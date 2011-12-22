@@ -16,15 +16,15 @@ void PdfViewer::paintEvent(QPaintEvent * /*event*/) {
 	using namespace std;
 	cout << "redraw" << endl;
 	QPainter painter(this);
-	for (int i = 0; i < 2; ++i) {
+	for (int i = -1; i < 3; ++i) {
 		QImage *img = res->getPage(page + i, width());
 		if (img != NULL) {
-			pageHeight = img->height();
+			float pageHeight =  width() / res->getPageAspect(page + i);
 			QRect target(0, 0, width(), height());
-			QRect source(0, scroll * pageHeight - (img->height() + 2) * i, width(), height());
+			QRect source(0, scroll * pageHeight - (pageHeight + 2) * i, width(), height());
 			painter.drawImage(target, *img, source);
 		} else {
-			cout << "null: " << page << " " << i << endl;
+		//	cout << "null: " << page << " " << i << endl;
 		}
 	}
 }
@@ -33,6 +33,7 @@ void PdfViewer::keyPressEvent(QKeyEvent *event) {
 	switch (event->key()) {
 		case Qt::Key_Q:
 		case Qt::Key_Escape:
+			res->wait();
 			QCoreApplication::exit(0);
 			break;
 		case Qt::Key_Space:
@@ -98,7 +99,7 @@ void PdfViewer::setPage(int newPage, bool relative) {
 
 	if (page != newPage) {
 		QString str = "page ";
-		str.append(QString::number(page));
+		str.append(QString::number(newPage + 1));
 		str.append("/");
 		str.append(QString::number(res->numPages()));
 		setWindowTitle(str);
@@ -116,7 +117,7 @@ void PdfViewer::scrollPage(int dx, int dy) {
 	if (dy == 0)
 		return;
 
-	scroll -= (float) dy / pageHeight;
+	scroll -= dy / (width() / res->getPageAspect(page));
 	if (scroll < 0) {
 		scroll++;
 		setPage(-1, true);

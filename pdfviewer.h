@@ -34,7 +34,6 @@ protected:
 private:
 	ResourceManager *res;
 	int page;
-	int pageHeight;
 	float scroll;
 	bool fit;
 
