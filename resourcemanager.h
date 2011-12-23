@@ -13,6 +13,7 @@
 
 
 class ResourceManager;
+class PdfViewer;
 
 
 class Worker : public QThread {
@@ -40,6 +41,7 @@ public:
 	float getPageAspect(int page) const;
 	int numPages() const;
 	void wait();
+	void setFinishedCallback(void (*_callback)(PdfViewer *), PdfViewer *arg);
 
 private:
 	bool render(int offset);
@@ -60,6 +62,8 @@ private:
 	friend class Worker;
 
 	float *pageAspect;
+	void (*callback)(PdfViewer *);
+	PdfViewer *caller;
 };
 
 #endif

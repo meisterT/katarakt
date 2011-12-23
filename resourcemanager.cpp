@@ -61,6 +61,7 @@ void Worker::run() {
 		res->garbageMutex.lock();
 		res->garbage.push(page);
 		res->garbageMutex.unlock();
+		res->callback(res->caller);
 	}
 }
 
@@ -104,8 +105,22 @@ ResourceManager::ResourceManager(QString file) {
 }
 
 ResourceManager::~ResourceManager() {
+	garbageMutex.lock();
+	while (!garbage.empty()) {
+		int page = garbage.front();
+		garbage.pop();
+		garbageMutex.unlock();
+
+		imgMutex.lock();
+		delete image[page];
+		image[page] = NULL;
+		imgMutex.unlock();
+
+		garbageMutex.lock();
+	}
+	garbageMutex.unlock();
 	delete doc;
-	delete image; // TODO free single pages
+	delete image;
 	delete pageAspect;
 }
 
@@ -113,8 +128,21 @@ bool ResourceManager::isNull() const {
 	return (doc == NULL);
 }
 
+void ResourceManager::setFinishedCallback(void (*_callback)(PdfViewer *), PdfViewer *arg) {
+	callback = _callback;
+	caller = arg;
+}
+
 QImage *ResourceManager::getPage(int page, int newWidth) {
+	if (page < 0 || page >= doc->numPages()) {
+		return NULL;
+	}
+
+	// new image size, old images are obsolete
 	if (newWidth != width) {
+		cout << "width changed from " << width << " to " << newWidth << endl;
+		width = newWidth;
+
 		garbageMutex.lock();
 		while (!garbage.empty()) {
 			int page = garbage.front();
@@ -131,11 +159,6 @@ QImage *ResourceManager::getPage(int page, int newWidth) {
 		garbageMutex.unlock();
 	}
 
-	width = newWidth;
-	if (page < 0 || page >= doc->numPages()) {
-		return NULL;
-	}
-
 	imgMutex.lock();
 	if (image[page] != NULL) {
 		QImage *tmp = image[page];
@@ -146,17 +169,21 @@ QImage *ResourceManager::getPage(int page, int newWidth) {
 
 	requestMutex.lock();
 	requests.push(page);
-	requestSemaphore.release(1);
+	if (requests.size() > 5) {
+		requests.pop();
+	} else {
+		requestSemaphore.release(1);
+	}
 	requestMutex.unlock();
 
 	// "garbage collection" - keep only the 5 newest pages
 	garbageMutex.lock();
-	cout << "currently rendered images: " << garbage.size() << endl;
 	while (garbage.size() > 5) {
 		int page = garbage.front();
 		garbage.pop();
 		garbageMutex.unlock();
 
+		cout << "    removing page " << page << endl;
 		imgMutex.lock();
 		delete image[page];
 		image[page] = NULL;
@@ -171,7 +198,7 @@ QImage *ResourceManager::getPage(int page, int newWidth) {
 
 float ResourceManager::getPageAspect(int page) const {
 	if (page < 0 || page >= doc->numPages()) {
-		return 1;
+		return -1;
 	}
 	return pageAspect[page];
 }

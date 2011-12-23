@@ -7,6 +7,7 @@ PdfViewer::PdfViewer(ResourceManager *_res, QWidget *parent) :
 		scroll(0.0),
 		fit(false) {
 	setFocusPolicy(Qt::StrongFocus);
+	res->setFinishedCallback(&scheduleUpdate, this);
 }
 
 PdfViewer::~PdfViewer() {
@@ -16,10 +17,19 @@ void PdfViewer::paintEvent(QPaintEvent * /*event*/) {
 	using namespace std;
 	cout << "redraw" << endl;
 	QPainter painter(this);
+
 	for (int i = -1; i < 3; ++i) {
-		QImage *img = res->getPage(page + i, width());
+		float pageWidth, pageHeight;
+		if (!fit) {
+			pageWidth = width();
+			pageHeight =  pageWidth / res->getPageAspect(page + i);
+		} else {
+			pageHeight = height();
+			pageWidth = res->getPageAspect(page + i) * pageHeight;
+		}
+
+		QImage *img = res->getPage(page + i, pageWidth);
 		if (img != NULL) {
-			float pageHeight =  width() / res->getPageAspect(page + i);
 			QRect target(0, 0, width(), height());
 			QRect source(0, scroll * pageHeight - (pageHeight + 2) * i, width(), height());
 			painter.drawImage(target, *img, source);
@@ -86,6 +96,10 @@ void PdfViewer::resizeEvent(QResizeEvent * /*event*/) {
 	update();
 }
 
+void PdfViewer::scheduleUpdate(PdfViewer *_this) {
+	_this->update();
+}
+
 void PdfViewer::setPage(int newPage, bool relative) {
 	if (relative) {
 		newPage += page;
@@ -117,7 +131,12 @@ void PdfViewer::scrollPage(int dx, int dy) {
 	if (dy == 0)
 		return;
 
-	scroll -= dy / (width() / res->getPageAspect(page));
+	if (!fit) {
+		scroll -= dy / (width() / res->getPageAspect(page));
+	} else {
+		scroll -= (float) dy / height();
+	}
+
 	if (scroll < 0) {
 		scroll++;
 		setPage(-1, true);

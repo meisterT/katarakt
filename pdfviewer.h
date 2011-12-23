@@ -27,6 +27,9 @@ protected:
 	void mouseMoveEvent(QMouseEvent *event);
 	void resizeEvent(QResizeEvent *event);
 
+	// kind of a hack because I don't like member function pointers
+	static void scheduleUpdate(PdfViewer *_this);
+
 	void setPage(int newPage, bool relative = false);
 	void toggleFit();
 	void scrollPage(int dx, int dy);
