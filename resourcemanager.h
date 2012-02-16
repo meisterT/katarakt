@@ -8,16 +8,16 @@
 #include <QMutex>
 #include <QSemaphore>
 #include <iostream>
-#include <queue>
+#include <list>
+#include <utility>
 #include <cstring>
 
 
 class ResourceManager;
-class PdfViewer;
+class Viewer;
 
 
 class Worker : public QThread {
-
 public:
 	Worker();
 	void setResManager(ResourceManager *res);
@@ -31,39 +31,50 @@ private:
 
 
 class ResourceManager {
-
 public:
 	ResourceManager(QString file);
 	~ResourceManager();
 
-	bool isNull() const;
-	QImage *getPage(int page, int newWidth);
-	float getPageAspect(int page) const;
-	int numPages() const;
-	void wait();
-	void setFinishedCallback(void (*_callback)(PdfViewer *), PdfViewer *arg);
+	// document not open?
+	bool is_null() const;
+
+	// page (meta)data
+	QImage *get_page(int page, int newWidth);
+	float get_page_width(int page) const;
+	float get_page_height(int page) const;
+	float get_page_aspect(int page) const;
+	int get_page_count() const;
+
+	void unlock_page(int page) const;
+	void set_cache_size(unsigned int size);
+
+	void join_threads();
+	void setFinishedCallback(void (*_callback)(Viewer *), Viewer *arg);
 
 private:
+	void enqueue(int page, int width);
 	bool render(int offset);
 
-	Worker worker; // sadly, poppler's renderToImage only supports one thread
+	// sadly, poppler's renderToImage only supports one thread per document
+	Worker worker;
 
 	Poppler::Document *doc;
-	QMutex imgMutex;
+	QMutex *imgMutex;
 	QMutex requestMutex;
 	QMutex garbageMutex;
 	QSemaphore requestSemaphore;
-	std::queue<int> requests;
-	std::queue<int> garbage;
+	std::list<std::pair<int,int> > requests;
+	std::list<int> garbage;
+	unsigned int cache_size;
 
-	volatile int width; // TODO locking
 	QImage **image;
+	int *image_status;
 
 	friend class Worker;
 
-	float *pageAspect;
-	void (*callback)(PdfViewer *);
-	PdfViewer *caller;
+	float *page_width, *page_height;
+	void (*callback)(Viewer *);
+	Viewer *caller;
 };
 
 #endif

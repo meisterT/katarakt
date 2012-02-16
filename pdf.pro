@@ -2,8 +2,9 @@ TEMPLATE = app
 TARGET = pdf
 DEPENDPATH += .
 INCLUDEPATH += .
+CONFIG += qt debug
 
 # Input
-HEADERS += pdfviewer.h resourcemanager.h
-SOURCES += main.cpp pdfviewer.cpp resourcemanager.cpp
+HEADERS += layout.h viewer.h resourcemanager.h
+SOURCES += main.cpp layout.cpp viewer.cpp resourcemanager.cpp
 unix:LIBS += -lpoppler-qt4

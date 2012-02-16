@@ -1,14 +1,16 @@
 #include <QApplication>
 #include <QImage>
 #include <QString>
+#include <QPalette>
 #include <iostream>
 
 #include "resourcemanager.h"
-#include "pdfviewer.h"
+#include "viewer.h"
 
 int main(int argc, char *argv[]) {
 	using namespace std;
 	QApplication app(argc, argv);
+	app.setPalette(QPalette(QColor(255, 255, 255), QColor(0, 0, 0)));
 
 	if (argc != 2) {
 		cerr << "usage: " << argv[0] << " <path>" << endl;
@@ -16,9 +18,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	ResourceManager res(argv[1]);
-	if (res.isNull())
+	if (res.is_null()) {
 		return 1;
-	PdfViewer pdf(&res);
+	}
+	Viewer pdf(&res);
 	pdf.show();
 
 	return app.exec();
