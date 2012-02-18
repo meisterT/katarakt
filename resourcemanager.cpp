@@ -84,8 +84,12 @@ void Worker::run() {
 
 
 //==[ ResourceManager ]========================================================
-ResourceManager::ResourceManager(QString file) :
-		cache_size(5) {
+ResourceManager::ResourceManager(QString _file) :
+		file(_file), cache_size(5) {
+	initialize();
+}
+
+void ResourceManager::initialize() {
 	doc = Poppler::Document::load(file);
 	if (doc == NULL) {
 		cerr << "failed to open file" << endl;
@@ -123,11 +127,17 @@ ResourceManager::ResourceManager(QString file) :
 
 	imgMutex = new QMutex[get_page_count()];
 
-	worker.setResManager(this);
-	worker.start();
+	worker = new Worker();
+	worker->setResManager(this);
+	worker->start();
 }
 
 ResourceManager::~ResourceManager() {
+	shutdown();
+}
+
+void ResourceManager::shutdown() {
+	join_threads();
 	garbageMutex.lock();
 	while (!garbage.empty()) {
 		int page = garbage.front();
@@ -151,6 +161,18 @@ ResourceManager::~ResourceManager() {
 	delete[] image_status;
 	delete[] page_width;
 	delete[] page_height;
+	delete worker;
+}
+
+void ResourceManager::reload_document() {
+	shutdown();
+	requests.clear();
+	cout << "reloading file " << file.toUtf8().constData() << endl;
+//	cout << requestSemaphore.available() << endl;
+	// TODO seems to work without, but I think it's necessary
+	requestSemaphore.acquire(requestSemaphore.available());
+//	cout << requestSemaphore.available() << endl;
+	initialize();
 }
 
 bool ResourceManager::is_null() const {
@@ -167,6 +189,26 @@ QImage *ResourceManager::get_page(int page, int width) {
 		return NULL;
 	}
 
+	// "garbage collection" - keep only the cache_size newest pages
+	// TODO selection is bad
+	garbageMutex.lock();
+	while (garbage.size() > cache_size) {
+		int page = garbage.front();
+		garbage.pop_front();
+		garbageMutex.unlock();
+
+		cout << "    removing page " << page << endl;
+		imgMutex[page].lock();
+		delete image[page];
+		image[page] = NULL;
+		image_status[page] = 0;
+		imgMutex[page].unlock();
+
+		garbageMutex.lock();
+	}
+	garbageMutex.unlock();
+
+	// is page available?
 	imgMutex[page].lock();
 	if (image[page] != NULL) {
 		QImage *img = image[page];
@@ -194,26 +236,6 @@ QImage *ResourceManager::get_page(int page, int width) {
 	imgMutex[page].unlock();
 
 	enqueue(page, width);
-
-	// "garbage collection" - keep only the cache_size newest pages
-	// TODO also call when the page is available, but has to be scaled
-	// TODO selection is bad
-	garbageMutex.lock();
-	while (garbage.size() > cache_size) {
-		int page = garbage.front();
-		garbage.pop_front();
-		garbageMutex.unlock();
-
-		cout << "    removing page " << page << endl;
-		imgMutex[page].lock();
-		delete image[page];
-		image[page] = NULL;
-		image_status[page] = 0;
-		imgMutex[page].unlock();
-
-		garbageMutex.lock();
-	}
-	garbageMutex.unlock();
 
 	return NULL;
 }
@@ -272,8 +294,8 @@ int ResourceManager::get_page_count() const {
 }
 
 void ResourceManager::join_threads() {
-	worker.die = true;
+	worker->die = true;
 	requestSemaphore.release(1);
-	worker.wait();
+	worker->wait();
 }
 

@@ -29,7 +29,6 @@ void Viewer::keyPressEvent(QKeyEvent *event) {
 		// quit
 		case Qt::Key_Q:
 		case Qt::Key_Escape:
-			res->join_threads();
 			QCoreApplication::exit(0);
 			break;
 
@@ -89,6 +88,12 @@ void Viewer::keyPressEvent(QKeyEvent *event) {
 			 setWindowState(windowState() ^ Qt::WindowFullScreen);
 			 update();
 			 break;
+
+		// reload document
+		case Qt::Key_R:
+			res->reload_document();
+			update();
+			break;
 
 		default:
 			QWidget::keyPressEvent(event);

@@ -35,6 +35,8 @@ public:
 	ResourceManager(QString file);
 	~ResourceManager();
 
+	void reload_document();
+
 	// document not open?
 	bool is_null() const;
 
@@ -48,16 +50,20 @@ public:
 	void unlock_page(int page) const;
 	void set_cache_size(unsigned int size);
 
-	void join_threads();
 	void setFinishedCallback(void (*_callback)(Viewer *), Viewer *arg);
 
 private:
 	void enqueue(int page, int width);
 	bool render(int offset);
 
-	// sadly, poppler's renderToImage only supports one thread per document
-	Worker worker;
+	void initialize();
+	void join_threads();
+	void shutdown();
 
+	// sadly, poppler's renderToImage only supports one thread per document
+	Worker *worker;
+
+	QString file;
 	Poppler::Document *doc;
 	QMutex *imgMutex;
 	QMutex requestMutex;
