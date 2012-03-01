@@ -63,12 +63,18 @@ void PresentationLayout::render(QPainter *painter) {
 		res->unlock_page(page);
 	}
 
-	// prefetch
-	if (res->get_page(page + 1, render_width) != NULL) {
+	// prefetch - order should be important
+	if (res->get_page(page + 1, render_width) != NULL) { // one after
 		res->unlock_page(page + 1);
 	}
-	if (res->get_page(page - 1, render_width) != NULL) {
+	if (res->get_page(page - 1, render_width) != NULL) { // one before
 		res->unlock_page(page - 1);
+	}
+	if (res->get_page(page + 2, render_width) != NULL) { // two after
+		res->unlock_page(page + 2);
+	}
+	if (res->get_page(page - 2, render_width) != NULL) { // two before
+		res->unlock_page(page - 2);
 	}
 	res->collect_garbage(page - 4, page + 4);
 }
@@ -115,12 +121,18 @@ void SequentialLayout::render(QPainter *painter) {
 		cur_page++;
 	}
 
-	// prefetch
-	if (res->get_page(cur_page, page_width) != NULL) {
+	// prefetch - order should be important
+	if (res->get_page(cur_page, page_width) != NULL) { // one after
 		res->unlock_page(cur_page);
 	}
-	if (res->get_page(page - 1, page_width) != NULL) {
+	if (res->get_page(page - 1, page_width) != NULL) { // one before
 		res->unlock_page(page - 1);
+	}
+	if (res->get_page(cur_page + 1, page_width) != NULL) { // two after
+		res->unlock_page(cur_page + 1);
+	}
+	if (res->get_page(page - 2, page_width) != NULL) { // two before
+		res->unlock_page(page - 2);
 	}
 
 	res->collect_garbage(page - 4, cur_page + 4);
