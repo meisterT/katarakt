@@ -33,12 +33,6 @@ void Worker::run() {
 			continue;
 		}
 		res->imgMutex[page].unlock();
-/*		res->imgMutex.lock();
-		if (res->image[page] != NULL) {
-			res->imgMutex.unlock();
-			continue;
-		}
-		res->imgMutex.unlock(); */
 
 		// open page
 		cout << "    rendering page " << page << endl;
@@ -69,15 +63,9 @@ void Worker::run() {
 		res->imgMutex[page].unlock();
 
 		res->garbageMutex.lock();
-		// TODO this might be slow
-		for (list<int>::iterator it = res->garbage.begin(); it != res->garbage.end(); ++it) {
-			if (*it == page) {
-				res->garbage.erase(it);
-				break;
-			}
-		}
-		res->garbage.push_back(page);
+		res->garbage.insert(page);
 		res->garbageMutex.unlock();
+
 		res->callback(res->caller);
 	}
 }
@@ -85,7 +73,7 @@ void Worker::run() {
 
 //==[ ResourceManager ]========================================================
 ResourceManager::ResourceManager(QString _file) :
-		file(_file), cache_size(5) {
+		file(_file) {
 	initialize();
 }
 
@@ -139,19 +127,17 @@ ResourceManager::~ResourceManager() {
 void ResourceManager::shutdown() {
 	join_threads();
 	garbageMutex.lock();
-	while (!garbage.empty()) {
-		int page = garbage.front();
-		garbage.pop_front();
-		garbageMutex.unlock();
-
+	for (set<int>::iterator it = garbage.begin(); it != garbage.end(); ++it) {
+		int page = *it;
 		imgMutex[page].lock();
 		delete image[page];
 		image[page] = NULL;
+		image_status[page] = 0;
 		imgMutex[page].unlock();
-
-		garbageMutex.lock();
 	}
+	garbage.clear();
 	garbageMutex.unlock();
+	requests.clear();
 	if (doc == NULL) {
 		return;
 	}
@@ -189,25 +175,6 @@ QImage *ResourceManager::get_page(int page, int width) {
 		return NULL;
 	}
 
-	// "garbage collection" - keep only the cache_size newest pages
-	// TODO selection is bad
-	garbageMutex.lock();
-	while (garbage.size() > cache_size) {
-		int page = garbage.front();
-		garbage.pop_front();
-		garbageMutex.unlock();
-
-		cout << "    removing page " << page << endl;
-		imgMutex[page].lock();
-		delete image[page];
-		image[page] = NULL;
-		image_status[page] = 0;
-		imgMutex[page].unlock();
-
-		garbageMutex.lock();
-	}
-	garbageMutex.unlock();
-
 	// is page available?
 	imgMutex[page].lock();
 	if (image[page] != NULL) {
@@ -225,6 +192,7 @@ QImage *ResourceManager::get_page(int page, int width) {
 
 			enqueue(page, width);
 		// redo dropped requests because of fast scrolling
+		// this does not really apply any more
 		} else if (image_status[page] == -width) {
 			enqueue(page, width);
 		}
@@ -240,12 +208,27 @@ QImage *ResourceManager::get_page(int page, int width) {
 	return NULL;
 }
 
-void ResourceManager::unlock_page(int page) const {
-	imgMutex[page].unlock();
+void ResourceManager::collect_garbage(int keep_min, int keep_max) {
+	garbageMutex.lock();
+	for (set<int>::iterator it = garbage.begin(); it != garbage.end(); /* empty */) {
+		int page = *it;
+		if (page >= keep_min && page <= keep_max) {
+			++it; // move on
+			continue;
+		}
+		garbage.erase(it++); // erase and move on (iterator becomes invalid)
+		cout << "    removing page " << page << endl;
+		imgMutex[page].lock();
+		delete image[page];
+		image[page] = NULL;
+		image_status[page] = 0;
+		imgMutex[page].unlock();
+	}
+	garbageMutex.unlock();
 }
 
-void ResourceManager::set_cache_size(unsigned int size) {
-	cache_size = size;
+void ResourceManager::unlock_page(int page) const {
+	imgMutex[page].unlock();
 }
 
 void ResourceManager::enqueue(int page, int width) {
@@ -259,12 +242,14 @@ void ResourceManager::enqueue(int page, int width) {
 		}
 	}
 	requests.push_back(make_pair(page, width));
-	// TODO overthink this
-	if (requests.size() > cache_size) {
+	// TODO overthink this - good if renderer can't keep up
+	// i probably want something like this
+/*	if (requests.size() > cache_size) {
 		requests.pop_front();
 	} else {
 		requestSemaphore.release(1);
-	}
+	} */
+	requestSemaphore.release(1);
 	requestMutex.unlock();
 }
 

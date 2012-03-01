@@ -9,6 +9,7 @@
 #include <QSemaphore>
 #include <iostream>
 #include <list>
+#include <set>
 #include <utility>
 #include <cstring>
 
@@ -48,7 +49,8 @@ public:
 	int get_page_count() const;
 
 	void unlock_page(int page) const;
-	void set_cache_size(unsigned int size);
+
+	void collect_garbage(int keep_min, int keep_max);
 
 	void setFinishedCallback(void (*_callback)(Viewer *), Viewer *arg);
 
@@ -70,8 +72,7 @@ private:
 	QMutex garbageMutex;
 	QSemaphore requestSemaphore;
 	std::list<std::pair<int,int> > requests;
-	std::list<int> garbage;
-	unsigned int cache_size;
+	std::set<int> garbage;
 
 	QImage **image;
 	int *image_status;

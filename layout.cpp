@@ -47,10 +47,9 @@ void PresentationLayout::scroll_smooth(int /*dx*/, int /*dy*/) {
 }
 
 void PresentationLayout::render(QPainter *painter) {
-	res->set_cache_size(5);
-
 	float render_width;
 	int center_x = 0, center_y = 0;
+
 	if (width / height > res->get_page_aspect(page)) {
 		render_width = res->get_page_aspect(page) * height;
 		center_x = (width - render_width) / 2;
@@ -71,6 +70,7 @@ void PresentationLayout::render(QPainter *painter) {
 	if (res->get_page(page - 1, render_width) != NULL) {
 		res->unlock_page(page - 1);
 	}
+	res->collect_garbage(page - 4, page + 4);
 }
 
 
@@ -106,16 +106,6 @@ void SequentialLayout::render(QPainter *painter) {
 
 	while (cur_offset < height && cur_page < res->get_page_count()) {
 		page_height = page_width / res->get_page_aspect(cur_page);
-		cur_offset += page_height;
-		cur_page++;
-	}
-	res->set_cache_size((cur_page - page + 1) * 1.5);
-
-	cur_page = page;
-	cur_offset = off_y;
-
-	while (cur_offset < height && cur_page < res->get_page_count()) {
-		page_height = page_width / res->get_page_aspect(cur_page);
 		QImage *img = res->get_page(cur_page, page_width);
 		if (img != NULL) {
 			painter->drawImage(off_x, cur_offset, *img);
@@ -132,5 +122,7 @@ void SequentialLayout::render(QPainter *painter) {
 	if (res->get_page(page - 1, page_width) != NULL) {
 		res->unlock_page(page - 1);
 	}
+
+	res->collect_garbage(page - 4, cur_page + 4);
 }
 
