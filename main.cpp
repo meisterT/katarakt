@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	ResourceManager res(argv[1]);
+	ResourceManager res(QString::fromUtf8(argv[1]));
 	if (res.is_null()) {
 		return 1;
 	}
