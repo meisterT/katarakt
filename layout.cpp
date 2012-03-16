@@ -8,6 +8,10 @@ Layout::Layout(ResourceManager *_res, int _page) :
 		res(_res), page(_page), off_x(0), off_y(0), width(0), height(0) {
 }
 
+int Layout::get_page() {
+	return page;
+}
+
 void Layout::scroll_smooth(int dx, int dy) {
 	off_x += dx;
 	off_y += dy;

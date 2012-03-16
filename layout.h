@@ -14,6 +14,8 @@ public:
 	Layout(ResourceManager *_res, int _page = 0);
 	virtual ~Layout() {};
 
+	virtual int get_page();
+
 	virtual void scroll_smooth(int dx, int dy);
 	virtual void scroll_page(int new_page, bool relative = true);
 	virtual void resize(float w, float h);

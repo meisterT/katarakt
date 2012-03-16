@@ -21,6 +21,12 @@ void Viewer::paintEvent(QPaintEvent * /*event*/) {
 //	cout << "redraw" << endl;
 	QPainter painter(this);
 	layout->render(&painter);
+
+	QString title = "page ";
+	title.append(QString::number(layout->get_page() + 1));
+	title.append("/");
+	title.append(QString::number(res->get_page_count()));
+	setWindowTitle(title);
 }
 
 void Viewer::keyPressEvent(QKeyEvent *event) {
