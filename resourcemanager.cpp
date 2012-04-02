@@ -125,7 +125,9 @@ ResourceManager::~ResourceManager() {
 }
 
 void ResourceManager::shutdown() {
-	join_threads();
+	if (worker != NULL) {
+		join_threads();
+	}
 	garbageMutex.lock();
 	for (set<int>::iterator it = garbage.begin(); it != garbage.end(); ++it) {
 		int page = *it;
@@ -209,6 +211,7 @@ QImage *ResourceManager::get_page(int page, int width) {
 }
 
 void ResourceManager::collect_garbage(int keep_min, int keep_max) {
+	// free distant pages
 	garbageMutex.lock();
 	for (set<int>::iterator it = garbage.begin(); it != garbage.end(); /* empty */) {
 		int page = *it;
@@ -225,6 +228,17 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 		imgMutex[page].unlock();
 	}
 	garbageMutex.unlock();
+
+	// keep the request list small
+	if (keep_max < keep_min) {
+		return;
+	}
+	requestMutex.lock();
+	while (requests.size() > keep_max - keep_min) {
+		requestSemaphore.acquire(1);
+		requests.pop_front();
+	}
+	requestMutex.unlock();
 }
 
 void ResourceManager::unlock_page(int page) const {
@@ -242,13 +256,6 @@ void ResourceManager::enqueue(int page, int width) {
 		}
 	}
 	requests.push_back(make_pair(page, width));
-	// TODO overthink this - good if renderer can't keep up
-	// i probably want something like this
-/*	if (requests.size() > cache_size) {
-		requests.pop_front();
-	} else {
-		requestSemaphore.release(1);
-	} */
 	requestSemaphore.release(1);
 	requestMutex.unlock();
 }
