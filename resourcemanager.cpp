@@ -3,6 +3,10 @@
 using namespace std;
 
 
+#define DEBUG
+//#undef DEBUG
+
+
 //==[ Worker ]=================================================================
 Worker::Worker() :
 		die(false) {
@@ -35,7 +39,9 @@ void Worker::run() {
 		res->imgMutex[page].unlock();
 
 		// open page
-		cout << "    rendering page " << page << endl;
+#ifdef DEBUG
+		cerr << "    rendering page " << page << endl;
+#endif
 		Poppler::Page *p = res->doc->page(page);
 		if (p == NULL) {
 			cerr << "failed to load page " << page << endl;
@@ -155,11 +161,11 @@ void ResourceManager::shutdown() {
 void ResourceManager::reload_document() {
 	shutdown();
 	requests.clear();
-	cout << "reloading file " << file.toUtf8().constData() << endl;
-//	cout << requestSemaphore.available() << endl;
+	cerr << "reloading file " << file.toUtf8().constData() << endl;
+//	cerr << requestSemaphore.available() << endl;
 	// TODO seems to work without, but I think it's necessary
 	requestSemaphore.acquire(requestSemaphore.available());
-//	cout << requestSemaphore.available() << endl;
+//	cerr << requestSemaphore.available() << endl;
 	initialize();
 }
 
@@ -220,7 +226,9 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 			continue;
 		}
 		garbage.erase(it++); // erase and move on (iterator becomes invalid)
-		cout << "    removing page " << page << endl;
+#ifdef DEBUG
+		cerr << "    removing page " << page << endl;
+#endif
 		imgMutex[page].lock();
 		delete image[page];
 		image[page] = NULL;

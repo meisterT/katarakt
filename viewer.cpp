@@ -18,7 +18,7 @@ Viewer::~Viewer() {
 }
 
 void Viewer::paintEvent(QPaintEvent * /*event*/) {
-//	cout << "redraw" << endl;
+//	cerr << "redraw" << endl;
 	QPainter painter(this);
 	layout->render(&painter);
 
