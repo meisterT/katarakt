@@ -16,6 +16,7 @@ public:
 	virtual ~Layout() {};
 
 	virtual int get_page();
+	virtual void rebuild();
 
 	virtual void scroll_smooth(int dx, int dy);
 	virtual void scroll_page(int new_page, bool relative = true);
@@ -52,9 +53,11 @@ public:
 
 class GridLayout : public Layout {
 public:
-	GridLayout(ResourceManager *res, int page = 0, int columns = 2);
-	GridLayout(Layout& old_layout, int columns = 2);
+	GridLayout(ResourceManager *res, int page = 0, int columns = 5);
+	GridLayout(Layout& old_layout, int columns = 5);
 	~GridLayout();
+
+	void rebuild();
 
 	void scroll_smooth(int dx, int dy);
 	void scroll_page(int new_page, bool relative = true);
@@ -62,9 +65,14 @@ public:
 	void render(QPainter *painter);
 
 private:
+	void initialize(int columns);
+
 	Grid *grid;
 
 	int horizontal_page;
+	float zoom;
+	float total_width;
+	float total_height;
 };
 
 

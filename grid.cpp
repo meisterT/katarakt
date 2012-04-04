@@ -49,12 +49,16 @@ int Grid::get_column_count() const {
 	return column_count;
 }
 
+int Grid::get_row_count() const {
+	return row_count;
+}
+
 void Grid::rebuild_cells() {
 	delete width;
 	delete height;
 
 	// implicit ceil
-	int row_count = (res->get_page_count() + column_count - 1) / column_count;
+	row_count = (res->get_page_count() + column_count - 1) / column_count;
 
 	width = new float[column_count];
 	height = new float[row_count];

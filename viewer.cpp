@@ -106,6 +106,7 @@ void Viewer::keyPressEvent(QKeyEvent *event) {
 		// reload document
 		case Qt::Key_R:
 			res->reload_document();
+			layout->rebuild();
 			update();
 			break;
 
