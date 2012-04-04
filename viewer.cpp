@@ -87,6 +87,14 @@ void Viewer::keyPressEvent(QKeyEvent *event) {
 				update();
 				break;
 			}
+		case Qt::Key_3:
+			{
+				Layout *old_layout = layout;
+				layout = new GridLayout(*old_layout);
+				delete old_layout;
+				update();
+				break;
+			}
 
 		// toggle fullscreen
 		case Qt::Key_F5:

@@ -242,7 +242,7 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 		return;
 	}
 	requestMutex.lock();
-	while (requests.size() > keep_max - keep_min) {
+	while ((int) requests.size() > keep_max - keep_min) {
 		requestSemaphore.acquire(1);
 		requests.pop_front();
 	}

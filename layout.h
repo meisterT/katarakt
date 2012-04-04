@@ -7,6 +7,7 @@
 #include <QImage>
 
 #include "resourcemanager.h"
+#include "grid.h"
 
 
 class Layout {
@@ -29,7 +30,6 @@ protected:
 
 };
 
-
 class PresentationLayout : public Layout {
 public:
 	PresentationLayout(ResourceManager *res, int page = 0);
@@ -48,6 +48,23 @@ public:
 
 	void scroll_smooth(int dx, int dy);
 	void render(QPainter *painter);
+};
+
+class GridLayout : public Layout {
+public:
+	GridLayout(ResourceManager *res, int page = 0, int columns = 2);
+	GridLayout(Layout& old_layout, int columns = 2);
+	~GridLayout();
+
+	void scroll_smooth(int dx, int dy);
+	void scroll_page(int new_page, bool relative = true);
+
+	void render(QPainter *painter);
+
+private:
+	Grid *grid;
+
+	int horizontal_page;
 };
 
 
