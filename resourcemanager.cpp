@@ -161,11 +161,10 @@ void ResourceManager::shutdown() {
 void ResourceManager::reload_document() {
 	shutdown();
 	requests.clear();
+#ifdef DEBUG
 	cerr << "reloading file " << file.toUtf8().constData() << endl;
-//	cerr << requestSemaphore.available() << endl;
-	// TODO seems to work without, but I think it's necessary
+#endif
 	requestSemaphore.acquire(requestSemaphore.available());
-//	cerr << requestSemaphore.available() << endl;
 	initialize();
 }
 
