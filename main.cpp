@@ -24,6 +24,6 @@ int main(int argc, char *argv[]) {
 	Viewer katarakt(&res);
 	katarakt.show();
 
-	return katarakt.exec();
+	return app.exec();
 }
 
