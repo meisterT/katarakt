@@ -21,9 +21,9 @@ int main(int argc, char *argv[]) {
 	if (res.is_null()) {
 		return 1;
 	}
-	Viewer pdf(&res);
-	pdf.show();
+	Viewer katarakt(&res);
+	katarakt.show();
 
-	return app.exec();
+	return katarakt.exec();
 }
 
