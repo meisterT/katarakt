@@ -17,17 +17,17 @@ public:
 
 	virtual int get_page();
 	virtual void rebuild();
+	virtual void resize(int w, int h);
 
 	virtual void scroll_smooth(int dx, int dy);
 	virtual void scroll_page(int new_page, bool relative = true);
-	virtual void resize(float w, float h);
 	virtual void render(QPainter *painter) = 0;
 
 protected:
 	ResourceManager *res;
 	int page;
 	int off_x, off_y;
-	float width, height;
+	int width, height;
 
 };
 
@@ -58,21 +58,25 @@ public:
 	~GridLayout();
 
 	void rebuild();
+	void resize(int w, int h);
 
 	void scroll_smooth(int dx, int dy);
 	void scroll_page(int new_page, bool relative = true);
-
 	void render(QPainter *painter);
 
 private:
 	void initialize(int columns);
+	void set_constants();
 
 	Grid *grid;
 
 	int horizontal_page;
 	float zoom;
-	float total_width;
-	float total_height;
+	int total_width;
+	int total_height;
+
+	int border_page_w, border_off_w;
+	int border_page_h, border_off_h;
 };
 
 

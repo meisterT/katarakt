@@ -62,6 +62,7 @@ void Viewer::keyPressEvent(QKeyEvent *event) {
 
 		// scroll to absolute position
 		case Qt::Key_G:
+			// TODO off_y = 0
 			layout->scroll_page(0, false);
 			update();
 			break;
