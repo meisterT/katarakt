@@ -330,12 +330,12 @@ void GridLayout::render(QPainter *painter) {
 				wpos < width) {
 			QImage *img = res->get_page(cur_page + cur_col, page_width);
 			if (img != NULL) {
-				// debugging
+/*				// debugging
 				int a = img->height(), b = ROUND(grid->get_height(cur_page + cur_col) * zoom);
 				if (a != b) {
 					// TODO fix this?
 					cerr << "image is " << (a - b) << " pixels bigger than expected" << endl;
-				}
+				} */
 				painter->drawImage(wpos, hpos, *img);
 				res->unlock_page(cur_page + cur_col);
 			}

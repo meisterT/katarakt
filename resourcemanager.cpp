@@ -79,6 +79,7 @@ void Worker::run() {
 
 //==[ ResourceManager ]========================================================
 ResourceManager::ResourceManager(QString _file) :
+		worker(NULL),
 		file(_file) {
 	initialize();
 }
@@ -86,7 +87,8 @@ ResourceManager::ResourceManager(QString _file) :
 void ResourceManager::initialize() {
 	doc = Poppler::Document::load(file);
 	if (doc == NULL) {
-		cerr << "failed to open file" << endl;
+		// poppler already prints a debug message
+//		cerr << "failed to open file" << endl;
 		return;
 	}
 	if (doc->isLocked()) {
