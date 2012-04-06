@@ -3,8 +3,7 @@
 using namespace std;
 
 
-#define DEBUG
-//#undef DEBUG
+//#define DEBUG // qmake now takes care of this
 
 
 //==[ Worker ]=================================================================

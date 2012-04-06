@@ -2,7 +2,9 @@ TEMPLATE = app
 TARGET = katarakt
 DEPENDPATH += .
 INCLUDEPATH += .
-CONFIG += qt debug
+CONFIG += qt
+
+QMAKE_CXXFLAGS_DEBUG += -DDEBUG
 
 # Input
 HEADERS += layout.h viewer.h resourcemanager.h grid.h
