@@ -29,6 +29,10 @@ void Layout::resize(int w, int h) {
 	height = h;
 }
 
+void Layout::set_columns(int /*new_columns*/, bool /*relative*/) {
+	// only useful for grid layout
+}
+
 void Layout::scroll_smooth(int dx, int dy) {
 	off_x += dx;
 	off_y += dy;
@@ -174,10 +178,6 @@ GridLayout::~GridLayout() {
 void GridLayout::initialize(int columns) {
 	grid = new Grid(res, columns);
 
-	horizontal_page = page % grid->get_column_count();
-	page -= horizontal_page;
-//	page = page / grid->get_column_count() * grid->get_column_count();
-
 //	zoom = 0.6;
 	zoom = 250 / grid->get_width(0);
 //	zoom = width / grid->get_width(0);
@@ -187,6 +187,9 @@ void GridLayout::initialize(int columns) {
 
 void GridLayout::set_constants() {
 //	zoom = width / grid->get_width(0); // makes it feel like SequentialLayout but better :)
+
+	horizontal_page = page % grid->get_column_count();
+	page -= horizontal_page;
 
 	total_height = 0;
 	for (int i = 0; i < grid->get_row_count(); i++) {
@@ -238,6 +241,16 @@ void GridLayout::rebuild() {
 
 void GridLayout::resize(int w, int h) {
 	Layout::resize(w, h);
+	set_constants();
+}
+
+void GridLayout::set_columns(int new_columns, bool relative) {
+	if (relative) {
+		grid->set_columns(grid->get_column_count() + new_columns);
+	} else {
+		grid->set_columns(new_columns);
+	}
+
 	set_constants();
 }
 

@@ -22,10 +22,19 @@ void Viewer::paintEvent(QPaintEvent * /*event*/) {
 	QPainter painter(this);
 	layout->render(&painter);
 
-	QString title = "page ";
-	title.append(QString::number(layout->get_page() + 1));
-	title.append("/");
-	title.append(QString::number(res->get_page_count()));
+	QString title = QString("page %1/%2")
+		.arg(layout->get_page() + 1)
+		.arg(res->get_page_count());
+	QRect size = QRect(0, 0, width(), height());
+	int flags = Qt::AlignBottom | Qt::AlignRight;
+	QRect bounding = painter.boundingRect(size, flags, title);
+
+	painter.setPen(Qt::NoPen);
+	painter.setBrush(QColor("#eeeeec"));
+	painter.drawRect(bounding);
+	painter.setPen(QColor("#2e3436"));
+	painter.drawText(size, flags, title);
+
 	setWindowTitle(title);
 }
 
@@ -96,6 +105,16 @@ void Viewer::keyPressEvent(QKeyEvent *event) {
 				update();
 				break;
 			}
+
+		// set columns
+		case Qt::Key_BracketLeft:
+			layout->set_columns(-1);
+			update();
+			break;
+		case Qt::Key_BracketRight:
+			layout->set_columns(1);
+			update();
+			break;
 
 		// toggle fullscreen
 		case Qt::Key_F5:

@@ -22,6 +22,9 @@ void Grid::set_columns(int columns) {
 	if (column_count < 1) {
 		column_count = 1;
 	}
+	if (column_count > res->get_page_count()) {
+		column_count = res->get_page_count();
+	}
 
 	rebuild_cells();
 }

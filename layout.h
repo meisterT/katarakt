@@ -18,6 +18,7 @@ public:
 	virtual int get_page();
 	virtual void rebuild();
 	virtual void resize(int w, int h);
+	virtual void set_columns(int new_columns, bool relative = true);
 
 	virtual void scroll_smooth(int dx, int dy);
 	virtual void scroll_page(int new_page, bool relative = true);
@@ -59,6 +60,7 @@ public:
 
 	void rebuild();
 	void resize(int w, int h);
+	void set_columns(int new_columns, bool relative = true);
 
 	void scroll_smooth(int dx, int dy);
 	void scroll_page(int new_page, bool relative = true);
