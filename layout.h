@@ -18,6 +18,7 @@ public:
 	virtual int get_page();
 	virtual void rebuild();
 	virtual void resize(int w, int h);
+	virtual void set_zoom(int new_zoom, bool relative = true);
 	virtual void set_columns(int new_columns, bool relative = true);
 
 	virtual void scroll_smooth(int dx, int dy);
@@ -54,12 +55,13 @@ public:
 
 class GridLayout : public Layout {
 public:
-	GridLayout(ResourceManager *res, int page = 0, int columns = 5);
-	GridLayout(Layout& old_layout, int columns = 5);
+	GridLayout(ResourceManager *res, int page = 0, int columns = 2);
+	GridLayout(Layout& old_layout, int columns = 2);
 	~GridLayout();
 
 	void rebuild();
 	void resize(int w, int h);
+	void set_zoom(int new_zoom, bool relative = true);
 	void set_columns(int new_columns, bool relative = true);
 
 	void scroll_smooth(int dx, int dy);
@@ -73,7 +75,8 @@ private:
 	Grid *grid;
 
 	int horizontal_page;
-	float zoom;
+	float size;
+	int zoom;
 	int total_width;
 	int total_height;
 

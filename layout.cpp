@@ -5,6 +5,9 @@ using namespace std;
 
 // TODO put in a config source file
 #define USELESS_GAP 2
+#define MIN_PAGE_WIDTH 150
+#define MIN_ZOOM -14
+#define MAX_ZOOM 30
 
 // rounds a float when afterwards cast to int
 // seems to fix the mismatch between calculated page height and actual image height
@@ -27,6 +30,10 @@ void Layout::rebuild() {
 void Layout::resize(int w, int h) {
 	width = w;
 	height = h;
+}
+
+void Layout::set_zoom(int /*new_zoom*/, bool /*relative*/) {
+	// TODO implement in all the child classes
 }
 
 void Layout::set_columns(int /*new_columns*/, bool /*relative*/) {
@@ -162,12 +169,14 @@ void SequentialLayout::render(QPainter *painter) {
 
 //==[ GridLayout ]=============================================================
 GridLayout::GridLayout(ResourceManager *_res, int page, int columns) :
-		Layout(_res, page) {
+		Layout(_res, page),
+		zoom(0) {
 	initialize(columns);
 }
 
 GridLayout::GridLayout(Layout& old_layout, int columns) :
-		Layout(old_layout) {
+		Layout(old_layout),
+		zoom(0) {
 	initialize(columns);
 }
 
@@ -178,28 +187,41 @@ GridLayout::~GridLayout() {
 void GridLayout::initialize(int columns) {
 	grid = new Grid(res, columns);
 
-//	zoom = 0.6;
-	zoom = 250 / grid->get_width(0);
-//	zoom = width / grid->get_width(0);
+//	size = 0.6;
+//	size = 250 / grid->get_width(0);
+//	size = width / grid->get_width(0);
 
 	set_constants();
 }
 
 void GridLayout::set_constants() {
-//	zoom = width / grid->get_width(0); // makes it feel like SequentialLayout but better :)
+	// calculate fit
+	int used = 0;
+	for (int i = 0; i < grid->get_column_count(); i++) {
+		used += grid->get_width(i);
+	}
+	int available = width - USELESS_GAP * (grid->get_column_count() - 1);
+	if (available < MIN_PAGE_WIDTH * grid->get_column_count()) {
+		available = MIN_PAGE_WIDTH * grid->get_column_count();
+	}
+	size = (float) available / used;
+
+	// apply zoom value
+	size *= (1 + zoom * 0.05f);
+	// TODO adjust offset values
 
 	horizontal_page = page % grid->get_column_count();
 	page -= horizontal_page;
 
 	total_height = 0;
 	for (int i = 0; i < grid->get_row_count(); i++) {
-		total_height += ROUND(grid->get_height(i * grid->get_column_count()) * zoom);
+		total_height += ROUND(grid->get_height(i * grid->get_column_count()) * size);
 	}
 	total_height += USELESS_GAP * (grid->get_row_count() - 1);
 
 	total_width = 0;
 	for (int i = 0; i < grid->get_column_count(); i++) {
-		total_width += grid->get_width(i) * zoom;
+		total_width += grid->get_width(i) * size;
 	}
 	total_width += USELESS_GAP * (grid->get_column_count() - 1);
 
@@ -207,7 +229,7 @@ void GridLayout::set_constants() {
 	border_page_w = grid->get_column_count();
 	int w = 0;
 	for (int i = grid->get_column_count() - 1; i >= 0; i--) {
-		w += grid->get_width(i) * zoom;
+		w += grid->get_width(i) * size;
 		if (w >= width) {
 			border_page_w = i;
 			border_off_w = width - w;
@@ -219,7 +241,7 @@ void GridLayout::set_constants() {
 	border_page_h = grid->get_row_count() * grid->get_column_count();
 	int h = 0;
 	for (int i = grid->get_row_count() - 1; i >= 0; i--) {
-		h += ROUND(grid->get_height(i * grid->get_column_count()) * zoom);
+		h += ROUND(grid->get_height(i * grid->get_column_count()) * size);
 		if (h >= height) {
 			border_page_h = i * grid->get_column_count();
 			border_off_h = height - h;
@@ -241,6 +263,19 @@ void GridLayout::rebuild() {
 
 void GridLayout::resize(int w, int h) {
 	Layout::resize(w, h);
+	set_constants();
+}
+
+void GridLayout::set_zoom(int new_zoom, bool relative) {
+	if (relative) {
+		zoom += new_zoom;
+	}
+	if (zoom < MIN_ZOOM) {
+		zoom = MIN_ZOOM;
+	} else if (zoom > MAX_ZOOM) {
+		zoom = MAX_ZOOM;
+	}
+
 	set_constants();
 }
 
@@ -266,12 +301,12 @@ void GridLayout::scroll_smooth(int dx, int dy) {
 		int h; // implicit rounding
 		// page up
 		while (off_y > 0 &&
-				(h = ROUND(grid->get_height(page - grid->get_column_count()) * zoom)) > 0) {
+				(h = ROUND(grid->get_height(page - grid->get_column_count()) * size)) > 0) {
 			off_y -= h + USELESS_GAP;
 			page -= grid->get_column_count();
 		}
 		// page down
-		while ((h = ROUND(grid->get_height(page) * zoom)) > 0 &&
+		while ((h = ROUND(grid->get_height(page) * size)) > 0 &&
 				page < border_page_h &&
 				off_y <= -h - USELESS_GAP) {
 			off_y += h + USELESS_GAP;
@@ -295,12 +330,12 @@ void GridLayout::scroll_smooth(int dx, int dy) {
 		int w; // implicit rounding
 		// page left
 		while (off_x > 0 &&
-				(w = grid->get_width(horizontal_page - 1) * zoom) > 0) {
+				(w = grid->get_width(horizontal_page - 1) * size) > 0) {
 			off_x -= w + USELESS_GAP;
 			horizontal_page--;
 		}
 		// page right
-		while ((w = grid->get_width(horizontal_page) * zoom) > 0 &&
+		while ((w = grid->get_width(horizontal_page) * size) > 0 &&
 				horizontal_page < border_page_w &&
 				horizontal_page < grid->get_column_count() - 1 && // only for horizontal
 				off_x <= -w - USELESS_GAP) {
@@ -333,18 +368,18 @@ void GridLayout::render(QPainter *painter) {
 	int cur_page = page;
 	int page_height; // implicit rounding
 	int hpos = off_y;
-	while ((page_height = ROUND(grid->get_height(cur_page) * zoom)) > 0 && hpos < height) {
+	while ((page_height = ROUND(grid->get_height(cur_page) * size)) > 0 && hpos < height) {
 		// horizontal
 		int cur_col = horizontal_page;
 		int page_width; // implicit rounding
 		int wpos = off_x;
-		while ((page_width = grid->get_width(cur_col) * zoom) > 0 &&
+		while ((page_width = grid->get_width(cur_col) * size) > 0 &&
 				cur_col < grid->get_column_count() &&
 				wpos < width) {
 			QImage *img = res->get_page(cur_page + cur_col, page_width);
 			if (img != NULL) {
 /*				// debugging
-				int a = img->height(), b = ROUND(grid->get_height(cur_page + cur_col) * zoom);
+				int a = img->height(), b = ROUND(grid->get_height(cur_page + cur_col) * size);
 				if (a != b) {
 					// TODO fix this?
 					cerr << "image is " << (a - b) << " pixels bigger than expected" << endl;

@@ -68,6 +68,14 @@ void Viewer::keyPressEvent(QKeyEvent *event) {
 			layout->scroll_smooth(0, 30);
 			update();
 			break;
+		case Qt::Key_H:
+			layout->scroll_smooth(30, 0);
+			update();
+			break;
+		case Qt::Key_L:
+			layout->scroll_smooth(-30, 0);
+			update();
+			break;
 
 		// scroll to absolute position
 		case Qt::Key_G:
@@ -105,6 +113,17 @@ void Viewer::keyPressEvent(QKeyEvent *event) {
 				update();
 				break;
 			}
+
+		// set zoom
+		case Qt::Key_Plus:
+		case Qt::Key_Equal:
+			layout->set_zoom(1);
+			update();
+			break;
+		case Qt::Key_Minus:
+			layout->set_zoom(-1);
+			update();
+			break;
 
 		// set columns
 		case Qt::Key_BracketLeft:
