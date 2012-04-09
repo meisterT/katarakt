@@ -390,7 +390,12 @@ void GridLayout::render(QPainter *painter) {
 					// TODO fix this?
 					cerr << "image is " << (a - b) << " pixels bigger than expected" << endl;
 				} */
-				painter->drawImage(wpos, hpos, *img);
+				if (page_width != img->width()) { // draw scaled
+					QRect rect(wpos, hpos, page_width, page_height);
+					painter->drawImage(rect, *img);
+				} else { // draw as-is
+					painter->drawImage(wpos, hpos, *img);
+				}
 				res->unlock_page(cur_page + cur_col);
 			}
 			wpos += page_width + USELESS_GAP;

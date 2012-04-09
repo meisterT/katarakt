@@ -186,27 +186,13 @@ QImage *ResourceManager::get_page(int page, int width) {
 	// is page available?
 	imgMutex[page].lock();
 	if (image[page] != NULL) {
-		QImage *img = image[page];
-
-		// scale image
-		if (img->width() != width) {
-			QImage *tmp = new QImage;
-			*tmp = img->scaledToWidth(width);
-			delete img;
-
-			image[page] = tmp;
-			img = tmp;
-			image_status[page] = -width;
-
-			enqueue(page, width);
-		// redo dropped requests because of fast scrolling
-		// this does not really apply any more
-		} else if (image_status[page] == -width) {
+		// rerender if image has wrong size
+		if (image[page]->width() != width) {
 			enqueue(page, width);
 		}
 		// the page is still locked
 		// draw it, then call unlock_page
-		return img;
+		return image[page];
 	}
 	image_status[page] = 0;
 	imgMutex[page].unlock();
