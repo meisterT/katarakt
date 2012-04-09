@@ -8,6 +8,7 @@ using namespace std;
 #define MIN_PAGE_WIDTH 150
 #define MIN_ZOOM -14
 #define MAX_ZOOM 30
+#define ZOOM_FACTOR 0.05f
 
 // rounds a float when afterwards cast to int
 // seems to fix the mismatch between calculated page height and actual image height
@@ -207,7 +208,7 @@ void GridLayout::set_constants() {
 	size = (float) available / used;
 
 	// apply zoom value
-	size *= (1 + zoom * 0.05f);
+	size *= (1 + zoom * ZOOM_FACTOR);
 	// TODO adjust offset values
 
 	horizontal_page = page % grid->get_column_count();
@@ -267,6 +268,7 @@ void GridLayout::resize(int w, int h) {
 }
 
 void GridLayout::set_zoom(int new_zoom, bool relative) {
+	float old_factor = 1 + zoom * ZOOM_FACTOR;
 	if (relative) {
 		zoom += new_zoom;
 	}
@@ -275,6 +277,10 @@ void GridLayout::set_zoom(int new_zoom, bool relative) {
 	} else if (zoom > MAX_ZOOM) {
 		zoom = MAX_ZOOM;
 	}
+	float new_factor = 1 + zoom * ZOOM_FACTOR;
+
+	off_x = (off_x - width / 2) * new_factor / old_factor + width / 2;
+	off_y = (off_y - height / 2) * new_factor / old_factor + height / 2;
 
 	set_constants();
 }
