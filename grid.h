@@ -6,7 +6,7 @@
 
 class Grid {
 public:
-	Grid(ResourceManager *_res, int columns = 2);
+	Grid(ResourceManager *_res, int columns);
 	~Grid();
 
 	void set_columns(int columns);

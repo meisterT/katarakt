@@ -97,15 +97,15 @@ void Viewer::keyPressEvent(QKeyEvent *event) {
 				update();
 				break;
 			}
-		case Qt::Key_2:
+/*		case Qt::Key_2:
 			{
 				Layout *old_layout = layout;
 				layout = new SequentialLayout(*old_layout);
 				delete old_layout;
 				update();
 				break;
-			}
-		case Qt::Key_3:
+			} */
+		case Qt::Key_2:
 			{
 				Layout *old_layout = layout;
 				layout = new GridLayout(*old_layout);

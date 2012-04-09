@@ -55,8 +55,8 @@ public:
 
 class GridLayout : public Layout {
 public:
-	GridLayout(ResourceManager *res, int page = 0, int columns = 2);
-	GridLayout(Layout& old_layout, int columns = 2);
+	GridLayout(ResourceManager *res, int page = 0, int columns = 1);
+	GridLayout(Layout& old_layout, int columns = 1);
 	~GridLayout();
 
 	void rebuild();
