@@ -162,10 +162,12 @@ void Viewer::mousePressEvent(QMouseEvent *event) {
 }
 
 void Viewer::mouseMoveEvent(QMouseEvent *event) {
-	layout->scroll_smooth(event->x() - mx, event->y() - my);
-	mx = event->x();
-	my = event->y();
-	update(); // TODO don't do this here
+	if (event->buttons() & Qt::LeftButton) {
+		layout->scroll_smooth(event->x() - mx, event->y() - my);
+		mx = event->x();
+		my = event->y();
+		update(); // TODO don't do this here
+	}
 }
 
 void Viewer::resizeEvent(QResizeEvent *event) {
