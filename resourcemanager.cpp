@@ -1,4 +1,5 @@
 #include "resourcemanager.h"
+#include "viewer.h"
 
 using namespace std;
 
@@ -13,6 +14,10 @@ Worker::Worker() :
 
 void Worker::setResManager(ResourceManager *rm) {
 	res = rm;
+}
+
+void Worker::connect_signal(Viewer *v) {
+	connect(this, SIGNAL(page_rendered(int)), v, SLOT(page_rendered(int)), Qt::UniqueConnection);
 }
 
 void Worker::run() {
@@ -71,7 +76,7 @@ void Worker::run() {
 		res->garbage.insert(page);
 		res->garbageMutex.unlock();
 
-		res->callback(res->caller);
+		emit page_rendered(page);
 	}
 }
 
@@ -167,15 +172,16 @@ void ResourceManager::reload_document() {
 #endif
 	requestSemaphore.acquire(requestSemaphore.available());
 	initialize();
+	set_viewer(viewer);
 }
 
 bool ResourceManager::is_null() const {
 	return (doc == NULL);
 }
 
-void ResourceManager::setFinishedCallback(void (*_callback)(Viewer *), Viewer *arg) {
-	callback = _callback;
-	caller = arg;
+void ResourceManager::set_viewer(Viewer *v) {
+	viewer = v;
+	worker->connect_signal(v);
 }
 
 QImage *ResourceManager::get_page(int page, int width) {

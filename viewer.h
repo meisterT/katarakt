@@ -30,9 +30,8 @@ protected:
 	void mouseMoveEvent(QMouseEvent *event);
 	void resizeEvent(QResizeEvent *event);
 
-	// I don't like member function pointers
-	// gets called when a page is ready -> need redraw
-	static void scheduleUpdate(Viewer *_this);
+private slots:
+	void page_rendered(int page);
 
 private:
 	ResourceManager *res;

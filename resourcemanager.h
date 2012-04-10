@@ -19,12 +19,18 @@ class Viewer;
 
 
 class Worker : public QThread {
+	Q_OBJECT
+
 public:
 	Worker();
 	void setResManager(ResourceManager *res);
+	void connect_signal(Viewer *v);
 	void run();
 
 	volatile bool die;
+
+signals:
+	void page_rendered(int page);
 
 private:
 	ResourceManager *res;
@@ -52,7 +58,7 @@ public:
 
 	void collect_garbage(int keep_min, int keep_max);
 
-	void setFinishedCallback(void (*_callback)(Viewer *), Viewer *arg);
+	void set_viewer(Viewer *v);
 
 private:
 	void enqueue(int page, int width);
@@ -80,8 +86,7 @@ private:
 	friend class Worker;
 
 	float *page_width, *page_height;
-	void (*callback)(Viewer *);
-	Viewer *caller;
+	Viewer *viewer;
 };
 
 #endif

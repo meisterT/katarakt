@@ -7,10 +7,9 @@ Viewer::Viewer(ResourceManager *_res, QWidget *parent) :
 		QWidget(parent),
 		res(_res) {
 	setFocusPolicy(Qt::StrongFocus);
-	res->setFinishedCallback(&scheduleUpdate, this);
+	res->set_viewer(this);
 
 	layout = new PresentationLayout(res);
-//	layout = new SequentialLayout(res);
 }
 
 Viewer::~Viewer() {
@@ -174,7 +173,8 @@ void Viewer::resizeEvent(QResizeEvent *event) {
 	update();
 }
 
-void Viewer::scheduleUpdate(Viewer *_this) {
-	_this->update();
+void Viewer::page_rendered(int /*page*/) {
+	// TODO use page, update selectively
+	update();
 }
 
