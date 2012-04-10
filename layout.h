@@ -15,7 +15,7 @@ public:
 	Layout(ResourceManager *_res, int _page = 0);
 	virtual ~Layout() {};
 
-	virtual int get_page();
+	virtual int get_page() const;
 	virtual void rebuild();
 	virtual void resize(int w, int h);
 	virtual void set_zoom(int new_zoom, bool relative = true);

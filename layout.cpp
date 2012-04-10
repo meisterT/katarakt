@@ -20,7 +20,7 @@ Layout::Layout(ResourceManager *_res, int _page) :
 		res(_res), page(_page), off_x(0), off_y(0), width(0), height(0) {
 }
 
-int Layout::get_page() {
+int Layout::get_page() const {
 	return page;
 }
 
@@ -176,12 +176,14 @@ void SequentialLayout::render(QPainter *painter) {
 //==[ GridLayout ]=============================================================
 GridLayout::GridLayout(ResourceManager *_res, int page, int columns) :
 		Layout(_res, page),
+		horizontal_page(0),
 		zoom(0) {
 	initialize(columns);
 }
 
 GridLayout::GridLayout(Layout& old_layout, int columns) :
 		Layout(old_layout),
+		horizontal_page(0),
 		zoom(0) {
 	initialize(columns);
 }
@@ -216,8 +218,8 @@ void GridLayout::set_constants() {
 	size *= (1 + zoom * ZOOM_FACTOR);
 	// TODO adjust offset values
 
-	horizontal_page = page % grid->get_column_count();
-	page -= horizontal_page;
+	horizontal_page = (page + horizontal_page) % grid->get_column_count();
+	page = page / grid->get_column_count() * grid->get_column_count();
 
 	total_height = 0;
 	for (int i = 0; i < grid->get_row_count(); i++) {
