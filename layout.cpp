@@ -75,20 +75,25 @@ void PresentationLayout::scroll_smooth(int /*dx*/, int /*dy*/) {
 }
 
 void PresentationLayout::render(QPainter *painter) {
-	int page_width;
+	int page_width = width, page_height = height;
 	int center_x = 0, center_y = 0;
 
 	// calculate perfect fit
 	if ((float) width / height > res->get_page_aspect(page)) {
-		page_width = res->get_page_aspect(page) * height;
+		page_width = res->get_page_aspect(page) * page_height;
 		center_x = (width - page_width) / 2;
 	} else {
-		page_width = width;
-		center_y = (height - page_width / res->get_page_aspect(page)) / 2;
+		page_height = ROUND(page_width / res->get_page_aspect(page));
+		center_y = (height - page_height) / 2;
 	}
 	QImage *img = res->get_page(page, page_width);
 	if (img != NULL) {
-		painter->drawImage(center_x, center_y, *img);
+		if (page_width != img->width()) { // draw scaled
+			QRect rect(center_x, center_y, page_width, page_height);
+			painter->drawImage(rect, *img);
+		} else { // draw as-is
+			painter->drawImage(center_x, center_y, *img);
+		}
 		res->unlock_page(page);
 	}
 
