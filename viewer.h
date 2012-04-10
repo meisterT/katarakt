@@ -39,6 +39,8 @@ private:
 
 	int mx, my;
 
+	bool draw_overlay;
+
 };
 
 #endif

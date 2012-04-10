@@ -5,7 +5,8 @@ using namespace std;
 
 Viewer::Viewer(ResourceManager *_res, QWidget *parent) :
 		QWidget(parent),
-		res(_res) {
+		res(_res),
+		draw_overlay(true) {
 	setFocusPolicy(Qt::StrongFocus);
 	res->set_viewer(this);
 
@@ -24,15 +25,18 @@ void Viewer::paintEvent(QPaintEvent * /*event*/) {
 	QString title = QString("page %1/%2")
 		.arg(layout->get_page() + 1)
 		.arg(res->get_page_count());
-	QRect size = QRect(0, 0, width(), height());
-	int flags = Qt::AlignBottom | Qt::AlignRight;
-	QRect bounding = painter.boundingRect(size, flags, title);
 
-	painter.setPen(Qt::NoPen);
-	painter.setBrush(QColor("#eeeeec"));
-	painter.drawRect(bounding);
-	painter.setPen(QColor("#2e3436"));
-	painter.drawText(size, flags, title);
+	if (draw_overlay) {
+		QRect size = QRect(0, 0, width(), height());
+		int flags = Qt::AlignBottom | Qt::AlignRight;
+		QRect bounding = painter.boundingRect(size, flags, title);
+
+		painter.setPen(Qt::NoPen);
+		painter.setBrush(QColor("#eeeeec"));
+		painter.drawRect(bounding);
+		painter.setPen(QColor("#2e3436"));
+		painter.drawText(size, flags, title);
+	}
 
 	setWindowTitle(title);
 }
@@ -145,6 +149,12 @@ void Viewer::keyPressEvent(QKeyEvent *event) {
 		case Qt::Key_R:
 			res->reload_document();
 			layout->rebuild();
+			update();
+			break;
+
+		// toggle overlay
+		case Qt::Key_T:
+			draw_overlay = not draw_overlay;
 			update();
 			break;
 
