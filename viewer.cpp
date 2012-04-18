@@ -11,10 +11,65 @@ Viewer::Viewer(ResourceManager *_res, QWidget *parent) :
 	res->set_viewer(this);
 
 	layout = new PresentationLayout(res);
+
+	// prints the string representation of a key
+//	cerr << QKeySequence(Qt::Key_Equal).toString().toUtf8().constData() << endl;
+
+	// key -> function mapping
+	add_sequence("1", &Viewer::set_presentation_layout);
+	add_sequence("2", &Viewer::set_grid_layout);
+
+	add_sequence("Space", &Viewer::page_down);
+	add_sequence("PgDown", &Viewer::page_down);
+	add_sequence("Down", &Viewer::page_down);
+
+	add_sequence("Backspace", &Viewer::page_up);
+	add_sequence("PgUp", &Viewer::page_up);
+	add_sequence("Up", &Viewer::page_up);
+
+	add_sequence("G", &Viewer::page_first);
+	add_sequence("Shift+G", &Viewer::page_last);
+
+	add_sequence("K", &Viewer::smooth_up);
+	add_sequence("J", &Viewer::smooth_down);
+	add_sequence("H", &Viewer::smooth_left);
+	add_sequence("L", &Viewer::smooth_right);
+
+	add_sequence("+", &Viewer::zoom_in);
+	add_sequence("=", &Viewer::zoom_in);
+	add_sequence("-", &Viewer::zoom_out);
+
+	add_sequence("]", &Viewer::columns_inc);
+	add_sequence("[", &Viewer::columns_dec);
+
+	add_sequence("F", &Viewer::toggle_fullscreen);
+	add_sequence("T", &Viewer::toggle_overlay);
+	add_sequence("R", &Viewer::reload);
+
+	add_sequence("Q", &Viewer::quit);
+	add_sequence("Esc", &Viewer::quit);
+	add_sequence("n,0,0,b", &Viewer::quit); // just messing around :)
 }
 
 Viewer::~Viewer() {
 	delete layout;
+}
+
+void Viewer::add_sequence(QString key, func_t action) {
+	QKeySequence s(key);
+	sequences[s] = action;
+	grabShortcut(s, Qt::WidgetShortcut);
+}
+
+bool Viewer::event(QEvent *event) {
+	if (event->type() == QEvent::Shortcut) {
+		QShortcutEvent *s = static_cast<QShortcutEvent*>(event);
+		if (sequences.find(s->key()) != sequences.end()) {
+			(this->*sequences[s->key()])();
+		}
+		return true;
+	}
+	return QWidget::event(event);
 }
 
 void Viewer::paintEvent(QPaintEvent * /*event*/) {
@@ -41,129 +96,6 @@ void Viewer::paintEvent(QPaintEvent * /*event*/) {
 	setWindowTitle(title);
 }
 
-void Viewer::keyPressEvent(QKeyEvent *event) {
-	switch (event->key()) {
-
-		// quit
-		case Qt::Key_Q:
-		case Qt::Key_Escape:
-			QCoreApplication::exit(0);
-			break;
-
-		// scroll whole page
-		case Qt::Key_Space:
-		case Qt::Key_Down:
-			layout->scroll_page(1);
-			update();
-			break;
-		case Qt::Key_Backspace:
-		case Qt::Key_Up:
-			layout->scroll_page(-1);
-			update();
-			break;
-
-		// scroll smoothly
-		case Qt::Key_J:
-			layout->scroll_smooth(0, -30);
-			update();
-			break;
-		case Qt::Key_K:
-			layout->scroll_smooth(0, 30);
-			update();
-			break;
-		case Qt::Key_H:
-			layout->scroll_smooth(30, 0);
-			update();
-			break;
-		case Qt::Key_L:
-			layout->scroll_smooth(-30, 0);
-			update();
-			break;
-
-		// scroll to absolute position
-		case Qt::Key_G:
-			// TODO off_y = 0
-			layout->scroll_page(0, false);
-			update();
-			break;
-		case Qt::Key_B:
-			layout->scroll_page(res->get_page_count() - 1, false);
-			update();
-			break;
-
-		// change layout
-		case Qt::Key_1:
-			{
-				Layout *old_layout = layout;
-				layout = new PresentationLayout(*old_layout);
-				delete old_layout;
-				update();
-				break;
-			}
-/*		case Qt::Key_2:
-			{
-				Layout *old_layout = layout;
-				layout = new SequentialLayout(*old_layout);
-				delete old_layout;
-				update();
-				break;
-			} */
-		case Qt::Key_2:
-			{
-				Layout *old_layout = layout;
-				layout = new GridLayout(*old_layout);
-				delete old_layout;
-				update();
-				break;
-			}
-
-		// set zoom
-		case Qt::Key_Plus:
-		case Qt::Key_Equal:
-			layout->set_zoom(1);
-			update();
-			break;
-		case Qt::Key_Minus:
-			layout->set_zoom(-1);
-			update();
-			break;
-
-		// set columns
-		case Qt::Key_BracketLeft:
-			layout->set_columns(-1);
-			update();
-			break;
-		case Qt::Key_BracketRight:
-			layout->set_columns(1);
-			update();
-			break;
-
-		// toggle fullscreen
-		case Qt::Key_F5:
-		case Qt::Key_F:
-			 setWindowState(windowState() ^ Qt::WindowFullScreen);
-			 update();
-			 break;
-
-		// reload document
-		case Qt::Key_R:
-			res->reload_document();
-			layout->rebuild();
-			update();
-			break;
-
-		// toggle overlay
-		case Qt::Key_T:
-			draw_overlay = not draw_overlay;
-			update();
-			break;
-
-		default:
-			QWidget::keyPressEvent(event);
-			break;
-	}
-}
-
 void Viewer::mousePressEvent(QMouseEvent *event) {
 	if (event->button() == Qt::LeftButton) {
 		mx = event->x();
@@ -183,6 +115,102 @@ void Viewer::mouseMoveEvent(QMouseEvent *event) {
 void Viewer::resizeEvent(QResizeEvent *event) {
 	layout->resize(event->size().width(), event->size().height());
 	update();
+}
+
+// primitive actions
+// TODO find a more compact way?
+void Viewer::set_presentation_layout() {
+	Layout *old_layout = layout;
+	layout = new PresentationLayout(*old_layout);
+	delete old_layout;
+	update();
+}
+
+void Viewer::set_grid_layout() {
+	Layout *old_layout = layout;
+	layout = new GridLayout(*old_layout);
+	delete old_layout;
+	update();
+}
+
+void Viewer::page_up() {
+	layout->scroll_page(-1);
+	update();
+}
+
+void Viewer::page_down() {
+	layout->scroll_page(1);
+	update();
+}
+
+void Viewer::page_first() {
+	layout->scroll_page(-1, false);
+	update();
+}
+
+void Viewer::page_last() {
+	layout->scroll_page(res->get_page_count(), false);
+	update();
+}
+
+void Viewer::smooth_up() {
+	layout->scroll_smooth(0, 30);
+	update();
+}
+
+void Viewer::smooth_down() {
+	layout->scroll_smooth(0, -30);
+	update();
+}
+
+void Viewer::smooth_left() {
+	layout->scroll_smooth(30, 0);
+	update();
+}
+
+void Viewer::smooth_right() {
+	layout->scroll_smooth(-30, 0);
+	update();
+}
+
+void Viewer::zoom_in() {
+	layout->set_zoom(1);
+	update();
+}
+
+void Viewer::zoom_out() {
+	layout->set_zoom(-1);
+	update();
+}
+
+void Viewer::columns_inc() {
+	layout->set_columns(1);
+	update();
+}
+
+void Viewer::columns_dec() {
+	layout->set_columns(-1);
+	update();
+}
+
+void Viewer::toggle_fullscreen() {
+	setWindowState(windowState() ^ Qt::WindowFullScreen);
+	update();
+}
+
+void Viewer::toggle_overlay() {
+	draw_overlay = not draw_overlay;
+	update();
+}
+
+void Viewer::reload() {
+	res->reload_document();
+	layout->rebuild();
+	update();
+}
+
+void Viewer::quit() {
+	QCoreApplication::exit(0);
 }
 
 void Viewer::page_rendered(int /*page*/) {
