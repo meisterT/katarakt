@@ -112,6 +112,17 @@ void Viewer::mouseMoveEvent(QMouseEvent *event) {
 	}
 }
 
+void Viewer::wheelEvent(QWheelEvent *event) {
+	int d = event->delta();
+	if (event->orientation() == Qt::Vertical) {
+		layout->scroll_smooth(0, d);
+		update();
+	} else { // TODO untested
+		layout->scroll_smooth(d, 0);
+		update();
+	}
+}
+
 void Viewer::resizeEvent(QResizeEvent *event) {
 	layout->resize(event->size().width(), event->size().height());
 	update();

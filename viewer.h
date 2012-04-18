@@ -8,6 +8,7 @@
 #include <QString>
 //#include <QKeyEvent>
 #include <QMouseEvent>
+#include <QWheelEvent>
 #include <QCoreApplication>
 #include <QResizeEvent>
 #include <QKeySequence>
@@ -37,6 +38,7 @@ protected:
 //	void keyPressEvent(QKeyEvent *event);
 	void mousePressEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
+	void wheelEvent(QWheelEvent *event);
 	void resizeEvent(QResizeEvent *event);
 
 private slots:
