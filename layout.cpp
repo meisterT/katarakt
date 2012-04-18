@@ -379,16 +379,18 @@ void GridLayout::scroll_page(int new_page, bool relative) {
 void GridLayout::render(QPainter *painter) {
 	// vertical
 	int cur_page = page;
-	int page_height; // implicit rounding
+	int grid_height; // implicit rounding
 	int hpos = off_y;
-	while ((page_height = ROUND(grid->get_height(cur_page) * size)) > 0 && hpos < height) {
+	while ((grid_height = ROUND(grid->get_height(cur_page) * size)) > 0 && hpos < height) {
 		// horizontal
 		int cur_col = horizontal_page;
-		int page_width; // implicit rounding
+		int grid_width; // implicit rounding
 		int wpos = off_x;
-		while ((page_width = grid->get_width(cur_col) * size) > 0 &&
+		while ((grid_width = grid->get_width(cur_col) * size) > 0 &&
 				cur_col < grid->get_column_count() &&
 				wpos < width) {
+			int page_width = res->get_page_width(cur_page + cur_col) * size;
+			int page_height = ROUND(res->get_page_height(cur_page + cur_col) * size);
 			QImage *img = res->get_page(cur_page + cur_col, page_width);
 			if (img != NULL) {
 /*				// debugging
@@ -397,18 +399,20 @@ void GridLayout::render(QPainter *painter) {
 					// TODO fix this?
 					cerr << "image is " << (a - b) << " pixels bigger than expected" << endl;
 				} */
+				int center_x = (grid_width - page_width) / 2;
+				int center_y = (grid_height - page_height) / 2;
 				if (page_width != img->width()) { // draw scaled
-					QRect rect(wpos, hpos, page_width, page_height);
+					QRect rect(wpos + center_x, hpos + center_y, page_width, page_height);
 					painter->drawImage(rect, *img);
 				} else { // draw as-is
-					painter->drawImage(wpos, hpos, *img);
+					painter->drawImage(wpos + center_x, hpos + center_y, *img);
 				}
 				res->unlock_page(cur_page + cur_col);
 			}
-			wpos += page_width + USELESS_GAP;
+			wpos += grid_width + USELESS_GAP;
 			cur_col++;
 		}
-		hpos += page_height + USELESS_GAP;
+		hpos += grid_height + USELESS_GAP;
 		cur_page += grid->get_column_count();
 	}
 	res->collect_garbage(page - 6, cur_page + 6);
