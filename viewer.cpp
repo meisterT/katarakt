@@ -47,7 +47,6 @@ Viewer::Viewer(ResourceManager *_res, QWidget *parent) :
 	add_sequence("R", &Viewer::reload);
 
 	add_sequence("Q", &Viewer::quit);
-	add_sequence("Esc", &Viewer::quit);
 	add_sequence("n,0,0,b", &Viewer::quit); // just messing around :)
 }
 
