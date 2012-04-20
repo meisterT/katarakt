@@ -3,6 +3,8 @@
 using namespace std;
 
 
+int Viewer::sig_fd[2];
+
 Viewer::Viewer(ResourceManager *_res, QWidget *parent) :
 		QWidget(parent),
 		res(_res),
@@ -11,6 +13,24 @@ Viewer::Viewer(ResourceManager *_res, QWidget *parent) :
 	res->set_viewer(this);
 
 	layout = new PresentationLayout(res);
+
+	// setup signal handling
+	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sig_fd) == -1) {
+		perror("socketpair");
+		// TODO exit
+	}
+	sig_notifier = new QSocketNotifier(sig_fd[1], QSocketNotifier::Read, this);
+	connect(sig_notifier, SIGNAL(activated(int)), this, SLOT(handle_signal()));
+
+	struct sigaction usr;
+	usr.sa_handler = Viewer::signal_handler;
+	sigemptyset(&usr.sa_mask);
+	usr.sa_flags = SA_RESTART;
+
+	if (sigaction(SIGUSR1, &usr, 0) > 0) {
+		perror("sigaction");
+		// TODO exit
+	}
 
 	// prints the string representation of a key
 //	cerr << QKeySequence(Qt::Key_Equal).toString().toUtf8().constData() << endl;
@@ -51,7 +71,29 @@ Viewer::Viewer(ResourceManager *_res, QWidget *parent) :
 }
 
 Viewer::~Viewer() {
+	::close(sig_fd[0]);
+	::close(sig_fd[1]);
+	delete sig_notifier;
 	delete layout;
+}
+
+void Viewer::signal_handler(int /*unused*/) {
+	char tmp = '1';
+	if (write(sig_fd[0], &tmp, sizeof(char)) < 0) {
+		perror("write");
+	}
+}
+
+void Viewer::handle_signal() {
+	sig_notifier->setEnabled(false);
+	char tmp;
+	if (read(sig_fd[1], &tmp, sizeof(char)) < 0) {
+		perror("read");
+	}
+
+	reload();
+
+	sig_notifier->setEnabled(true);
 }
 
 void Viewer::add_sequence(QString key, func_t action) {

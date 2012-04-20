@@ -12,8 +12,12 @@
 #include <QCoreApplication>
 #include <QResizeEvent>
 #include <QKeySequence>
+#include <QSocketNotifier>
 #include <iostream>
 #include <map>
+#include <sys/socket.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include "resourcemanager.h"
 #include "layout.h"
@@ -29,6 +33,11 @@ class Viewer : public QWidget {
 public:
 	Viewer(ResourceManager *res, QWidget *parent = 0);
 	~Viewer();
+
+	// signal handling
+	static void signal_handler(int unused);
+public slots:
+	void handle_signal();
 
 protected:
 	// QT event handling
@@ -76,6 +85,10 @@ private:
 	int mx, my;
 
 	bool draw_overlay;
+
+	// signal handling
+	static int sig_fd[2];
+	QSocketNotifier *sig_notifier;
 
 };
 
