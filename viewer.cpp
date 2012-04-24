@@ -1,4 +1,8 @@
 #include "viewer.h"
+#include <csignal>
+#include <cstring>
+#include <cerrno>
+#include <unistd.h>
 
 using namespace std;
 
@@ -16,7 +20,7 @@ Viewer::Viewer(ResourceManager *_res, QWidget *parent) :
 
 	// setup signal handling
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sig_fd) == -1) {
-		perror("socketpair");
+		cerr << "socketpair: " << strerror(errno) << endl;
 		// TODO exit
 	}
 	sig_notifier = new QSocketNotifier(sig_fd[1], QSocketNotifier::Read, this);
@@ -28,7 +32,7 @@ Viewer::Viewer(ResourceManager *_res, QWidget *parent) :
 	usr.sa_flags = SA_RESTART;
 
 	if (sigaction(SIGUSR1, &usr, 0) > 0) {
-		perror("sigaction");
+		cerr << "sigaction: " << strerror(errno) << endl;
 		// TODO exit
 	}
 
@@ -80,7 +84,7 @@ Viewer::~Viewer() {
 void Viewer::signal_handler(int /*unused*/) {
 	char tmp = '1';
 	if (write(sig_fd[0], &tmp, sizeof(char)) < 0) {
-		perror("write");
+		cerr << "write: " << strerror(errno) << endl;
 	}
 }
 
@@ -88,7 +92,7 @@ void Viewer::handle_signal() {
 	sig_notifier->setEnabled(false);
 	char tmp;
 	if (read(sig_fd[1], &tmp, sizeof(char)) < 0) {
-		perror("read");
+		cerr << "read: " << strerror(errno) << endl;
 	}
 
 	reload();

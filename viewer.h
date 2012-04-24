@@ -16,8 +16,6 @@
 #include <iostream>
 #include <map>
 #include <sys/socket.h>
-#include <signal.h>
-#include <unistd.h>
 
 #include "resourcemanager.h"
 #include "layout.h"
