@@ -10,7 +10,7 @@
 int main(int argc, char *argv[]) {
 	using namespace std;
 	QApplication app(argc, argv);
-	app.setPalette(QPalette(QColor(255, 255, 255), QColor(0, 0, 0)));
+//	app.setPalette(QPalette(QColor(255, 255, 255), QColor(0, 0, 0)));
 
 	if (argc != 2) {
 		cerr << "usage: " << argv[0] << " <path>" << endl;

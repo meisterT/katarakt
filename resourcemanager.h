@@ -15,7 +15,7 @@
 
 
 class ResourceManager;
-class Viewer;
+class Canvas;
 
 
 class Worker : public QThread {
@@ -24,7 +24,7 @@ class Worker : public QThread {
 public:
 	Worker();
 	void setResManager(ResourceManager *res);
-	void connect_signal(Viewer *v);
+	void connect_signal(Canvas *c);
 	void run();
 
 	volatile bool die;
@@ -58,7 +58,7 @@ public:
 
 	void collect_garbage(int keep_min, int keep_max);
 
-	void set_viewer(Viewer *v);
+	void set_canvas(Canvas *c);
 
 private:
 	void enqueue(int page, int width);
@@ -86,7 +86,7 @@ private:
 	friend class Worker;
 
 	float *page_width, *page_height;
-	Viewer *viewer;
+	Canvas *canvas;
 };
 
 #endif

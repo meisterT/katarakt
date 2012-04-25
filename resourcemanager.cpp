@@ -1,5 +1,5 @@
 #include "resourcemanager.h"
-#include "viewer.h"
+#include "canvas.h"
 
 using namespace std;
 
@@ -16,8 +16,8 @@ void Worker::setResManager(ResourceManager *rm) {
 	res = rm;
 }
 
-void Worker::connect_signal(Viewer *v) {
-	connect(this, SIGNAL(page_rendered(int)), v, SLOT(page_rendered(int)), Qt::UniqueConnection);
+void Worker::connect_signal(Canvas *c) {
+	connect(this, SIGNAL(page_rendered(int)), c, SLOT(page_rendered(int)), Qt::UniqueConnection);
 }
 
 void Worker::run() {
@@ -172,16 +172,16 @@ void ResourceManager::reload_document() {
 #endif
 	requestSemaphore.acquire(requestSemaphore.available());
 	initialize();
-	set_viewer(viewer);
+	set_canvas(canvas);
 }
 
 bool ResourceManager::is_null() const {
 	return (doc == NULL);
 }
 
-void ResourceManager::set_viewer(Viewer *v) {
-	viewer = v;
-	worker->connect_signal(v);
+void ResourceManager::set_canvas(Canvas *c) {
+	canvas = c;
+	worker->connect_signal(c);
 }
 
 QImage *ResourceManager::get_page(int page, int width) {
