@@ -13,8 +13,8 @@ Grid::Grid(ResourceManager *_res, int columns) :
 }
 
 Grid::~Grid() {
-	delete width;
-	delete height;
+	delete[] width;
+	delete[] height;
 }
 
 void Grid::set_columns(int columns) {
@@ -57,8 +57,8 @@ int Grid::get_row_count() const {
 }
 
 void Grid::rebuild_cells() {
-	delete width;
-	delete height;
+	delete[] width;
+	delete[] height;
 
 	// implicit ceil
 	row_count = (res->get_page_count() + column_count - 1) / column_count;
