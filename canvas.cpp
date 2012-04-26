@@ -13,7 +13,8 @@ int Canvas::sig_fd[2];
 Canvas::Canvas(ResourceManager *_res, QWidget *parent) :
 		QWidget(parent),
 		res(_res),
-		draw_overlay(true) {
+		draw_overlay(true),
+		valid(true) {
 	setFocusPolicy(Qt::StrongFocus);
 	res->set_canvas(this);
 
@@ -22,7 +23,9 @@ Canvas::Canvas(ResourceManager *_res, QWidget *parent) :
 	// setup signal handling
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sig_fd) == -1) {
 		cerr << "socketpair: " << strerror(errno) << endl;
-		// TODO exit
+		valid = false;
+		sig_notifier = NULL;
+		return;
 	}
 	sig_notifier = new QSocketNotifier(sig_fd[1], QSocketNotifier::Read, this);
 	connect(sig_notifier, SIGNAL(activated(int)), this, SLOT(handle_signal()));
@@ -34,7 +37,8 @@ Canvas::Canvas(ResourceManager *_res, QWidget *parent) :
 
 	if (sigaction(SIGUSR1, &usr, 0) > 0) {
 		cerr << "sigaction: " << strerror(errno) << endl;
-		// TODO exit
+		valid = false;
+		return;
 	}
 
 	// prints the string representation of a key
@@ -82,6 +86,10 @@ Canvas::~Canvas() {
 	::close(sig_fd[1]);
 	delete sig_notifier;
 	delete layout;
+}
+
+bool Canvas::is_valid() const {
+	return valid;
 }
 
 void Canvas::signal_handler(int /*unused*/) {

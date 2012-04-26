@@ -44,8 +44,8 @@ public:
 
 	void reload_document();
 
-	// document not open?
-	bool is_null() const;
+	// document opened correctly?
+	bool is_valid() const;
 
 	// page (meta)data
 	QImage *get_page(int page, int newWidth);

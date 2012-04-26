@@ -175,8 +175,8 @@ void ResourceManager::reload_document() {
 	set_canvas(canvas);
 }
 
-bool ResourceManager::is_null() const {
-	return (doc == NULL);
+bool ResourceManager::is_valid() const {
+	return (doc != NULL);
 }
 
 void ResourceManager::set_canvas(Canvas *c) {

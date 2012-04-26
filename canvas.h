@@ -33,6 +33,7 @@ public:
 	Canvas(ResourceManager *res, QWidget *parent = 0);
 	~Canvas();
 
+	bool is_valid() const;
 	// signal handling
 	static void signal_handler(int unused);
 public slots:
@@ -88,6 +89,7 @@ private:
 	// signal handling
 	static int sig_fd[2];
 	QSocketNotifier *sig_notifier;
+	bool valid;
 
 };
 

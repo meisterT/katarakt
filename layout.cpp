@@ -34,7 +34,7 @@ void Layout::resize(int w, int h) {
 }
 
 void Layout::set_zoom(int /*new_zoom*/, bool /*relative*/) {
-	// TODO implement in all the child classes
+	// implement in child classes where necessary
 }
 
 void Layout::set_columns(int /*new_columns*/, bool /*relative*/) {
@@ -216,7 +216,6 @@ void GridLayout::set_constants() {
 
 	// apply zoom value
 	size *= (1 + zoom * ZOOM_FACTOR);
-	// TODO adjust offset values
 
 	horizontal_page = (page + horizontal_page) % grid->get_column_count();
 	page = page / grid->get_column_count() * grid->get_column_count();

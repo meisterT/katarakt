@@ -2,8 +2,15 @@
 
 
 Viewer::Viewer(ResourceManager *res, QWidget *parent) :
-		QWidget(parent) {
+		QWidget(parent),
+		valid(true) {
 	canvas = new Canvas(res, this);
+	if (!canvas->is_valid()) {
+		valid = false;
+		search_bar = NULL;
+		layout = NULL;
+		return;
+	}
 
 	search_bar = new QLineEdit(this);
 	// TODO these sequences conflict between widgets
@@ -27,6 +34,10 @@ Viewer::~Viewer() {
 	delete layout;
 	delete search_bar;
 	delete canvas;
+}
+
+bool Viewer::is_valid() const {
+	return valid;
 }
 
 void Viewer::focus_search() {

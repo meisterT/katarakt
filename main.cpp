@@ -18,10 +18,13 @@ int main(int argc, char *argv[]) {
 	}
 
 	ResourceManager res(QString::fromUtf8(argv[1]));
-	if (res.is_null()) {
+	if (!res.is_valid()) {
 		return 1;
 	}
 	Viewer katarakt(&res);
+	if (!katarakt.is_valid()) {
+		return 1;
+	}
 	katarakt.show();
 
 	return app.exec();

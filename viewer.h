@@ -20,6 +20,7 @@ public:
 	Viewer(ResourceManager *res, QWidget *parent = 0);
 	~Viewer();
 
+	bool is_valid() const;
 	void focus_search();
 
 protected:
@@ -36,6 +37,7 @@ private:
 
 	// key sequences
 	std::map<QKeySequence,func_t> sequences;
+	bool valid;
 };
 
 #endif
