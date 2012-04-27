@@ -39,10 +39,11 @@ private:
 
 class ResourceManager {
 public:
-	ResourceManager(QString file);
+	ResourceManager(QString _file);
 	~ResourceManager();
 
 	void reload_document();
+	QString get_file() const;
 
 	// document opened correctly?
 	bool is_valid() const;

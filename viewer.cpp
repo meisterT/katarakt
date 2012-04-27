@@ -1,4 +1,5 @@
 #include "viewer.h"
+#include <QFileInfo>
 
 
 Viewer::Viewer(ResourceManager *res, QWidget *parent) :
@@ -22,11 +23,13 @@ Viewer::Viewer(ResourceManager *res, QWidget *parent) :
 	layout->setSpacing(0);
 	layout->addWidget(canvas);
 	layout->addWidget(search_bar);
-	this->setLayout(layout);
+	setLayout(layout);
 
-	this->setMinimumSize(50, 50);
-	this->resize(500, 500);
-	this->show();
+	QFileInfo info(res->get_file());
+	setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
+	setMinimumSize(50, 50);
+	resize(500, 500);
+	show();
 	search_bar->hide();
 }
 

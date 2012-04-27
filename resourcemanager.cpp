@@ -175,6 +175,10 @@ void ResourceManager::reload_document() {
 	set_canvas(canvas);
 }
 
+QString ResourceManager::get_file() const {
+	return file;
+}
+
 bool ResourceManager::is_valid() const {
 	return (doc != NULL);
 }

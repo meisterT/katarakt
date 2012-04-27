@@ -149,8 +149,6 @@ void Canvas::paintEvent(QPaintEvent * /*event*/) {
 		painter.setPen(QColor("#2e3436"));
 		painter.drawText(size, flags, title);
 	}
-
-	setWindowTitle(title);
 }
 
 void Canvas::mousePressEvent(QMouseEvent *event) {
