@@ -286,6 +286,8 @@ void GridLayout::set_zoom(int new_zoom, bool relative) {
 	float old_factor = 1 + zoom * ZOOM_FACTOR;
 	if (relative) {
 		zoom += new_zoom;
+	} else {
+		zoom = new_zoom;
 	}
 	if (zoom < MIN_ZOOM) {
 		zoom = MIN_ZOOM;
