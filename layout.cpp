@@ -41,6 +41,11 @@ void Layout::set_columns(int /*new_columns*/, bool /*relative*/) {
 	// only useful for grid layout
 }
 
+bool Layout::supports_smooth_scrolling() {
+	// normally a layout supports smooth scrolling
+	return true;
+}
+
 void Layout::scroll_smooth(int dx, int dy) {
 	off_x += dx;
 	off_y += dy;
@@ -68,6 +73,10 @@ PresentationLayout::PresentationLayout(ResourceManager *_res, int page) :
 
 PresentationLayout::PresentationLayout(Layout& old_layout) :
 		Layout(old_layout) {
+}
+
+bool PresentationLayout::supports_smooth_scrolling() {
+	return false;
 }
 
 void PresentationLayout::scroll_smooth(int /*dx*/, int /*dy*/) {

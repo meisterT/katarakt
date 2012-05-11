@@ -60,8 +60,8 @@ Canvas::Canvas(ResourceManager *_res, QWidget *parent) :
 	add_sequence("Shift+G", &Canvas::page_last);
 	add_sequence("C-x", &Canvas::page_last);
 
-	add_sequence("K", &Canvas::smooth_up);
-	add_sequence("J", &Canvas::smooth_down);
+	add_sequence("K", &Canvas::auto_smooth_up);
+	add_sequence("J", &Canvas::auto_smooth_down);
 	add_sequence("H", &Canvas::smooth_left);
 	add_sequence("L", &Canvas::smooth_right);
 
@@ -219,6 +219,22 @@ void Canvas::page_last() {
 	update();
 }
 
+void Canvas::auto_smooth_up() {
+	if (layout->supports_smooth_scrolling()) {
+		smooth_up();
+	} else {
+		page_up();
+	}
+}
+
+void Canvas::auto_smooth_down() {
+	if (layout->supports_smooth_scrolling()) {
+		smooth_down();
+	} else {
+		page_down();
+	}
+}
+
 void Canvas::smooth_up() {
 	layout->scroll_smooth(0, 30);
 	update();
@@ -228,6 +244,7 @@ void Canvas::smooth_down() {
 	layout->scroll_smooth(0, -30);
 	update();
 }
+
 
 void Canvas::smooth_left() {
 	layout->scroll_smooth(30, 0);

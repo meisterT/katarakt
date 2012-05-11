@@ -61,6 +61,8 @@ private:
 	void page_down();
 	void page_first();
 	void page_last();
+	void auto_smooth_up();
+	void auto_smooth_down();
 	void smooth_up();
 	void smooth_down();
 	void smooth_left();

@@ -21,6 +21,7 @@ public:
 	virtual void set_zoom(int new_zoom, bool relative = true);
 	virtual void set_columns(int new_columns, bool relative = true);
 
+	virtual bool supports_smooth_scrolling();
 	virtual void scroll_smooth(int dx, int dy);
 	virtual void scroll_page(int new_page, bool relative = true);
 	virtual void render(QPainter *painter) = 0;
@@ -39,6 +40,7 @@ public:
 	PresentationLayout(Layout& old_layout);
 	~PresentationLayout() {};
 
+	bool supports_smooth_scrolling();
 	void scroll_smooth(int dx, int dy);
 	void render(QPainter *painter);
 };
