@@ -68,6 +68,7 @@ Canvas::Canvas(ResourceManager *_res, QWidget *parent) :
 	add_sequence("+", &Canvas::zoom_in);
 	add_sequence("=", &Canvas::zoom_in);
 	add_sequence("-", &Canvas::zoom_out);
+	add_sequence("z,z", &Canvas::reset_zoom);
 
 	add_sequence("]", &Canvas::columns_inc);
 	add_sequence("[", &Canvas::columns_dec);
@@ -263,6 +264,11 @@ void Canvas::zoom_in() {
 
 void Canvas::zoom_out() {
 	layout->set_zoom(-1);
+	update();
+}
+
+void Canvas::reset_zoom() {
+	layout->set_zoom(0, false);
 	update();
 }
 

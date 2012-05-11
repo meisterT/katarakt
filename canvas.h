@@ -69,6 +69,7 @@ private:
 	void smooth_right();
 	void zoom_in();
 	void zoom_out();
+	void reset_zoom();
 	void columns_inc();
 	void columns_dec();
 	void toggle_overlay();
