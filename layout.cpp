@@ -83,6 +83,13 @@ void PresentationLayout::scroll_smooth(int /*dx*/, int /*dy*/) {
 	// ignore smooth scrolling
 }
 
+int PresentationLayout::calculate_fit_width(int page) {
+	if ((float) width / height > res->get_page_aspect(page)) {
+		return res->get_page_aspect(page) * height;
+	}
+	return width;
+}
+
 void PresentationLayout::render(QPainter *painter) {
 	int page_width = width, page_height = height;
 	int center_x = 0, center_y = 0;
@@ -107,16 +114,16 @@ void PresentationLayout::render(QPainter *painter) {
 	}
 
 	// prefetch - order should be important
-	if (res->get_page(page + 1, page_width) != NULL) { // one after
+	if (res->get_page(page + 1, calculate_fit_width(page + 1)) != NULL) { // one after
 		res->unlock_page(page + 1);
 	}
-	if (res->get_page(page - 1, page_width) != NULL) { // one before
+	if (res->get_page(page - 1, calculate_fit_width(page - 1)) != NULL) { // one before
 		res->unlock_page(page - 1);
 	}
-	if (res->get_page(page + 2, page_width) != NULL) { // two after
+	if (res->get_page(page + 2, calculate_fit_width(page + 2)) != NULL) { // two after
 		res->unlock_page(page + 2);
 	}
-	if (res->get_page(page - 2, page_width) != NULL) { // two before
+	if (res->get_page(page - 2, calculate_fit_width(page - 2)) != NULL) { // two before
 		res->unlock_page(page - 2);
 	}
 	res->collect_garbage(page - 4, page + 4);

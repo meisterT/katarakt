@@ -43,6 +43,9 @@ public:
 	bool supports_smooth_scrolling();
 	void scroll_smooth(int dx, int dy);
 	void render(QPainter *painter);
+
+private:
+	int calculate_fit_width(int page);
 };
 
 class SequentialLayout : public Layout {
