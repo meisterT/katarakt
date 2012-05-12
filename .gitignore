@@ -2,3 +2,5 @@ katarakt
 *.o
 .*.swp
 *~
+moc_*.cpp
+Makefile
