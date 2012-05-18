@@ -27,7 +27,10 @@ int Layout::get_page() const {
 }
 
 void Layout::rebuild() {
-	// does nothing here
+	// clamp to available pages
+	if (page >= res->get_page_count()) {
+		page = res->get_page_count() - 1;
+	}
 }
 
 void Layout::resize(int w, int h) {
@@ -280,6 +283,7 @@ void GridLayout::set_constants() {
 }
 
 void GridLayout::rebuild() {
+	Layout::rebuild();
 	// rebuild non-dynamic data
 	int columns = grid->get_column_count();
 	delete grid;
