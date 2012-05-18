@@ -1,45 +1,19 @@
 #include "canvas.h"
-#include <csignal>
-#include <cstring>
-#include <cerrno>
-#include <unistd.h>
 #include "viewer.h"
+#include "layout.h"
+#include "resourcemanager.h"
 
 using namespace std;
 
 
-int Canvas::sig_fd[2];
-
-Canvas::Canvas(ResourceManager *_res, QWidget *parent) :
+Canvas::Canvas(Viewer *v, QWidget *parent) :
 		QWidget(parent),
-		res(_res),
+		viewer(v),
 		draw_overlay(true),
 		valid(true) {
 	setFocusPolicy(Qt::StrongFocus);
-	res->set_canvas(this);
 
-	layout = new PresentationLayout(res);
-
-	// setup signal handling
-	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sig_fd) == -1) {
-		cerr << "socketpair: " << strerror(errno) << endl;
-		valid = false;
-		sig_notifier = NULL;
-		return;
-	}
-	sig_notifier = new QSocketNotifier(sig_fd[1], QSocketNotifier::Read, this);
-	connect(sig_notifier, SIGNAL(activated(int)), this, SLOT(handle_signal()));
-
-	struct sigaction usr;
-	usr.sa_handler = Canvas::signal_handler;
-	sigemptyset(&usr.sa_mask);
-	usr.sa_flags = SA_RESTART;
-
-	if (sigaction(SIGUSR1, &usr, 0) > 0) {
-		cerr << "sigaction: " << strerror(errno) << endl;
-		valid = false;
-		return;
-	}
+	layout = new PresentationLayout(viewer->get_res());
 
 	// prints the string representation of a key
 //	cerr << QKeySequence(Qt::Key_Equal).toString().toUtf8().constData() << endl;
@@ -74,7 +48,6 @@ Canvas::Canvas(ResourceManager *_res, QWidget *parent) :
 	add_sequence("[", &Canvas::columns_dec);
 
 	add_sequence("T", &Canvas::toggle_overlay);
-	add_sequence("R", &Canvas::reload);
 
 	add_sequence("Q", &Canvas::quit);
 	add_sequence("n,0,0,b", &Canvas::quit); // just messing around :)
@@ -83,9 +56,6 @@ Canvas::Canvas(ResourceManager *_res, QWidget *parent) :
 }
 
 Canvas::~Canvas() {
-	::close(sig_fd[0]);
-	::close(sig_fd[1]);
-	delete sig_notifier;
 	delete layout;
 }
 
@@ -93,23 +63,9 @@ bool Canvas::is_valid() const {
 	return valid;
 }
 
-void Canvas::signal_handler(int /*unused*/) {
-	char tmp = '1';
-	if (write(sig_fd[0], &tmp, sizeof(char)) < 0) {
-		cerr << "write: " << strerror(errno) << endl;
-	}
-}
-
-void Canvas::handle_signal() {
-	sig_notifier->setEnabled(false);
-	char tmp;
-	if (read(sig_fd[1], &tmp, sizeof(char)) < 0) {
-		cerr << "read: " << strerror(errno) << endl;
-	}
-
-	reload();
-
-	sig_notifier->setEnabled(true);
+void Canvas::reload() {
+	layout->rebuild();
+	update();
 }
 
 void Canvas::add_sequence(QString key, func_t action) {
@@ -137,7 +93,7 @@ void Canvas::paintEvent(QPaintEvent * /*event*/) {
 
 	QString title = QString("page %1/%2")
 		.arg(layout->get_page() + 1)
-		.arg(res->get_page_count());
+		.arg(viewer->get_res()->get_page_count());
 
 	if (draw_overlay) {
 		QRect size = QRect(0, 0, width(), height());
@@ -216,7 +172,7 @@ void Canvas::page_first() {
 }
 
 void Canvas::page_last() {
-	layout->scroll_page(res->get_page_count(), false);
+	layout->scroll_page(viewer->get_res()->get_page_count(), false);
 	update();
 }
 
@@ -284,12 +240,6 @@ void Canvas::columns_dec() {
 
 void Canvas::toggle_overlay() {
 	draw_overlay = not draw_overlay;
-	update();
-}
-
-void Canvas::reload() {
-	res->reload_document();
-	layout->rebuild();
 	update();
 }
 

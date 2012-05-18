@@ -12,16 +12,13 @@
 #include <QCoreApplication>
 #include <QResizeEvent>
 #include <QKeySequence>
-#include <QSocketNotifier>
 #include <iostream>
 #include <map>
 #include <sys/socket.h>
 
-#include "resourcemanager.h"
-#include "layout.h"
 
-
-class Canvas;
+class Viewer;
+class Layout;
 
 
 class Canvas : public QWidget {
@@ -30,14 +27,11 @@ class Canvas : public QWidget {
 	typedef void (Canvas::*func_t)();
 
 public:
-	Canvas(ResourceManager *res, QWidget *parent = 0);
+	Canvas(Viewer *v, QWidget *parent = 0);
 	~Canvas();
 
 	bool is_valid() const;
-	// signal handling
-	static void signal_handler(int unused);
-public slots:
-	void handle_signal();
+	void reload();
 
 protected:
 	// QT event handling
@@ -73,13 +67,12 @@ private:
 	void columns_inc();
 	void columns_dec();
 	void toggle_overlay();
-	void reload();
 	void quit();
 	void search();
 
 	void add_sequence(QString key, func_t action);
 
-	ResourceManager *res;
+	Viewer *viewer;
 	Layout *layout;
 
 	// key sequences
@@ -89,9 +82,6 @@ private:
 
 	bool draw_overlay;
 
-	// signal handling
-	static int sig_fd[2];
-	QSocketNotifier *sig_notifier;
 	bool valid;
 
 };

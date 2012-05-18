@@ -1,5 +1,6 @@
 #include "resourcemanager.h"
 #include "canvas.h"
+#include <iostream>
 
 using namespace std;
 
@@ -12,8 +13,8 @@ Worker::Worker() :
 		die(false) {
 }
 
-void Worker::setResManager(ResourceManager *rm) {
-	res = rm;
+void Worker::setResManager(ResourceManager *_res) {
+	res = _res;
 }
 
 void Worker::connect_signal(Canvas *c) {
@@ -82,13 +83,12 @@ void Worker::run() {
 
 
 //==[ ResourceManager ]========================================================
-ResourceManager::ResourceManager(QString _file) :
-		worker(NULL),
-		file(_file) {
-	initialize();
+ResourceManager::ResourceManager(QString file) :
+		worker(NULL) {
+	initialize(file);
 }
 
-void ResourceManager::initialize() {
+void ResourceManager::initialize(QString file) {
 	doc = Poppler::Document::load(file);
 	if (doc == NULL) {
 		// poppler already prints a debug message
@@ -104,7 +104,7 @@ void ResourceManager::initialize() {
 	doc->setRenderHint(Poppler::Document::Antialiasing, true);
 	doc->setRenderHint(Poppler::Document::TextAntialiasing, true);
 	doc->setRenderHint(Poppler::Document::TextHinting, true);
-//	if (POPPLER_CHECK_VERSION(0, 18, 0)) {
+//	if (POPPLER_CHECK_VERSION(0, 18, 0)) { // TODO is there a working macro?
 		doc->setRenderHint(Poppler::Document::TextSlightHinting, true);
 //	}
 
@@ -152,6 +152,7 @@ void ResourceManager::shutdown() {
 	garbage.clear();
 	garbageMutex.unlock();
 	requests.clear();
+	requestSemaphore.acquire(requestSemaphore.available());
 	if (doc == NULL) {
 		return;
 	}
@@ -164,27 +165,16 @@ void ResourceManager::shutdown() {
 	delete worker;
 }
 
-void ResourceManager::reload_document() {
+void ResourceManager::load(QString file) {
 	shutdown();
-	requests.clear();
-#ifdef DEBUG
-	cerr << "reloading file " << file.toUtf8().constData() << endl;
-#endif
-	requestSemaphore.acquire(requestSemaphore.available());
-	initialize();
-	set_canvas(canvas);
-}
-
-QString ResourceManager::get_file() const {
-	return file;
+	initialize(file);
 }
 
 bool ResourceManager::is_valid() const {
 	return (doc != NULL);
 }
 
-void ResourceManager::set_canvas(Canvas *c) {
-	canvas = c;
+void ResourceManager::connect_canvas(Canvas *c) const {
 	worker->connect_signal(c);
 }
 

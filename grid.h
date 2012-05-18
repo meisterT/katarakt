@@ -1,7 +1,8 @@
 #ifndef GRID_H
 #define GRID_H
 
-#include "resourcemanager.h"
+
+class ResourceManager;
 
 
 class Grid {

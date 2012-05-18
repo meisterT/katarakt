@@ -1,4 +1,6 @@
 #include "layout.h"
+#include "resourcemanager.h"
+#include "grid.h"
 
 using namespace std;
 
@@ -41,7 +43,7 @@ void Layout::set_columns(int /*new_columns*/, bool /*relative*/) {
 	// only useful for grid layout
 }
 
-bool Layout::supports_smooth_scrolling() {
+bool Layout::supports_smooth_scrolling() const {
 	// normally a layout supports smooth scrolling
 	return true;
 }
@@ -75,7 +77,7 @@ PresentationLayout::PresentationLayout(Layout& old_layout) :
 		Layout(old_layout) {
 }
 
-bool PresentationLayout::supports_smooth_scrolling() {
+bool PresentationLayout::supports_smooth_scrolling() const {
 	return false;
 }
 

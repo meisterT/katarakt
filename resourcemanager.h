@@ -7,7 +7,6 @@
 #include <QThread>
 #include <QMutex>
 #include <QSemaphore>
-#include <iostream>
 #include <list>
 #include <set>
 #include <utility>
@@ -23,7 +22,7 @@ class Worker : public QThread {
 
 public:
 	Worker();
-	void setResManager(ResourceManager *res);
+	void setResManager(ResourceManager *_res);
 	void connect_signal(Canvas *c);
 	void run();
 
@@ -39,11 +38,10 @@ private:
 
 class ResourceManager {
 public:
-	ResourceManager(QString _file);
+	ResourceManager(QString file);
 	~ResourceManager();
 
-	void reload_document();
-	QString get_file() const;
+	void load(QString file);
 
 	// document opened correctly?
 	bool is_valid() const;
@@ -59,20 +57,19 @@ public:
 
 	void collect_garbage(int keep_min, int keep_max);
 
-	void set_canvas(Canvas *c);
+	void connect_canvas(Canvas *c) const;
 
 private:
 	void enqueue(int page, int width);
 	bool render(int offset);
 
-	void initialize();
+	void initialize(QString file);
 	void join_threads();
 	void shutdown();
 
 	// sadly, poppler's renderToImage only supports one thread per document
 	Worker *worker;
 
-	QString file;
 	Poppler::Document *doc;
 	QMutex *imgMutex;
 	QMutex requestMutex;
@@ -87,7 +84,6 @@ private:
 	friend class Worker;
 
 	float *page_width, *page_height;
-	Canvas *canvas;
 };
 
 #endif

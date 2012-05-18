@@ -1,13 +1,13 @@
 #ifndef LAYOUT_H
 #define LAYOUT_H
 
-
 #include <iostream>
 #include <QPainter>
 #include <QImage>
 
-#include "resourcemanager.h"
-#include "grid.h"
+
+class ResourceManager;
+class Grid;
 
 
 class Layout {
@@ -21,7 +21,7 @@ public:
 	virtual void set_zoom(int new_zoom, bool relative = true);
 	virtual void set_columns(int new_columns, bool relative = true);
 
-	virtual bool supports_smooth_scrolling();
+	virtual bool supports_smooth_scrolling() const;
 	virtual void scroll_smooth(int dx, int dy);
 	virtual void scroll_page(int new_page, bool relative = true);
 	virtual void render(QPainter *painter) = 0;
@@ -40,7 +40,7 @@ public:
 	PresentationLayout(Layout& old_layout);
 	~PresentationLayout() {};
 
-	bool supports_smooth_scrolling();
+	bool supports_smooth_scrolling() const;
 	void scroll_smooth(int dx, int dy);
 	void render(QPainter *painter);
 
