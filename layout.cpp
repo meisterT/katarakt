@@ -1,6 +1,7 @@
 #include "layout.h"
 #include "resourcemanager.h"
 #include "grid.h"
+#include "search.h"
 
 using namespace std;
 
@@ -71,6 +72,21 @@ void Layout::scroll_page(int new_page, bool relative) {
 	}
 }
 
+void Layout::clear_hits() {
+	for (map<int,list<Result> *>::iterator it = hits.begin(); it != hits.end(); ++it) {
+		delete it->second;
+	}
+	hits.clear();
+}
+
+void Layout::set_hits(int page, list<Result> *_hits) {
+	map<int,list<Result> *>::iterator it = hits.find(page);
+	if (it != hits.end()) {
+		delete it->second;
+	}
+	hits[page] = _hits;
+}
+
 //==[ PresentationLayout ]===========================================================
 PresentationLayout::PresentationLayout(ResourceManager *_res, int page) :
 		Layout(_res, page) {
@@ -116,6 +132,17 @@ void PresentationLayout::render(QPainter *painter) {
 			painter->drawImage(center_x, center_y, *img);
 		}
 		res->unlock_page(page);
+	}
+
+	// draw search rects
+	painter->setPen(QColor(0, 0, 0));
+	painter->setBrush(QColor(255, 0, 0, 64));
+	double factor = page_width / res->get_page_width(page);
+	map<int,list<Result> *>::iterator it = hits.find(page);
+	if (it != hits.end()) {
+		for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
+			painter->drawRect(i2->scale_translate(factor, center_x, center_y));
+		}
 	}
 
 	// prefetch - order should be important
@@ -414,6 +441,10 @@ void GridLayout::render(QPainter *painter) {
 				wpos < width) {
 			int page_width = res->get_page_width(cur_page + cur_col) * size;
 			int page_height = ROUND(res->get_page_height(cur_page + cur_col) * size);
+
+			int center_x = (grid_width - page_width) / 2;
+			int center_y = (grid_height - page_height) / 2;
+
 			QImage *img = res->get_page(cur_page + cur_col, page_width);
 			if (img != NULL) {
 /*				// debugging
@@ -422,8 +453,6 @@ void GridLayout::render(QPainter *painter) {
 					// TODO fix this?
 					cerr << "image is " << (a - b) << " pixels bigger than expected" << endl;
 				} */
-				int center_x = (grid_width - page_width) / 2;
-				int center_y = (grid_height - page_height) / 2;
 				if (page_width != img->width()) { // draw scaled
 					QRect rect(wpos + center_x, hpos + center_y, page_width, page_height);
 					painter->drawImage(rect, *img);
@@ -432,6 +461,18 @@ void GridLayout::render(QPainter *painter) {
 				}
 				res->unlock_page(cur_page + cur_col);
 			}
+
+			// draw search rects
+			painter->setPen(QColor(0, 0, 0));
+			painter->setBrush(QColor(255, 0, 0, 64));
+			double factor = page_width / res->get_page_width(cur_page + cur_col);
+			map<int,list<Result> *>::iterator it = hits.find(cur_page + cur_col);
+			if (it != hits.end()) {
+				for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
+					painter->drawRect(i2->scale_translate(factor, wpos + center_x, hpos + center_y));
+				}
+			}
+
 			wpos += grid_width + USELESS_GAP;
 			cur_col++;
 		}

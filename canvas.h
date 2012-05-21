@@ -14,11 +14,13 @@
 #include <QKeySequence>
 #include <iostream>
 #include <map>
+#include <list>
 #include <sys/socket.h>
 
 
 class Viewer;
 class Layout;
+class Result;
 
 
 class Canvas : public QWidget {
@@ -45,6 +47,8 @@ protected:
 	void resizeEvent(QResizeEvent *event);
 
 private slots:
+	void search_clear();
+	void search_done(int page, std::list<Result> *hits);
 	void page_rendered(int page);
 
 private:

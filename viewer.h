@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
-#include <QLineEdit>
+//#include <QLineEdit>
 #include <QKeySequence>
 #include <QSocketNotifier>
 #include <map>
@@ -11,6 +11,7 @@
 
 class ResourceManager;
 class Canvas;
+class SearchBar;
 
 
 class Viewer : public QWidget {
@@ -45,7 +46,8 @@ private:
 	QString file;
 	ResourceManager *res;
 	Canvas *canvas;
-	QLineEdit *search_bar;
+	SearchBar *search_bar;
+//	QLineEdit *search_bar;
 	QVBoxLayout *layout;
 
 	// signal handling

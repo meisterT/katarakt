@@ -4,10 +4,13 @@
 #include <iostream>
 #include <QPainter>
 #include <QImage>
+#include <list>
+#include <map>
 
 
 class ResourceManager;
 class Grid;
+class Result;
 
 
 class Layout {
@@ -26,11 +29,17 @@ public:
 	virtual void scroll_page(int new_page, bool relative = true);
 	virtual void render(QPainter *painter) = 0;
 
+	virtual void clear_hits();
+	virtual void set_hits(int page, std::list<Result> *_hits);
+
 protected:
 	ResourceManager *res;
 	int page;
 	int off_x, off_y;
 	int width, height;
+
+	// search results
+	std::map<int,std::list<Result> *> hits;
 
 };
 

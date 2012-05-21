@@ -2,6 +2,7 @@
 #include "viewer.h"
 #include "layout.h"
 #include "resourcemanager.h"
+#include "search.h"
 
 using namespace std;
 
@@ -56,6 +57,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 }
 
 Canvas::~Canvas() {
+	layout->clear_hits();
 	delete layout;
 }
 
@@ -249,6 +251,16 @@ void Canvas::quit() {
 
 void Canvas::search() {
 	static_cast<Viewer*>(parentWidget())->focus_search();
+}
+
+void Canvas::search_clear() {
+	layout->clear_hits();
+	update();
+}
+
+void Canvas::search_done(int page, list<Result> *hits) {
+	layout->set_hits(page, hits);
+	update();
 }
 
 void Canvas::page_rendered(int /*page*/) {

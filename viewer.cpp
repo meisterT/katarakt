@@ -1,6 +1,7 @@
 #include "viewer.h"
 #include "resourcemanager.h"
 #include "canvas.h"
+#include "search.h"
 #include <iostream>
 #include <QFileInfo>
 #include <csignal>
@@ -35,7 +36,10 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 	}
 	res->connect_canvas(canvas);
 
-	search_bar = new QLineEdit(this);
+	search_bar = new SearchBar(file, this);
+	connect(search_bar, SIGNAL(search_clear()), canvas, SLOT(search_clear()), Qt::UniqueConnection);
+	connect(search_bar, SIGNAL(search_done(int, std::list<Result> *)),
+			canvas, SLOT(search_done(int, std::list<Result> *)), Qt::UniqueConnection);
 
 	// setup signal handling
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sig_fd) == -1) {
@@ -101,6 +105,15 @@ void Viewer::reload() {
 #ifdef DEBUG
 	cerr << "reloading file " << file.toUtf8().constData() << endl;
 #endif
+	// TODO not nice
+	delete search_bar;
+	search_bar = new SearchBar(file, this);
+	connect(search_bar, SIGNAL(search_clear()), canvas, SLOT(search_clear()), Qt::UniqueConnection);
+	connect(search_bar, SIGNAL(search_done(int, std::list<Result> *)),
+			canvas, SLOT(search_done(int, std::list<Result> *)), Qt::UniqueConnection);
+	layout->addWidget(search_bar);
+	search_bar->hide();
+
 	res->load(file);
 	res->connect_canvas(canvas);
 	canvas->reload();
