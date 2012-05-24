@@ -58,7 +58,8 @@ private:
 
 	Poppler::Document *doc;
 
-	QMutex mutex;
+	QMutex search_mutex;
+	QMutex term_mutex;
 	SearchWorker *worker;
 	QString term;
 

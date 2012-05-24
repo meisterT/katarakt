@@ -25,7 +25,7 @@ SearchWorker::SearchWorker(SearchBar *_bar) :
 
 void SearchWorker::run() {
 	while (1) {
-		bar->mutex.lock();
+		bar->search_mutex.lock();
 		stop = false;
 		if (die) {
 			break;
@@ -33,8 +33,14 @@ void SearchWorker::run() {
 		if (bar->term.isEmpty()) {
 			continue;
 		}
+
+		// get search string
+		bar->term_mutex.lock();
+		QString search_term = bar->term;
+		bar->term_mutex.unlock();
+
 #ifdef DEBUG
-		cerr << "'" << bar->term.toUtf8().constData() << "'" << endl;
+		cerr << "'" << search_term.toUtf8().constData() << "'" << endl;
 #endif
 		emit bar->search_clear();
 
@@ -49,8 +55,9 @@ void SearchWorker::run() {
 			// collect all occurrences
 			list<Result> *hits = new list<Result>;
 			Result rect;
+			// TODO option for case sensitive
 			while (!stop && !die &&
-					p->search(bar->term, rect.x1, rect.y1, rect.x2, rect.y2,
+					p->search(search_term, rect.x1, rect.y1, rect.x2, rect.y2,
 						Poppler::Page::NextResult, Poppler::Page::CaseInsensitive)) {
 				hits->push_back(rect);
 			}
@@ -61,11 +68,13 @@ void SearchWorker::run() {
 #endif
 			delete p;
 
-			emit bar->search_done(page, hits);
-
+			// clean up when interrupted
 			if (stop || die) {
+				delete hits;
 				break;
 			}
+
+			emit bar->search_done(page, hits);
 		}
 #ifdef DEBUG
 		cerr << "done!" << endl;
@@ -89,7 +98,7 @@ SearchBar::SearchBar(QString file, QWidget *parent) :
 		doc = NULL;
 		return;
 	}
-	mutex.lock();
+	search_mutex.lock();
 	worker = new SearchWorker(this);
 	worker->start();
 
@@ -115,14 +124,18 @@ void SearchBar::set_text() {
 	if (term == text()) {
 		return;
 	}
+
+	term_mutex.lock();
 	term = text();
+	term_mutex.unlock();
+
 	worker->stop = true;
-	mutex.unlock();
+	search_mutex.unlock();
 }
 
 void SearchBar::join_threads() {
 	worker->die = true;
-	mutex.unlock();
+	search_mutex.unlock();
 	worker->wait();
 }
 
