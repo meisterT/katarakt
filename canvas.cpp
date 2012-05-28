@@ -263,6 +263,11 @@ void Canvas::search_done(int page, list<Result> *hits) {
 	update();
 }
 
+void Canvas::search_visible(bool visible) {
+	layout->set_search_visible(visible);
+	update();
+}
+
 void Canvas::page_rendered(int /*page*/) {
 	// TODO use page, update selectively
 	update();

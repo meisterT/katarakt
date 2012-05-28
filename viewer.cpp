@@ -40,6 +40,8 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 	connect(search_bar, SIGNAL(search_clear()), canvas, SLOT(search_clear()), Qt::UniqueConnection);
 	connect(search_bar, SIGNAL(search_done(int, std::list<Result> *)),
 			canvas, SLOT(search_done(int, std::list<Result> *)), Qt::UniqueConnection);
+	connect(search_bar, SIGNAL(search_visible(bool)),
+			canvas, SLOT(search_visible(bool)), Qt::UniqueConnection);
 
 	// setup signal handling
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sig_fd) == -1) {
@@ -111,6 +113,8 @@ void Viewer::reload() {
 	connect(search_bar, SIGNAL(search_clear()), canvas, SLOT(search_clear()), Qt::UniqueConnection);
 	connect(search_bar, SIGNAL(search_done(int, std::list<Result> *)),
 			canvas, SLOT(search_done(int, std::list<Result> *)), Qt::UniqueConnection);
+	connect(search_bar, SIGNAL(search_visible(bool)),
+			canvas, SLOT(search_visible(bool)), Qt::UniqueConnection);
 	layout->addWidget(search_bar);
 	search_bar->hide();
 

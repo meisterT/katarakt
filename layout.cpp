@@ -20,7 +20,8 @@ using namespace std;
 
 //==[ Layout ]=================================================================
 Layout::Layout(ResourceManager *_res, int _page) :
-		res(_res), page(_page), off_x(0), off_y(0), width(0), height(0) {
+		res(_res), page(_page), off_x(0), off_y(0), width(0), height(0),
+		search_visible(false) {
 }
 
 int Layout::get_page() const {
@@ -87,6 +88,10 @@ void Layout::set_hits(int page, list<Result> *_hits) {
 	hits[page] = _hits;
 }
 
+void Layout::set_search_visible(bool visible) {
+	search_visible = visible;
+}
+
 //==[ PresentationLayout ]===========================================================
 PresentationLayout::PresentationLayout(ResourceManager *_res, int page) :
 		Layout(_res, page) {
@@ -135,13 +140,15 @@ void PresentationLayout::render(QPainter *painter) {
 	}
 
 	// draw search rects
-	painter->setPen(QColor(0, 0, 0));
-	painter->setBrush(QColor(255, 0, 0, 64));
-	double factor = page_width / res->get_page_width(page);
-	map<int,list<Result> *>::iterator it = hits.find(page);
-	if (it != hits.end()) {
-		for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
-			painter->drawRect(i2->scale_translate(factor, center_x, center_y));
+	if (search_visible) {
+		painter->setPen(QColor(0, 0, 0));
+		painter->setBrush(QColor(255, 0, 0, 64));
+		double factor = page_width / res->get_page_width(page);
+		map<int,list<Result> *>::iterator it = hits.find(page);
+		if (it != hits.end()) {
+			for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
+				painter->drawRect(i2->scale_translate(factor, center_x, center_y));
+			}
 		}
 	}
 
@@ -463,13 +470,15 @@ void GridLayout::render(QPainter *painter) {
 			}
 
 			// draw search rects
-			painter->setPen(QColor(0, 0, 0));
-			painter->setBrush(QColor(255, 0, 0, 64));
-			double factor = page_width / res->get_page_width(cur_page + cur_col);
-			map<int,list<Result> *>::iterator it = hits.find(cur_page + cur_col);
-			if (it != hits.end()) {
-				for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
-					painter->drawRect(i2->scale_translate(factor, wpos + center_x, hpos + center_y));
+			if (search_visible) {
+				painter->setPen(QColor(0, 0, 0));
+				painter->setBrush(QColor(255, 0, 0, 64));
+				double factor = page_width / res->get_page_width(cur_page + cur_col);
+				map<int,list<Result> *>::iterator it = hits.find(cur_page + cur_col);
+				if (it != hits.end()) {
+					for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
+						painter->drawRect(i2->scale_translate(factor, wpos + center_x, hpos + center_y));
+					}
 				}
 			}
 

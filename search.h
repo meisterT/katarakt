@@ -7,6 +7,7 @@
 #include <QMutex>
 #include <QLineEdit>
 #include <QRect>
+#include <QEvent>
 #include <list>
 
 
@@ -49,6 +50,11 @@ public:
 signals:
 	void search_clear();
 	void search_done(int page, std::list<Result> *hits);
+	void search_visible(bool visible);
+
+protected:
+	// QT event handling
+	bool event(QEvent *event);
 
 private slots:
 	void set_text();

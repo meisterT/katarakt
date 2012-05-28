@@ -31,6 +31,7 @@ public:
 
 	virtual void clear_hits();
 	virtual void set_hits(int page, std::list<Result> *_hits);
+	virtual void set_search_visible(bool visible);
 
 protected:
 	ResourceManager *res;
@@ -40,6 +41,7 @@ protected:
 
 	// search results
 	std::map<int,std::list<Result> *> hits;
+	bool search_visible;
 
 };
 

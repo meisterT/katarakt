@@ -49,6 +49,7 @@ protected:
 private slots:
 	void search_clear();
 	void search_done(int page, std::list<Result> *hits);
+	void search_visible(bool visible);
 	void page_rendered(int page);
 
 private:

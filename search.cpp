@@ -116,6 +116,17 @@ SearchBar::~SearchBar() {
 	delete worker;
 }
 
+bool SearchBar::event(QEvent *event) {
+	if (event->type() == QEvent::Hide) {
+		emit search_visible(false);
+		return true;
+	} else if (event->type() == QEvent::Show) {
+		emit search_visible(true);
+		return true;
+	}
+	return QWidget::event(event);
+}
+
 bool SearchBar::is_valid() const {
 	return doc != NULL;
 }
