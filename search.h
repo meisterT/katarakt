@@ -12,6 +12,7 @@
 
 
 class SearchBar;
+class Canvas;
 
 
 class Result {
@@ -45,7 +46,9 @@ public:
 	SearchBar(QString file, QWidget *parent = 0);
 	~SearchBar();
 
+	void load(QString file);
 	bool is_valid() const;
+	void connect_canvas(Canvas *c) const;
 
 signals:
 	void search_clear();
@@ -60,7 +63,9 @@ private slots:
 	void set_text();
 
 private:
+	void initialize(QString file);
 	void join_threads();
+	void shutdown();
 
 	Poppler::Document *doc;
 

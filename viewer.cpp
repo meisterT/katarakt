@@ -37,11 +37,11 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 	res->connect_canvas(canvas);
 
 	search_bar = new SearchBar(file, this);
-	connect(search_bar, SIGNAL(search_clear()), canvas, SLOT(search_clear()), Qt::UniqueConnection);
-	connect(search_bar, SIGNAL(search_done(int, std::list<Result> *)),
-			canvas, SLOT(search_done(int, std::list<Result> *)), Qt::UniqueConnection);
-	connect(search_bar, SIGNAL(search_visible(bool)),
-			canvas, SLOT(search_visible(bool)), Qt::UniqueConnection);
+	if (!search_bar->is_valid()) {
+		valid = false;
+		return;
+	}
+	search_bar->connect_canvas(canvas);
 
 	// setup signal handling
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sig_fd) == -1) {
@@ -50,7 +50,8 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 		return;
 	}
 	sig_notifier = new QSocketNotifier(sig_fd[1], QSocketNotifier::Read, this);
-	connect(sig_notifier, SIGNAL(activated(int)), this, SLOT(signal_slot()));
+	connect(sig_notifier, SIGNAL(activated(int)), this, SLOT(signal_slot()),
+			Qt::UniqueConnection);
 
 	struct sigaction usr;
 	usr.sa_handler = Viewer::signal_handler;
@@ -107,19 +108,12 @@ void Viewer::reload() {
 #ifdef DEBUG
 	cerr << "reloading file " << file.toUtf8().constData() << endl;
 #endif
-	// TODO not nice
-	delete search_bar;
-	search_bar = new SearchBar(file, this);
-	connect(search_bar, SIGNAL(search_clear()), canvas, SLOT(search_clear()), Qt::UniqueConnection);
-	connect(search_bar, SIGNAL(search_done(int, std::list<Result> *)),
-			canvas, SLOT(search_done(int, std::list<Result> *)), Qt::UniqueConnection);
-	connect(search_bar, SIGNAL(search_visible(bool)),
-			canvas, SLOT(search_visible(bool)), Qt::UniqueConnection);
-	layout->addWidget(search_bar);
-	search_bar->hide();
-
+	// TODO handle errors (!is_valid)
 	res->load(file);
 	res->connect_canvas(canvas);
+
+	search_bar->load(file);
+
 	canvas->reload();
 }
 
@@ -175,3 +169,4 @@ void Viewer::add_sequence(QString key, func_t action) {
 	sequences[s] = action;
 	grabShortcut(s, Qt::WindowShortcut);
 }
+

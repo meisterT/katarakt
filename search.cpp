@@ -1,4 +1,5 @@
 #include "search.h"
+#include "canvas.h"
 #include <iostream>
 
 using namespace std;
@@ -87,6 +88,10 @@ void SearchWorker::run() {
 SearchBar::SearchBar(QString file, QWidget *parent) :
 		QLineEdit(parent),
 		worker(NULL) {
+	initialize(file);
+}
+
+void SearchBar::initialize(QString file) {
 	doc = Poppler::Document::load(file);
 	if (doc == NULL) {
 		// poppler already prints a debug message
@@ -98,14 +103,18 @@ SearchBar::SearchBar(QString file, QWidget *parent) :
 		doc = NULL;
 		return;
 	}
-	search_mutex.lock();
 	worker = new SearchWorker(this);
 	worker->start();
 
-	connect(this, SIGNAL(returnPressed()), this, SLOT(set_text()));
+	connect(this, SIGNAL(returnPressed()), this, SLOT(set_text()),
+			Qt::UniqueConnection);
 }
 
 SearchBar::~SearchBar() {
+	shutdown();
+}
+
+void SearchBar::shutdown() {
 	if (worker != NULL) {
 		join_threads();
 	}
@@ -114,6 +123,25 @@ SearchBar::~SearchBar() {
 	}
 	delete doc;
 	delete worker;
+}
+
+void SearchBar::load(QString file) {
+	shutdown();
+	initialize(file);
+}
+
+bool SearchBar::is_valid() const {
+	return doc != NULL;
+}
+
+void SearchBar::connect_canvas(Canvas *c) const {
+	connect(this, SIGNAL(search_clear()), c, SLOT(search_clear()),
+			Qt::UniqueConnection);
+	connect(this, SIGNAL(search_done(int, std::list<Result> *)),
+			c, SLOT(search_done(int, std::list<Result> *)),
+			Qt::UniqueConnection);
+	connect(this, SIGNAL(search_visible(bool)),
+			c, SLOT(search_visible(bool)), Qt::UniqueConnection);
 }
 
 bool SearchBar::event(QEvent *event) {
@@ -125,10 +153,6 @@ bool SearchBar::event(QEvent *event) {
 		return true;
 	}
 	return QWidget::event(event);
-}
-
-bool SearchBar::is_valid() const {
-	return doc != NULL;
 }
 
 void SearchBar::set_text() {
