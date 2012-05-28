@@ -31,6 +31,9 @@ void SearchWorker::run() {
 		if (die) {
 			break;
 		}
+		// always clear results -> empty search == stop search
+		emit bar->search_clear();
+
 		if (bar->term.isEmpty()) {
 			continue;
 		}
@@ -43,8 +46,6 @@ void SearchWorker::run() {
 #ifdef DEBUG
 		cerr << "'" << search_term.toUtf8().constData() << "'" << endl;
 #endif
-		emit bar->search_clear();
-
 		// search all pages
 		for (int page = 0; page < bar->doc->numPages(); page++) {
 			Poppler::Page *p = bar->doc->page(page);
