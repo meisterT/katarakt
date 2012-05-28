@@ -83,12 +83,13 @@ void Worker::run() {
 
 
 //==[ ResourceManager ]========================================================
-ResourceManager::ResourceManager(QString file) :
-		worker(NULL) {
+ResourceManager::ResourceManager(QString file) {
 	initialize(file);
 }
 
 void ResourceManager::initialize(QString file) {
+	page_count = 0;
+	worker = NULL;
 	doc = Poppler::Document::load(file);
 	if (doc == NULL) {
 		// poppler already prints a debug message
@@ -108,6 +109,7 @@ void ResourceManager::initialize(QString file) {
 		doc->setRenderHint(Poppler::Document::TextSlightHinting, true);
 //	}
 
+	page_count = doc->numPages();
 	page_width = new float[get_page_count()];
 	page_height = new float[get_page_count()];
 	for (int i = 0; i < get_page_count(); i++) {
@@ -276,7 +278,7 @@ float ResourceManager::get_page_aspect(int page) const {
 }
 
 int ResourceManager::get_page_count() const {
-	return doc->numPages();
+	return page_count;
 }
 
 void ResourceManager::join_threads() {

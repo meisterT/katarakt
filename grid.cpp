@@ -19,11 +19,11 @@ Grid::~Grid() {
 
 void Grid::set_columns(int columns) {
 	column_count = columns;
-	if (column_count < 1) {
-		column_count = 1;
-	}
 	if (column_count > res->get_page_count()) {
 		column_count = res->get_page_count();
+	}
+	if (column_count < 1) {
+		column_count = 1;
 	}
 
 	rebuild_cells();

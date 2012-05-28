@@ -84,6 +84,7 @@ private:
 	friend class Worker;
 
 	float *page_width, *page_height;
+	int page_count;
 };
 
 #endif

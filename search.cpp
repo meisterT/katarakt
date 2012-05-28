@@ -86,12 +86,12 @@ void SearchWorker::run() {
 
 //==[ SearchBar ]==============================================================
 SearchBar::SearchBar(QString file, QWidget *parent) :
-		QLineEdit(parent),
-		worker(NULL) {
+		QLineEdit(parent) {
 	initialize(file);
 }
 
 void SearchBar::initialize(QString file) {
+	worker = NULL;
 	doc = Poppler::Document::load(file);
 	if (doc == NULL) {
 		// poppler already prints a debug message
@@ -128,6 +128,12 @@ void SearchBar::shutdown() {
 void SearchBar::load(QString file) {
 	shutdown();
 	initialize(file);
+
+	// clear old search results if initialisation failed
+	if (!is_valid()) {
+		term = "";
+		emit search_clear();
+	}
 }
 
 bool SearchBar::is_valid() const {
@@ -156,6 +162,11 @@ bool SearchBar::event(QEvent *event) {
 }
 
 void SearchBar::set_text() {
+	// prevent searching a non-existing document
+	if (!is_valid()) {
+		return;
+	}
+	// do not search for the same term twice
 	if (term == text()) {
 		return;
 	}

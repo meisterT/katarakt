@@ -108,9 +108,12 @@ void Viewer::reload() {
 #ifdef DEBUG
 	cerr << "reloading file " << file.toUtf8().constData() << endl;
 #endif
-	// TODO handle errors (!is_valid)
+
 	res->load(file);
-	res->connect_canvas(canvas);
+	// do not connect non-existing worker to canvas
+	if (res->is_valid()) {
+		res->connect_canvas(canvas);
+	}
 
 	search_bar->load(file);
 

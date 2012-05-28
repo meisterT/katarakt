@@ -30,6 +30,9 @@ int Layout::get_page() const {
 
 void Layout::rebuild() {
 	// clamp to available pages
+	if (page < 0) {
+		page = 0;
+	}
 	if (page >= res->get_page_count()) {
 		page = res->get_page_count() - 1;
 	}
