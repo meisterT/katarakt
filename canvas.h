@@ -21,6 +21,7 @@
 class Viewer;
 class Layout;
 class Result;
+class GotoLine;
 
 
 class Canvas : public QWidget {
@@ -51,6 +52,7 @@ private slots:
 	void search_done(int page, std::list<Result> *hits);
 	void search_visible(bool visible);
 	void page_rendered(int page);
+	void goto_page();
 
 private:
 	// primitive actions
@@ -74,11 +76,14 @@ private:
 	void toggle_overlay();
 	void quit();
 	void search();
+	void focus_goto();
 
 	void add_sequence(QString key, func_t action);
 
 	Viewer *viewer;
 	Layout *layout;
+
+	GotoLine *goto_line;
 
 	// key sequences
 	std::map<QKeySequence,func_t> sequences;

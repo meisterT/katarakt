@@ -3,6 +3,7 @@
 #include "layout.h"
 #include "resourcemanager.h"
 #include "search.h"
+#include "gotoline.h"
 
 using namespace std;
 
@@ -33,7 +34,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 	add_sequence("G", &Canvas::page_first);
 	add_sequence("Shift+G", &Canvas::page_last);
-	add_sequence("C-x", &Canvas::page_last);
+	add_sequence("Ctrl+G", &Canvas::focus_goto);
 
 	add_sequence("K", &Canvas::auto_smooth_up);
 	add_sequence("J", &Canvas::auto_smooth_down);
@@ -54,9 +55,15 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	add_sequence("n,0,0,b", &Canvas::quit); // just messing around :)
 
 	add_sequence("/", &Canvas::search);
+
+	goto_line = new GotoLine(viewer->get_res()->get_page_count(), this);
+	goto_line->hide(); // TODO why is it shown by default?
+	connect(goto_line, SIGNAL(returnPressed()), this, SLOT(goto_page()), Qt::UniqueConnection);
+	goto_line->move(0, height() - goto_line->height()); // TODO why is the initial position wrong?
 }
 
 Canvas::~Canvas() {
+	delete goto_line;
 	layout->clear_hits();
 	delete layout;
 }
@@ -67,6 +74,7 @@ bool Canvas::is_valid() const {
 
 void Canvas::reload() {
 	layout->rebuild();
+	goto_line->set_page_count(viewer->get_res()->get_page_count());
 	update();
 }
 
@@ -139,6 +147,7 @@ void Canvas::wheelEvent(QWheelEvent *event) {
 
 void Canvas::resizeEvent(QResizeEvent *event) {
 	layout->resize(event->size().width(), event->size().height());
+	goto_line->move(0, height() - goto_line->height());
 	update();
 }
 
@@ -253,6 +262,13 @@ void Canvas::search() {
 	static_cast<Viewer*>(parentWidget())->focus_search();
 }
 
+void Canvas::focus_goto() {
+	goto_line->setFocus();
+	goto_line->setText(QString::number(layout->get_page() + 1));
+	goto_line->selectAll();
+	goto_line->show();
+}
+
 void Canvas::search_clear() {
 	layout->clear_hits();
 	update();
@@ -271,5 +287,11 @@ void Canvas::search_visible(bool visible) {
 void Canvas::page_rendered(int /*page*/) {
 	// TODO use page, update selectively
 	update();
+}
+
+void Canvas::goto_page() {
+	int page = goto_line->text().toInt() - 1;
+	goto_line->hide();
+	layout->scroll_page(page, false);
 }
 
