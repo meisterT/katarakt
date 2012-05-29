@@ -265,13 +265,17 @@ void Canvas::search() {
 }
 
 void Canvas::next_hit() {
-	layout->advance_hit();
-	update();
+	if (layout->get_search_visible()) {
+		layout->advance_hit();
+		update();
+	}
 }
 
 void Canvas::previous_hit() {
-	layout->advance_hit(false);
-	update();
+	if (layout->get_search_visible()) {
+		layout->advance_hit(false);
+		update();
+	}
 }
 
 void Canvas::focus_goto() {

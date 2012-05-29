@@ -90,9 +90,9 @@ void Layout::set_hits(int page, list<Result> *l) {
 		hit_it = l->begin();
 	}
 
+	// just to be safe - prevent memory leaks
 	map<int,list<Result> *>::iterator it = hits.find(page);
 	if (it != hits.end()) {
-		cout << "foobar" << endl;
 		delete it->second;
 	}
 	hits[page] = l;
@@ -130,6 +130,10 @@ void Layout::advance_hit(bool forward) {
 			--hit_it;
 		}
 	}
+}
+
+bool Layout::get_search_visible() const {
+	return search_visible;
 }
 
 //==[ PresentationLayout ]===========================================================

@@ -34,6 +34,8 @@ public:
 	virtual void set_search_visible(bool visible);
 	virtual void advance_hit(bool forward = true);
 
+	virtual bool get_search_visible() const;
+
 protected:
 	ResourceManager *res;
 	int page;
