@@ -49,7 +49,7 @@ protected:
 
 private slots:
 	void search_clear();
-	void search_done(int page, std::list<Result> *hits);
+	void search_done(int page, std::list<Result> *l);
 	void search_visible(bool visible);
 	void page_rendered(int page);
 	void goto_page();
@@ -76,6 +76,8 @@ private:
 	void toggle_overlay();
 	void quit();
 	void search();
+	void next_hit();
+	void previous_hit();
 	void focus_goto();
 
 	void add_sequence(QString key, func_t action);

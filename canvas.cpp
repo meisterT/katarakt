@@ -55,6 +55,8 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	add_sequence("n,0,0,b", &Canvas::quit); // just messing around :)
 
 	add_sequence("/", &Canvas::search);
+	add_sequence("N", &Canvas::next_hit);
+	add_sequence("Shift+N", &Canvas::previous_hit);
 
 	goto_line = new GotoLine(viewer->get_res()->get_page_count(), this);
 	goto_line->hide(); // TODO why is it shown by default?
@@ -262,6 +264,16 @@ void Canvas::search() {
 	static_cast<Viewer*>(parentWidget())->focus_search();
 }
 
+void Canvas::next_hit() {
+	layout->advance_hit();
+	update();
+}
+
+void Canvas::previous_hit() {
+	layout->advance_hit(false);
+	update();
+}
+
 void Canvas::focus_goto() {
 	goto_line->setFocus();
 	goto_line->setText(QString::number(layout->get_page() + 1));
@@ -274,8 +286,8 @@ void Canvas::search_clear() {
 	update();
 }
 
-void Canvas::search_done(int page, list<Result> *hits) {
-	layout->set_hits(page, hits);
+void Canvas::search_done(int page, list<Result> *l) {
+	layout->set_hits(page, l);
 	update();
 }
 

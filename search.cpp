@@ -5,6 +5,10 @@
 using namespace std;
 
 
+// TODO put in a config source file
+#define RECT_EXPANSION 2
+
+
 //==[ Result ]=================================================================
 Result::Result(double _x1, double _y1, double _x2, double _y2) :
 		x1(_x1), y1(_y1),
@@ -12,8 +16,8 @@ Result::Result(double _x1, double _y1, double _x2, double _y2) :
 }
 
 QRect Result::scale_translate(double factor, double off_x, double off_y) {
-	return QRect(x1 * factor + off_x, y1 * factor + off_y,
-			(x2 - x1) * factor, (y2 - y1) * factor);
+	return QRect(x1 * factor + off_x - RECT_EXPANSION, y1 * factor + off_y - RECT_EXPANSION,
+			(x2 - x1) * factor + RECT_EXPANSION * 2, (y2 - y1) * factor + RECT_EXPANSION * 2);
 }
 
 
@@ -76,7 +80,9 @@ void SearchWorker::run() {
 				break;
 			}
 
-			emit bar->search_done(page, hits);
+			if (hits->size() > 0) {
+				emit bar->search_done(page, hits);
+			}
 		}
 #ifdef DEBUG
 		cerr << "done!" << endl;

@@ -83,16 +83,53 @@ void Layout::clear_hits() {
 	hits.clear();
 }
 
-void Layout::set_hits(int page, list<Result> *_hits) {
+void Layout::set_hits(int page, list<Result> *l) {
+	// new search -> initialize highlight
+	if (hits.size() == 0) {
+		hit_page = page;
+		hit_it = l->begin();
+	}
+
 	map<int,list<Result> *>::iterator it = hits.find(page);
 	if (it != hits.end()) {
+		cout << "foobar" << endl;
 		delete it->second;
 	}
-	hits[page] = _hits;
+	hits[page] = l;
 }
 
 void Layout::set_search_visible(bool visible) {
 	search_visible = visible;
+}
+
+void Layout::advance_hit(bool forward) {
+	if (hits.size() == 0) {
+		return;
+	}
+	// find next hit
+	if (forward) {
+		++hit_it;
+		if (hit_it == hits[hit_page]->end()) { // this was the last hit on that page
+			map<int,list<Result> *>::const_iterator it = hits.upper_bound(hit_page);
+			if (it == hits.end()) { // this was the last page with a hit -> wrap
+				it = hits.begin();
+			}
+			hit_page = it->first;
+			hit_it = it->second->begin();
+		}
+	// find previous hit
+	} else {
+		if (hit_it == hits[hit_page]->begin()) { // this was the first hit on that page
+			map<int,list<Result> *>::const_reverse_iterator it(hits.lower_bound(hit_page));
+			if (it == hits.rend()) { // this was the first page with a hit -> wrap
+				it = hits.rbegin();
+			}
+			hit_page = it->first;
+			hit_it = --(it->second->end());
+		} else {
+			--hit_it;
+		}
+	}
 }
 
 //==[ PresentationLayout ]===========================================================
@@ -150,7 +187,13 @@ void PresentationLayout::render(QPainter *painter) {
 		map<int,list<Result> *>::iterator it = hits.find(page);
 		if (it != hits.end()) {
 			for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
-				painter->drawRect(i2->scale_translate(factor, center_x, center_y));
+				if (i2 == hit_it) {
+					painter->setBrush(QColor(0, 255, 0, 64));
+					painter->drawRect(i2->scale_translate(factor, center_x, center_y));
+					painter->setBrush(QColor(255, 0, 0, 64));
+				} else {
+					painter->drawRect(i2->scale_translate(factor, center_x, center_y));
+				}
 			}
 		}
 	}
@@ -169,6 +212,11 @@ void PresentationLayout::render(QPainter *painter) {
 		res->unlock_page(page - 2);
 	}
 	res->collect_garbage(page - 4, page + 4);
+}
+
+void PresentationLayout::advance_hit(bool forward) {
+	Layout::advance_hit(forward);
+	scroll_page(hit_page, false);
 }
 
 
@@ -480,7 +528,13 @@ void GridLayout::render(QPainter *painter) {
 				map<int,list<Result> *>::iterator it = hits.find(cur_page + cur_col);
 				if (it != hits.end()) {
 					for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
-						painter->drawRect(i2->scale_translate(factor, wpos + center_x, hpos + center_y));
+						if (i2 == hit_it) {
+							painter->setBrush(QColor(0, 255, 0, 64));
+							painter->drawRect(i2->scale_translate(factor, wpos + center_x, hpos + center_y));
+							painter->setBrush(QColor(255, 0, 0, 64));
+						} else {
+							painter->drawRect(i2->scale_translate(factor, wpos + center_x, hpos + center_y));
+						}
 					}
 				}
 			}
@@ -492,5 +546,11 @@ void GridLayout::render(QPainter *painter) {
 		cur_page += grid->get_column_count();
 	}
 	res->collect_garbage(page - 6, cur_page + 6);
+}
+
+void GridLayout::advance_hit(bool forward) {
+	Layout::advance_hit(forward);
+	// TODO improve... A LOT
+	scroll_page(hit_page / grid->get_column_count(), false);
 }
 

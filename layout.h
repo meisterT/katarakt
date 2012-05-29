@@ -30,8 +30,9 @@ public:
 	virtual void render(QPainter *painter) = 0;
 
 	virtual void clear_hits();
-	virtual void set_hits(int page, std::list<Result> *_hits);
+	virtual void set_hits(int page, std::list<Result> *l);
 	virtual void set_search_visible(bool visible);
+	virtual void advance_hit(bool forward = true);
 
 protected:
 	ResourceManager *res;
@@ -42,6 +43,8 @@ protected:
 	// search results
 	std::map<int,std::list<Result> *> hits;
 	bool search_visible;
+	int hit_page;
+	std::list<Result>::const_iterator hit_it;
 
 };
 
@@ -54,6 +57,8 @@ public:
 	bool supports_smooth_scrolling() const;
 	void scroll_smooth(int dx, int dy);
 	void render(QPainter *painter);
+
+	void advance_hit(bool forward = true);
 
 private:
 	int calculate_fit_width(int page);
@@ -83,6 +88,8 @@ public:
 	void scroll_smooth(int dx, int dy);
 	void scroll_page(int new_page, bool relative = true);
 	void render(QPainter *painter);
+
+	void advance_hit(bool forward = true);
 
 private:
 	void initialize(int columns);
