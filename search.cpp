@@ -165,7 +165,7 @@ bool SearchBar::event(QEvent *event) {
 		emit search_visible(true);
 		return true;
 	}
-	return QWidget::event(event);
+	return QLineEdit::event(event);
 }
 
 void SearchBar::set_text() {
