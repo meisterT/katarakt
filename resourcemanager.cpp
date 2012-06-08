@@ -57,7 +57,6 @@ void Worker::run() {
 		float dpi = 72.0 * width / res->get_page_width(page);
 		QImage *img = new QImage;
 		*img = p->renderToImage(dpi, dpi);
-		delete p;
 
 		if (img->isNull()) {
 			cerr << "failed to render page " << page << endl;
@@ -78,6 +77,25 @@ void Worker::run() {
 		res->garbageMutex.unlock();
 
 		emit page_rendered(page);
+
+		// collect goto links
+		res->link_mutex.lock();
+		if (res->links[page] == NULL) {
+			res->link_mutex.unlock();
+
+			list<Poppler::LinkGoto *> *lg = new list<Poppler::LinkGoto *>;
+			Q_FOREACH(Poppler::Link *l, p->links()) {
+				if (l->linkType() == Poppler::Link::Goto) {
+					lg->push_back(static_cast<Poppler::LinkGoto *>(l));
+				}
+			}
+
+			res->link_mutex.lock();
+			res->links[page] = lg;
+		}
+		res->link_mutex.unlock();
+
+		delete p;
 	}
 }
 
@@ -129,6 +147,9 @@ void ResourceManager::initialize(QString file) {
 
 	imgMutex = new QMutex[get_page_count()];
 
+	links = new list<Poppler::LinkGoto *> *[get_page_count()];
+	memset(links, 0, get_page_count() * sizeof(list<Poppler::LinkGoto *> *));
+
 	worker = new Worker();
 	worker->setResManager(this);
 	worker->start();
@@ -159,6 +180,10 @@ void ResourceManager::shutdown() {
 		return;
 	}
 	delete doc;
+	for (int i = 0; i < get_page_count(); i++) {
+		delete links[i];
+	}
+	delete[] links;
 	delete[] imgMutex;
 	delete[] image;
 	delete[] image_status;
@@ -279,6 +304,16 @@ float ResourceManager::get_page_aspect(int page) const {
 
 int ResourceManager::get_page_count() const {
 	return page_count;
+}
+
+const list<Poppler::LinkGoto *> *ResourceManager::get_links(int page) {
+	if (page < 0 || page >= get_page_count()) {
+		return NULL;
+	}
+	link_mutex.lock();
+	list<Poppler::LinkGoto *> *l = links[page];
+	link_mutex.unlock();
+	return l;
 }
 
 void ResourceManager::join_threads() {

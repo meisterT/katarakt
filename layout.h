@@ -34,6 +34,8 @@ public:
 	virtual void set_search_visible(bool visible);
 	virtual void advance_hit(bool forward = true);
 
+	virtual bool click_mouse(int mx, int my);
+
 	virtual bool get_search_visible() const;
 
 protected:
@@ -61,6 +63,8 @@ public:
 	void render(QPainter *painter);
 
 	void advance_hit(bool forward = true);
+
+	bool click_mouse(int mx, int my);
 
 private:
 	int calculate_fit_width(int page);
@@ -92,6 +96,8 @@ public:
 	void render(QPainter *painter);
 
 	void advance_hit(bool forward = true);
+
+	bool click_mouse(int mx, int my);
 
 private:
 	void initialize(int columns);

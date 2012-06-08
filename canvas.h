@@ -43,6 +43,7 @@ protected:
 	void paintEvent(QPaintEvent *event);
 //	void keyPressEvent(QKeyEvent *event);
 	void mousePressEvent(QMouseEvent *event);
+	void mouseReleaseEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
 	void wheelEvent(QWheelEvent *event);
 	void resizeEvent(QResizeEvent *event);
@@ -91,6 +92,7 @@ private:
 	std::map<QKeySequence,func_t> sequences;
 
 	int mx, my;
+	int mx_down, my_down;
 
 	bool draw_overlay;
 

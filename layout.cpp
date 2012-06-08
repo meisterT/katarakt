@@ -132,6 +132,10 @@ void Layout::advance_hit(bool forward) {
 	}
 }
 
+bool Layout::click_mouse(int /*mx*/, int /*my*/) {
+	return false;
+}
+
 bool Layout::get_search_visible() const {
 	return search_visible;
 }
@@ -202,6 +206,23 @@ void PresentationLayout::render(QPainter *painter) {
 		}
 	}
 
+	// draw goto link rects
+/*	const list<Poppler::LinkGoto *> *l = res->get_links(page);
+	if (l != NULL) {
+		painter->setPen(QColor(0, 0, 255));
+		painter->setBrush(QColor(0, 0, 255, 64));
+		for (list<Poppler::LinkGoto *>::const_iterator it = l->begin();
+				it != l->end(); ++it) {
+			QRectF r = (*it)->linkArea();
+			r.setLeft(r.left() * page_width);
+			r.setTop(r.top() * page_height);
+			r.setRight(r.right() * page_width);
+			r.setBottom(r.bottom() * page_height);
+			r.translate(center_x, center_y);
+			painter->drawRect(r);
+		}
+	} */
+
 	// prefetch - order should be important
 	if (res->get_page(page + 1, calculate_fit_width(page + 1)) != NULL) { // one after
 		res->unlock_page(page + 1);
@@ -222,6 +243,41 @@ void PresentationLayout::advance_hit(bool forward) {
 	Layout::advance_hit(forward);
 	scroll_page(hit_page, false);
 }
+
+bool PresentationLayout::click_mouse(int mx, int my) {
+	// TODO duplicate code
+	int page_width = width, page_height = height;
+	int center_x = 0, center_y = 0;
+
+	// calculate perfect fit
+	if ((float) width / height > res->get_page_aspect(page)) {
+		page_width = res->get_page_aspect(page) * page_height;
+		center_x = (width - page_width) / 2;
+	} else {
+		page_height = ROUND(page_width / res->get_page_aspect(page));
+		center_y = (height - page_height) / 2;
+	}
+
+	// transform mouse coordinates
+	float x = (mx - center_x) / (float) page_width;
+	float y = (my - center_y) / (float) page_height;
+
+	// find matching box
+	const list<Poppler::LinkGoto *> *l = res->get_links(page);
+	for (list<Poppler::LinkGoto *>::const_iterator it = l->begin();
+			it != l->end(); ++it) {
+		QRectF r = (*it)->linkArea();
+		if (x >= r.left() && x < r.right()) {
+			if (y < r.top() && y >= r.bottom()) {
+				int new_page = (*it)->destination().pageNumber();
+				scroll_page(new_page - 1, false);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 
 
 //==[ SequentialLayout ]=======================================================
@@ -556,5 +612,61 @@ void GridLayout::advance_hit(bool forward) {
 	Layout::advance_hit(forward);
 	// TODO improve... A LOT
 	scroll_page(hit_page / grid->get_column_count(), false);
+}
+
+bool GridLayout::click_mouse(int mx, int my) {
+	// TODO ignore gaps?
+	// find vertical page
+	int cur_page = page;
+	int grid_height;
+	int hpos = off_y;
+	while ((grid_height = ROUND(grid->get_height(cur_page) * size)) > 0 &&
+			hpos < height) {
+		if (my < hpos + grid_height) {
+			break;
+		}
+		hpos += grid_height + USELESS_GAP;
+		cur_page += grid->get_column_count();
+	}
+	// find horizontal page
+	int cur_col = horizontal_page;
+	int grid_width;
+	int wpos = off_x;
+	while ((grid_width = grid->get_width(cur_col) * size) > 0 &&
+			cur_col < grid->get_column_count() &&
+			wpos < width) {
+		if (mx < wpos + grid_width) {
+			break;
+		}
+		wpos += grid_width + USELESS_GAP;
+		cur_col++;
+	}
+
+	int page_width = res->get_page_width(cur_page + cur_col) * size;
+	int page_height = ROUND(res->get_page_height(cur_page + cur_col) * size);
+
+	int center_x = (grid_width - page_width) / 2;
+	int center_y = (grid_height - page_height) / 2;
+
+	// transform mouse coordinates
+	float x = (mx - center_x - wpos) / (float) page_width;
+	float y = (my - center_y - hpos) / (float) page_height;
+
+	// find matching box
+	const list<Poppler::LinkGoto *> *l = res->get_links(cur_page + cur_col);
+	int count = 0;
+	for (list<Poppler::LinkGoto *>::const_iterator it = l->begin();
+			it != l->end(); ++it) {
+		QRectF r = (*it)->linkArea();
+		if (x >= r.left() && x < r.right()) {
+			if (y < r.top() && y >= r.bottom()) {
+				int new_page = (*it)->destination().pageNumber();
+				scroll_page((new_page - 1) / grid->get_column_count(), false);
+				return true;
+			}
+		}
+		count++;
+	}
+	return false;
 }
 

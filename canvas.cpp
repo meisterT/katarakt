@@ -124,6 +124,18 @@ void Canvas::mousePressEvent(QMouseEvent *event) {
 	if (event->button() == Qt::LeftButton) {
 		mx = event->x();
 		my = event->y();
+		mx_down = mx;
+		my_down = my;
+	}
+}
+
+void Canvas::mouseReleaseEvent(QMouseEvent *event) {
+	if (event->button() == Qt::LeftButton) {
+		if (mx_down == event->x() && my_down == event->y()) {
+			if (layout->click_mouse(mx_down, my_down)) {
+				update();
+			}
+		}
 	}
 }
 

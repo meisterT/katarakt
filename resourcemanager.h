@@ -52,6 +52,7 @@ public:
 	float get_page_height(int page) const;
 	float get_page_aspect(int page) const;
 	int get_page_count() const;
+	const std::list<Poppler::LinkGoto *> *get_links(int page);
 
 	void unlock_page(int page) const;
 
@@ -77,6 +78,8 @@ private:
 	QSemaphore requestSemaphore;
 	std::list<std::pair<int,int> > requests;
 	std::set<int> garbage;
+	std::list<Poppler::LinkGoto *> **links;
+	QMutex link_mutex;
 
 	QImage **image;
 	int *image_status;
