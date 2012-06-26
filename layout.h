@@ -70,16 +70,6 @@ private:
 	int calculate_fit_width(int page);
 };
 
-class SequentialLayout : public Layout {
-public:
-	SequentialLayout(ResourceManager *res, int page = 0);
-	SequentialLayout(Layout& old_layout);
-	~SequentialLayout() {};
-
-	void scroll_smooth(int dx, int dy);
-	void render(QPainter *painter);
-};
-
 class GridLayout : public Layout {
 public:
 	GridLayout(ResourceManager *res, int page = 0, int columns = 1);

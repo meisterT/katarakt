@@ -141,6 +141,7 @@ bool Layout::get_search_visible() const {
 	return search_visible;
 }
 
+
 //==[ PresentationLayout ]===========================================================
 PresentationLayout::PresentationLayout(ResourceManager *_res, int page) :
 		Layout(_res, page) {
@@ -277,66 +278,6 @@ bool PresentationLayout::click_mouse(int mx, int my) {
 	return false;
 }
 
-
-
-//==[ SequentialLayout ]=======================================================
-SequentialLayout::SequentialLayout(ResourceManager *_res, int page) :
-		Layout(_res, page) {
-	off_x = 0;
-}
-
-SequentialLayout::SequentialLayout(Layout& old_layout) :
-		Layout(old_layout) {
-	off_x = 0;
-}
-
-void SequentialLayout::scroll_smooth(int dx, int dy) {
-	Layout::scroll_smooth(dx, dy);
-	while (off_y <= -width / res->get_page_aspect(page) && page < res->get_page_count() - 1) {
-		off_y += width / res->get_page_aspect(page);
-		page++;
-	}
-	while (off_y > 0 && page > 0) {
-		page--;
-		off_y -= width / res->get_page_aspect(page);
-	}
-	if (page == 0 && off_y > 0) {
-		off_y = 0;
-	}
-	off_x = 0;
-}
-
-void SequentialLayout::render(QPainter *painter) {
-	int page_width = width;
-	int cur_page = page, cur_offset = off_y;
-
-	while (cur_offset < height && cur_page < res->get_page_count()) {
-		int page_height = page_width / res->get_page_aspect(cur_page);
-		QImage *img = res->get_page(cur_page, page_width);
-		if (img != NULL) {
-			painter->drawImage(off_x, cur_offset, *img);
-			res->unlock_page(cur_page);
-		}
-		cur_offset += page_height;
-		cur_page++;
-	}
-
-	// prefetch - order should be important
-	if (res->get_page(cur_page, page_width) != NULL) { // one after
-		res->unlock_page(cur_page);
-	}
-	if (res->get_page(page - 1, page_width) != NULL) { // one before
-		res->unlock_page(page - 1);
-	}
-	if (res->get_page(cur_page + 1, page_width) != NULL) { // two after
-		res->unlock_page(cur_page + 1);
-	}
-	if (res->get_page(page - 2, page_width) != NULL) { // two before
-		res->unlock_page(page - 2);
-	}
-
-	res->collect_garbage(page - 4, cur_page + 4);
-}
 
 //==[ GridLayout ]=============================================================
 GridLayout::GridLayout(ResourceManager *_res, int page, int columns) :
