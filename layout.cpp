@@ -12,6 +12,7 @@ using namespace std;
 #define MIN_ZOOM -14
 #define MAX_ZOOM 30
 #define ZOOM_FACTOR 0.05f
+#define PREFETCH_COUNT 3
 
 // rounds a float when afterwards cast to int
 // seems to fix the mismatch between calculated page height and actual image height
@@ -223,20 +224,18 @@ void PresentationLayout::render(QPainter *painter) {
 		}
 	} */
 
-	// prefetch - order should be important
-	if (res->get_page(page + 1, calculate_fit_width(page + 1)) != NULL) { // one after
-		res->unlock_page(page + 1);
+	// prefetch
+	for (int count = 1; count <= PREFETCH_COUNT; count++) {
+		// after current page
+		if (res->get_page(page + count, calculate_fit_width(page + count)) != NULL) {
+			res->unlock_page(page + count);
+		}
+		// before current page
+		if (res->get_page(page - count, calculate_fit_width(page - count)) != NULL) {
+			res->unlock_page(page - count);
+		}
 	}
-	if (res->get_page(page - 1, calculate_fit_width(page - 1)) != NULL) { // one before
-		res->unlock_page(page - 1);
-	}
-	if (res->get_page(page + 2, calculate_fit_width(page + 2)) != NULL) { // two after
-		res->unlock_page(page + 2);
-	}
-	if (res->get_page(page - 2, calculate_fit_width(page - 2)) != NULL) { // two before
-		res->unlock_page(page - 2);
-	}
-	res->collect_garbage(page - 4, page + 4);
+	res->collect_garbage(page - PREFETCH_COUNT * 3, page + PREFETCH_COUNT * 3);
 }
 
 void PresentationLayout::advance_hit(bool forward) {
@@ -547,6 +546,7 @@ void GridLayout::scroll_page(int new_page, bool relative) {
 void GridLayout::render(QPainter *painter) {
 	// vertical
 	int cur_page = page;
+	int last_page = page + horizontal_page;
 	int grid_height; // implicit rounding
 	int hpos = off_y;
 	while ((grid_height = ROUND(grid->get_height(cur_page) * size)) > 0 && hpos < height) {
@@ -557,16 +557,18 @@ void GridLayout::render(QPainter *painter) {
 		while ((grid_width = grid->get_width(cur_col) * size) > 0 &&
 				cur_col < grid->get_column_count() &&
 				wpos < width) {
-			int page_width = res->get_page_width(cur_page + cur_col) * size;
-			int page_height = ROUND(res->get_page_height(cur_page + cur_col) * size);
+			last_page = cur_page + cur_col;
+
+			int page_width = res->get_page_width(last_page) * size;
+			int page_height = ROUND(res->get_page_height(last_page) * size);
 
 			int center_x = (grid_width - page_width) / 2;
 			int center_y = (grid_height - page_height) / 2;
 
-			QImage *img = res->get_page(cur_page + cur_col, page_width);
+			QImage *img = res->get_page(last_page, page_width);
 			if (img != NULL) {
 /*				// debugging
-				int a = img->height(), b = ROUND(grid->get_height(cur_page + cur_col) * size);
+				int a = img->height(), b = ROUND(grid->get_height(last_page) * size);
 				if (a != b) {
 					// TODO fix this?
 					cerr << "image is " << (a - b) << " pixels bigger than expected" << endl;
@@ -577,15 +579,15 @@ void GridLayout::render(QPainter *painter) {
 				} else { // draw as-is
 					painter->drawImage(wpos + center_x, hpos + center_y, *img);
 				}
-				res->unlock_page(cur_page + cur_col);
+				res->unlock_page(last_page);
 			}
 
 			// draw search rects
 			if (search_visible) {
 				painter->setPen(QColor(0, 0, 0));
 				painter->setBrush(QColor(255, 0, 0, 64));
-				double factor = page_width / res->get_page_width(cur_page + cur_col);
-				map<int,list<Result> *>::iterator it = hits.find(cur_page + cur_col);
+				double factor = page_width / res->get_page_width(last_page);
+				map<int,list<Result> *>::iterator it = hits.find(last_page);
 				if (it != hits.end()) {
 					for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
 						if (i2 == hit_it) {
@@ -605,7 +607,36 @@ void GridLayout::render(QPainter *painter) {
 		hpos += grid_height + USELESS_GAP;
 		cur_page += grid->get_column_count();
 	}
-	res->collect_garbage(page - 6, cur_page + 6);
+
+	res->collect_garbage(page - PREFETCH_COUNT * 3, last_page + PREFETCH_COUNT * 3);
+
+	// prefetch
+	int cur_col = last_page % grid->get_column_count();
+	cur_page = last_page - cur_col;
+	int cur_col_first = horizontal_page;
+	int cur_page_first = page;
+	for (int count = 0; count < PREFETCH_COUNT; count++) {
+		// after last visible page
+		cur_col++;
+		if (cur_col >= grid->get_column_count()) {
+			cur_col = 0;
+			cur_page += grid->get_column_count();
+		}
+		int page_width = res->get_page_width(cur_page + cur_col) * size;
+		if (res->get_page(cur_page + cur_col, page_width) != NULL) {
+			res->unlock_page(cur_page + cur_col);
+		}
+		// before first visible page
+		cur_col_first--;
+		if (cur_col_first < 0) {
+			cur_col_first = grid->get_column_count() - 1;
+			cur_page_first -= grid->get_column_count();
+		}
+		page_width = res->get_page_width(cur_page_first + cur_col_first) * size;
+		if (res->get_page(cur_page_first + cur_col_first, page_width) != NULL) {
+			res->unlock_page(cur_page_first + cur_col_first);
+		}
+	}
 }
 
 void GridLayout::advance_hit(bool forward) {
