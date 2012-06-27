@@ -44,7 +44,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	add_sequence("+", &Canvas::zoom_in);
 	add_sequence("=", &Canvas::zoom_in);
 	add_sequence("-", &Canvas::zoom_out);
-	add_sequence("z,z", &Canvas::reset_zoom);
+	add_sequence("Z", &Canvas::reset_zoom);
 
 	add_sequence("]", &Canvas::columns_inc);
 	add_sequence("[", &Canvas::columns_dec);
@@ -52,7 +52,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	add_sequence("T", &Canvas::toggle_overlay);
 
 	add_sequence("Q", &Canvas::quit);
-	add_sequence("n,0,0,b", &Canvas::quit); // just messing around :)
+	add_sequence("W,E,E,E", &Canvas::quit); // just messing around :)
 
 	add_sequence("/", &Canvas::search);
 	add_sequence("N", &Canvas::next_hit);
