@@ -1,0 +1,74 @@
+katarakt(1)
+===========
+:doctype: manpage
+:man source: Katarakt
+:man manual: Katarakt Manual
+
+NAME
+----
+katarakt - a simple PDF viewer with two layouts
+
+SYNOPSIS
+--------
+*katarakt* 'FILE'
+
+DESCRIPTION
+-----------
+It's a PDF viewer. It views PDFs.
+
+There are currently two layouts.  The 'presentation layout' is very simple and
+only supports scrolling on a per page basis. As the name suggests the current
+page is displayed in the center and zoomed to fit the window. It is active by
+default.
+
+The 'grid layout' is much more advanced and offers continuous (smooth, per
+pixel) scrolling, zooming and adjusting the column count. Pages keep their
+correct relative size and are shown in a grid.
+
+KEY BINDINGS
+------------
+*q* ::
+	Quit *katarakt*
+*1* ::
+	Switch to 'presentation layout'. Views a single page at a time, scaled to
+	fit the screen
+*2* ::
+	Switch to 'grid layout'. Views pages in a continuous fashion, scaled to fit
+	the width. Supports columns.
+
+*Up*, *Down*, *PgUp*, *PgDown*, *BackSpace*, *Space* ::
+	Move from page to page
+*h*, *j*, *k*, *l* ::
+	Move smoothly
+*g*, *G* ::
+	Go to the first/last page
+*^g* ::
+	Show 'goto page' bar
+*f* ::
+	Toggle fullscreen
+*t* ::
+	Toggle page number display
+*r* ::
+	Reload document
+*-*, *+*, *=* ::
+	Adjust zoom level ('grid layout' only)
+*z* ::
+	Reset zoom level to default, i.e. fit width ('grid layout' only)
+*[*, *]* ::
+	Adjust column count ('grid layout' only)
+*/* ::
+	Show search bar
+*n*, *N* ::
+	focus next/previous search hit
+
+COMMUNITY
+---------
+Feel free to join the IRC channel '#katarakt' on freenode.
+
+AUTHOR
+------
+*katarakt* is written by Philipp Erhardt.
+
+RESOURCES
+---------
+Gitweb: <http://git.cs.fau.de/?p=katarakt>
