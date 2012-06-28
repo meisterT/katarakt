@@ -1,0 +1,13 @@
+Overview
+========
+katarakt is a simple PDF viewer with two layouts.
+
+Dependencies
+------------
+qt-core, qt-gui version 4
+poppler-qt >= 0.18
+
+Building
+--------
+qmake
+make
