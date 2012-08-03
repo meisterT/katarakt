@@ -22,6 +22,11 @@ QRect Result::scale_translate(double factor, double off_x, double off_y) {
 			(x2 - x1) * factor + RECT_EXPANSION * 2, (y2 - y1) * factor + RECT_EXPANSION * 2);
 }
 
+QRect Result::scale_translate(double factor, double off_x, double off_y) const {
+	return QRect(x1 * factor + off_x - RECT_EXPANSION, y1 * factor + off_y - RECT_EXPANSION,
+			(x2 - x1) * factor + RECT_EXPANSION * 2, (y2 - y1) * factor + RECT_EXPANSION * 2);
+}
+
 
 //==[ SearchWorker ]===========================================================
 SearchWorker::SearchWorker(SearchBar *_bar) :

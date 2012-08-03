@@ -13,6 +13,7 @@ using namespace std;
 #define MAX_ZOOM 30
 #define ZOOM_FACTOR 0.05f
 #define PREFETCH_COUNT 3
+#define SEARCH_PADDING 0.2 // must be <= 0.5
 
 // rounds a float when afterwards cast to int
 // seems to fix the mismatch between calculated page height and actual image height
@@ -536,16 +537,15 @@ void GridLayout::render(QPainter *painter) {
 			if (search_visible) {
 				painter->setPen(QColor(0, 0, 0));
 				painter->setBrush(QColor(255, 0, 0, 64));
-				double factor = page_width / res->get_page_width(last_page);
 				map<int,list<Result> *>::iterator it = hits.find(last_page);
 				if (it != hits.end()) {
 					for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
 						if (i2 == hit_it) {
 							painter->setBrush(QColor(0, 255, 0, 64));
-							painter->drawRect(i2->scale_translate(factor, wpos + center_x, hpos + center_y));
+							painter->drawRect(i2->scale_translate(size, wpos + center_x, hpos + center_y));
 							painter->setBrush(QColor(255, 0, 0, 64));
 						} else {
-							painter->drawRect(i2->scale_translate(factor, wpos + center_x, hpos + center_y));
+							painter->drawRect(i2->scale_translate(size, wpos + center_x, hpos + center_y));
 						}
 					}
 				}
@@ -597,7 +597,62 @@ void GridLayout::advance_hit(bool forward) {
 
 void GridLayout::view_hit() {
 	// TODO improve... A LOT
-	scroll_page(hit_page / grid->get_column_count(), false);
+/*	if (hit_page < page || hit_page > last_visible_page) {
+		scroll_page(hit_page / grid->get_column_count(), false);
+	} */
+
+	// calculate offsets
+	int page_width = res->get_page_width(hit_page) * size;
+	int page_height = ROUND(res->get_page_height(hit_page) * size);
+
+	int center_x = (grid->get_width(hit_page) * size - page_width) / 2;
+	int center_y = (grid->get_height(hit_page) * size - page_height) / 2;
+
+	int wpos = off_x;
+	for (int i = 0; i < hit_page % grid->get_column_count(); i++) {
+		wpos += grid->get_width(i) * size + USELESS_GAP;
+	}
+	int hpos = off_y;
+	if (hit_page > page) {
+		for (int i = page / grid->get_column_count();
+				i < hit_page / grid->get_column_count(); i++) {
+			hpos += grid->get_height(i) * size + USELESS_GAP;
+		}
+	} else {
+		for (int i = page / grid->get_column_count();
+				i > hit_page / grid->get_column_count(); i--) {
+			hpos -= grid->get_height(i) * size + USELESS_GAP;
+		}
+	}
+	// get search rect coordinates relative to the current view
+	QRect r = hit_it->scale_translate(size, wpos + center_x, hpos + center_y);
+	// move view
+	if (r.width() <= width * (1 - 2 * SEARCH_PADDING)) {
+		if (r.x() < width * SEARCH_PADDING) {
+			scroll_smooth(width * SEARCH_PADDING - r.x(), 0);
+		} else if (r.x() + r.width() > width * (1 - SEARCH_PADDING)) {
+			scroll_smooth(width * (1 - SEARCH_PADDING) - r.x() - r.width(), 0);
+		}
+	} else {
+		int center = (width - r.width()) / 2;
+		if (center < 0) {
+			center = 0;
+		}
+		scroll_smooth(center - r.x(), 0);
+	}
+	if (r.height() <= height * (1 - 2 * SEARCH_PADDING)) {
+		if (r.y() < height * SEARCH_PADDING) {
+			scroll_smooth(0, height * SEARCH_PADDING - r.y());
+		} else if (r.y() + r.height() > height * (1 - SEARCH_PADDING)) {
+			scroll_smooth(0, height * (1 - SEARCH_PADDING) - r.y() - r.height());
+		}
+	} else {
+		int center = (height - r.height()) / 2;
+		if (center < 0) {
+			center = 0;
+		}
+		scroll_smooth(0, center - r.y());
+	}
 }
 
 bool GridLayout::click_mouse(int mx, int my) {
