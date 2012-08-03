@@ -199,6 +199,7 @@ void SearchBar::set_text() {
 
 	worker->stop = true;
 	search_mutex.unlock();
+	viewer->get_canvas()->setFocus(Qt::OtherFocusReason);
 }
 
 void SearchBar::join_threads() {
