@@ -312,9 +312,11 @@ void Canvas::search_visible(bool visible) {
 	update();
 }
 
-void Canvas::page_rendered(int /*page*/) {
+void Canvas::page_rendered(int page) {
 	// TODO use page, update selectively
-	update();
+	if (layout->page_visible(page)) {
+		update();
+	}
 }
 
 void Canvas::goto_page() {

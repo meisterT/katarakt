@@ -278,6 +278,10 @@ bool PresentationLayout::click_mouse(int mx, int my) {
 	return false;
 }
 
+bool PresentationLayout::page_visible(int p) const {
+	return p == page;
+}
+
 
 //==[ GridLayout ]=============================================================
 GridLayout::GridLayout(ResourceManager *_res, int page, int columns) :
@@ -549,6 +553,7 @@ void GridLayout::render(QPainter *painter) {
 		cur_page += grid->get_column_count();
 	}
 
+	last_visible_page = last_page;
 	res->collect_garbage(page - PREFETCH_COUNT * 3, last_page + PREFETCH_COUNT * 3);
 
 	// prefetch
@@ -640,5 +645,12 @@ bool GridLayout::click_mouse(int mx, int my) {
 		count++;
 	}
 	return false;
+}
+
+bool GridLayout::page_visible(int p) const {
+	if (p < page || p > last_visible_page) {
+		return false;
+	}
+	return true;
 }
 

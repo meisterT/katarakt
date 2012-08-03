@@ -37,6 +37,7 @@ public:
 	virtual bool click_mouse(int mx, int my);
 
 	virtual bool get_search_visible() const;
+	virtual bool page_visible(int p) const = 0;
 
 protected:
 	ResourceManager *res;
@@ -66,6 +67,8 @@ public:
 
 	bool click_mouse(int mx, int my);
 
+	bool page_visible(int p) const;
+
 private:
 	int calculate_fit_width(int page);
 };
@@ -89,6 +92,8 @@ public:
 
 	bool click_mouse(int mx, int my);
 
+	bool page_visible(int p) const;
+
 private:
 	void initialize(int columns);
 	void set_constants();
@@ -96,6 +101,7 @@ private:
 	Grid *grid;
 
 	int horizontal_page;
+	int last_visible_page;
 	float size;
 	int zoom;
 	int total_width;
