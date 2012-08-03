@@ -1,5 +1,7 @@
 #include "search.h"
 #include "canvas.h"
+#include "viewer.h"
+#include "layout.h"
 #include <iostream>
 
 using namespace std;
@@ -38,12 +40,13 @@ void SearchWorker::run() {
 		// always clear results -> empty search == stop search
 		emit bar->search_clear();
 
-		if (bar->term.isEmpty()) {
-			continue;
-		}
-
 		// get search string
 		bar->term_mutex.lock();
+		if (bar->term.isEmpty()) {
+			bar->term_mutex.unlock();
+			continue;
+		}
+		int start = bar->start_page;
 		QString search_term = bar->term;
 		bar->term_mutex.unlock();
 
@@ -51,7 +54,8 @@ void SearchWorker::run() {
 		cerr << "'" << search_term.toUtf8().constData() << "'" << endl;
 #endif
 		// search all pages
-		for (int page = 0; page < bar->doc->numPages(); page++) {
+		int page = start;
+		do {
 			Poppler::Page *p = bar->doc->page(page);
 			if (p == NULL) {
 				cerr << "failed to load page " << page << endl;
@@ -83,7 +87,11 @@ void SearchWorker::run() {
 			if (hits->size() > 0) {
 				emit bar->search_done(page, hits);
 			}
-		}
+
+			if (++page == bar->doc->numPages()) {
+				page = 0;
+			}
+		} while (page != start);
 #ifdef DEBUG
 		cerr << "done!" << endl;
 #endif
@@ -92,8 +100,9 @@ void SearchWorker::run() {
 
 
 //==[ SearchBar ]==============================================================
-SearchBar::SearchBar(QString file, QWidget *parent) :
-		QLineEdit(parent) {
+SearchBar::SearchBar(QString file, Viewer *v, QWidget *parent) :
+		QLineEdit(parent),
+		viewer(v) {
 	initialize(file);
 }
 
@@ -179,6 +188,7 @@ void SearchBar::set_text() {
 	}
 
 	term_mutex.lock();
+	start_page = viewer->get_canvas()->get_layout()->get_page();
 	term = text();
 	term_mutex.unlock();
 

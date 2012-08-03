@@ -36,7 +36,7 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 	}
 	res->connect_canvas(canvas);
 
-	search_bar = new SearchBar(file, this);
+	search_bar = new SearchBar(file, this, this);
 	if (!search_bar->is_valid()) {
 		valid = false;
 		return;

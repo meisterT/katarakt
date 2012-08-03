@@ -36,6 +36,8 @@ public:
 	bool is_valid() const;
 	void reload();
 
+	const Layout *get_layout() const;
+
 protected:
 	// QT event handling
 	bool event(QEvent *event);

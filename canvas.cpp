@@ -86,6 +86,10 @@ void Canvas::add_sequence(QString key, func_t action) {
 	grabShortcut(s, Qt::WidgetShortcut);
 }
 
+const Layout *Canvas::get_layout() const {
+	return layout;
+}
+
 bool Canvas::event(QEvent *event) {
 	if (event->type() == QEvent::Shortcut) {
 		QShortcutEvent *s = static_cast<QShortcutEvent*>(event);
@@ -273,7 +277,7 @@ void Canvas::quit() {
 }
 
 void Canvas::search() {
-	static_cast<Viewer*>(parentWidget())->focus_search();
+	viewer->focus_search();
 }
 
 void Canvas::next_hit() {

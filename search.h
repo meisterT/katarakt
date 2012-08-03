@@ -13,6 +13,7 @@
 
 class SearchBar;
 class Canvas;
+class Viewer;
 
 
 class Result {
@@ -43,7 +44,7 @@ class SearchBar : public QLineEdit {
 	Q_OBJECT
 
 public:
-	SearchBar(QString file, QWidget *parent = 0);
+	SearchBar(QString file, Viewer *v, QWidget *parent = 0);
 	~SearchBar();
 
 	void load(QString file);
@@ -68,11 +69,13 @@ private:
 	void shutdown();
 
 	Poppler::Document *doc;
+	Viewer *viewer;
 
 	QMutex search_mutex;
 	QMutex term_mutex;
 	SearchWorker *worker;
 	QString term;
+	int start_page;
 
 	friend class SearchWorker;
 };
