@@ -89,6 +89,7 @@ void Layout::set_hits(int page, list<Result> *l) {
 	if (hits.size() == 0) {
 		hit_page = page;
 		hit_it = l->begin();
+		view_hit();
 	}
 
 	// just to be safe - prevent memory leaks
@@ -241,6 +242,10 @@ void PresentationLayout::render(QPainter *painter) {
 
 void PresentationLayout::advance_hit(bool forward) {
 	Layout::advance_hit(forward);
+	view_hit();
+}
+
+void PresentationLayout::view_hit() {
 	scroll_page(hit_page, false);
 }
 
@@ -587,6 +592,10 @@ void GridLayout::render(QPainter *painter) {
 
 void GridLayout::advance_hit(bool forward) {
 	Layout::advance_hit(forward);
+	view_hit();
+}
+
+void GridLayout::view_hit() {
 	// TODO improve... A LOT
 	scroll_page(hit_page / grid->get_column_count(), false);
 }

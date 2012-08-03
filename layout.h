@@ -40,6 +40,8 @@ public:
 	virtual bool page_visible(int p) const = 0;
 
 protected:
+	virtual void view_hit() = 0;
+
 	ResourceManager *res;
 	int page;
 	int off_x, off_y;
@@ -71,6 +73,7 @@ public:
 
 private:
 	int calculate_fit_width(int page);
+	void view_hit();
 };
 
 class GridLayout : public Layout {
@@ -97,6 +100,7 @@ public:
 private:
 	void initialize(int columns);
 	void set_constants();
+	void view_hit();
 
 	Grid *grid;
 
