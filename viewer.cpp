@@ -99,9 +99,7 @@ bool Viewer::is_valid() const {
 }
 
 void Viewer::focus_search() {
-	search_bar->setFocus(Qt::OtherFocusReason);
-	search_bar->selectAll();
-	search_bar->show();
+	search_bar->focus();
 }
 
 void Viewer::reload() {

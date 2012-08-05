@@ -5,7 +5,10 @@
 #include <QString>
 #include <QThread>
 #include <QMutex>
+#include <QWidget>
 #include <QLineEdit>
+#include <QLabel>
+#include <QHBoxLayout>
 #include <QRect>
 #include <QEvent>
 #include <list>
@@ -41,7 +44,7 @@ private:
 };
 
 
-class SearchBar : public QLineEdit {
+class SearchBar : public QWidget {
 	Q_OBJECT
 
 public:
@@ -51,11 +54,13 @@ public:
 	void load(QString file);
 	bool is_valid() const;
 	void connect_canvas(Canvas *c) const;
+	void focus();
 
 signals:
 	void search_clear();
 	void search_done(int page, std::list<Result> *hits);
 	void search_visible(bool visible);
+	void update_label_text(const QString &text);
 
 protected:
 	// QT event handling
@@ -68,6 +73,10 @@ private:
 	void initialize(QString file);
 	void join_threads();
 	void shutdown();
+
+	QLineEdit *line;
+	QLabel *progress;
+	QHBoxLayout *layout;
 
 	Poppler::Document *doc;
 	Viewer *viewer;

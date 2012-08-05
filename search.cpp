@@ -49,6 +49,7 @@ void SearchWorker::run() {
 		bar->term_mutex.lock();
 		if (bar->term.isEmpty()) {
 			bar->term_mutex.unlock();
+			emit bar->update_label_text("done.");
 			continue;
 		}
 		int start = bar->start_page;
@@ -58,7 +59,10 @@ void SearchWorker::run() {
 #ifdef DEBUG
 		cerr << "'" << search_term.toUtf8().constData() << "'" << endl;
 #endif
+		emit bar->update_label_text("0\% searched, 0 hits");
+
 		// search all pages
+		int hit_count = 0;
 		int page = start;
 		do {
 			Poppler::Page *p = bar->doc->page(page);
@@ -90,8 +94,17 @@ void SearchWorker::run() {
 			}
 
 			if (hits->size() > 0) {
+				hit_count += hits->size();
 				emit bar->search_done(page, hits);
 			}
+
+			// update progress label next to the search bar
+			int percent = ((page + bar->doc->numPages() - start)
+					% bar->doc->numPages()) * 100 / bar->doc->numPages();
+			QString progress = QString("%1\% searched, %2 hits")
+				.arg(percent)
+				.arg(hit_count);
+			emit bar->update_label_text(progress);
 
 			if (++page == bar->doc->numPages()) {
 				page = 0;
@@ -100,14 +113,28 @@ void SearchWorker::run() {
 #ifdef DEBUG
 		cerr << "done!" << endl;
 #endif
+		emit bar->update_label_text(QString("done, %1 hits").arg(hit_count));
 	}
 }
 
 
 //==[ SearchBar ]==============================================================
 SearchBar::SearchBar(QString file, Viewer *v, QWidget *parent) :
-		QLineEdit(parent),
+		QWidget(parent),
 		viewer(v) {
+	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+	line = new QLineEdit(parent);
+
+	progress = new QLabel("done.");
+	progress->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+	layout = new QHBoxLayout();
+	layout->setContentsMargins(0, 0, 0, 0);
+	layout->setSpacing(0);
+	layout->addWidget(line);
+	layout->addWidget(progress);
+	setLayout(layout);
+
 	initialize(file);
 }
 
@@ -127,12 +154,17 @@ void SearchBar::initialize(QString file) {
 	worker = new SearchWorker(this);
 	worker->start();
 
-	connect(this, SIGNAL(returnPressed()), this, SLOT(set_text()),
+	connect(line, SIGNAL(returnPressed()), this, SLOT(set_text()),
 			Qt::UniqueConnection);
+	connect(this, SIGNAL(update_label_text(const QString &)),
+			progress, SLOT(setText(const QString &)), Qt::UniqueConnection);
 }
 
 SearchBar::~SearchBar() {
 	shutdown();
+	delete layout;
+	delete progress;
+	delete line;
 }
 
 void SearchBar::shutdown() {
@@ -171,6 +203,12 @@ void SearchBar::connect_canvas(Canvas *c) const {
 			c, SLOT(search_visible(bool)), Qt::UniqueConnection);
 }
 
+void SearchBar::focus() {
+	line->setFocus(Qt::OtherFocusReason);
+	line->selectAll();
+	show();
+}
+
 bool SearchBar::event(QEvent *event) {
 	if (event->type() == QEvent::Hide) {
 		emit search_visible(false);
@@ -179,7 +217,7 @@ bool SearchBar::event(QEvent *event) {
 		emit search_visible(true);
 		return true;
 	}
-	return QLineEdit::event(event);
+	return QWidget::event(event);
 }
 
 void SearchBar::set_text() {
@@ -188,13 +226,13 @@ void SearchBar::set_text() {
 		return;
 	}
 	// do not search for the same term twice
-	if (term == text()) {
+	if (term == line->text()) {
 		return;
 	}
 
 	term_mutex.lock();
 	start_page = viewer->get_canvas()->get_layout()->get_page();
-	term = text();
+	term = line->text();
 	term_mutex.unlock();
 
 	worker->stop = true;
