@@ -8,6 +8,10 @@
 using namespace std;
 
 
+// TODO put in a config source file
+#define MOUSE_WHEEL_FACTOR 120 // (qt-)delta for turning the mouse wheel 1 click
+
+
 Canvas::Canvas(Viewer *v, QWidget *parent) :
 		QWidget(parent),
 		viewer(v),
@@ -155,9 +159,13 @@ void Canvas::mouseMoveEvent(QMouseEvent *event) {
 void Canvas::wheelEvent(QWheelEvent *event) {
 	int d = event->delta();
 	if (event->orientation() == Qt::Vertical) {
-		layout->scroll_smooth(0, d);
+		if (layout->supports_smooth_scrolling()) {
+			layout->scroll_smooth(0, d);
+		} else {
+			layout->scroll_page(-d / MOUSE_WHEEL_FACTOR);
+		}
 		update();
-	} else { // TODO untested
+	} else {
 		layout->scroll_smooth(d, 0);
 		update();
 	}
@@ -317,7 +325,6 @@ void Canvas::search_visible(bool visible) {
 }
 
 void Canvas::page_rendered(int page) {
-	// TODO use page, update selectively
 	if (layout->page_visible(page)) {
 		update();
 	}
