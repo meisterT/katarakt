@@ -5,7 +5,9 @@
 using namespace std;
 
 
-//#define DEBUG // qmake now takes care of this
+// TODO put in a config source file
+#define SMOOTH_DOWNSCALING true // filter when creating thumbnail image
+#define THUMBNAIL_SIZE 32
 
 
 //==[ Worker ]=================================================================
@@ -143,6 +145,7 @@ void ResourceManager::initialize(QString file) {
 
 	image = new QImage *[get_page_count()];
 	memset(image, 0, get_page_count() * sizeof(QImage *));
+	thumbnail = new QImage[get_page_count()];
 	image_status = new int[get_page_count()];
 
 	imgMutex = new QMutex[get_page_count()];
@@ -186,6 +189,7 @@ void ResourceManager::shutdown() {
 	delete[] links;
 	delete[] imgMutex;
 	delete[] image;
+	delete[] thumbnail;
 	delete[] image_status;
 	delete[] page_width;
 	delete[] page_height;
@@ -226,6 +230,10 @@ QImage *ResourceManager::get_page(int page, int width) {
 
 	enqueue(page, width);
 
+	if (!thumbnail[page].isNull()) {
+		return &thumbnail[page]; // TODO locking necessary?
+	}
+
 	return NULL;
 }
 
@@ -243,6 +251,17 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 		cerr << "    removing page " << page << endl;
 #endif
 		imgMutex[page].lock();
+		// create thumbnail
+		if (thumbnail[page].isNull()) {
+			if (SMOOTH_DOWNSCALING) {
+				thumbnail[page] = image[page]->scaled(
+						QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE),
+						Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+			} else {
+				thumbnail[page] = image[page]->scaled(
+						QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE));
+			}
+		}
 		delete image[page];
 		image[page] = NULL;
 		image_status[page] = 0;
@@ -255,7 +274,7 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 		return;
 	}
 	requestMutex.lock();
-	while ((int) requests.size() > keep_max - keep_min) {
+	while ((int) requests.size() > keep_max - keep_min + 1) {
 		requestSemaphore.acquire(1);
 		requests.pop_front();
 	}

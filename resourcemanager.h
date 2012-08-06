@@ -82,6 +82,7 @@ private:
 	QMutex link_mutex;
 
 	QImage **image;
+	QImage *thumbnail;
 	int *image_status;
 
 	friend class Worker;
