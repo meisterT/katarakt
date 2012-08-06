@@ -58,12 +58,14 @@ bool Layout::supports_smooth_scrolling() const {
 	return true;
 }
 
-void Layout::scroll_smooth(int dx, int dy) {
+bool Layout::scroll_smooth(int dx, int dy) {
 	off_x += dx;
 	off_y += dy;
+	return true;
 }
 
-void Layout::scroll_page(int new_page, bool relative) {
+bool Layout::scroll_page(int new_page, bool relative) {
+	int old_page = page;
 	if (relative) {
 		page += new_page;
 	} else {
@@ -76,6 +78,7 @@ void Layout::scroll_page(int new_page, bool relative) {
 	if (page > res->get_page_count() - 1) {
 		page = res->get_page_count() - 1;
 	}
+	return page != old_page;
 }
 
 void Layout::clear_hits() {
@@ -157,8 +160,9 @@ bool PresentationLayout::supports_smooth_scrolling() const {
 	return false;
 }
 
-void PresentationLayout::scroll_smooth(int /*dx*/, int /*dy*/) {
+bool PresentationLayout::scroll_smooth(int /*dx*/, int /*dy*/) {
 	// ignore smooth scrolling
+	return false;
 }
 
 int PresentationLayout::calculate_fit_width(int page) {
@@ -420,7 +424,10 @@ void GridLayout::set_columns(int new_columns, bool relative) {
 	set_constants();
 }
 
-void GridLayout::scroll_smooth(int dx, int dy) {
+bool GridLayout::scroll_smooth(int dx, int dy) {
+	int old_off_x = off_x;
+	int old_off_y = off_y;
+	int old_page = page;
 	off_x += dx;
 	off_y += dy;
 
@@ -482,9 +489,11 @@ void GridLayout::scroll_smooth(int dx, int dy) {
 			off_x = border_off_w;
 		}
 	}
+	return off_x != old_off_x || off_y != old_off_y || page != old_page;
 }
 
-void GridLayout::scroll_page(int new_page, bool relative) {
+bool GridLayout::scroll_page(int new_page, bool relative) {
+	int old_page = page;
 	if (total_height > height) {
 		Layout::scroll_page(new_page * grid->get_column_count(), relative);
 	}
@@ -492,6 +501,7 @@ void GridLayout::scroll_page(int new_page, bool relative) {
 		page = border_page_h;
 		off_y = border_off_h;
 	}
+	return page != old_page;
 }
 
 void GridLayout::render(QPainter *painter) {

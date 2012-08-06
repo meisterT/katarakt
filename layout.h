@@ -25,8 +25,8 @@ public:
 	virtual void set_columns(int new_columns, bool relative = true);
 
 	virtual bool supports_smooth_scrolling() const;
-	virtual void scroll_smooth(int dx, int dy);
-	virtual void scroll_page(int new_page, bool relative = true);
+	virtual bool scroll_smooth(int dx, int dy);
+	virtual bool scroll_page(int new_page, bool relative = true);
 	virtual void render(QPainter *painter) = 0;
 
 	virtual void clear_hits();
@@ -62,7 +62,7 @@ public:
 	~PresentationLayout() {};
 
 	bool supports_smooth_scrolling() const;
-	void scroll_smooth(int dx, int dy);
+	bool scroll_smooth(int dx, int dy);
 	void render(QPainter *painter);
 
 	void advance_hit(bool forward = true);
@@ -87,8 +87,8 @@ public:
 	void set_zoom(int new_zoom, bool relative = true);
 	void set_columns(int new_columns, bool relative = true);
 
-	void scroll_smooth(int dx, int dy);
-	void scroll_page(int new_page, bool relative = true);
+	bool scroll_smooth(int dx, int dy);
+	bool scroll_page(int new_page, bool relative = true);
 	void render(QPainter *painter);
 
 	void advance_hit(bool forward = true);

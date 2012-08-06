@@ -10,6 +10,7 @@ using namespace std;
 
 // TODO put in a config source file
 #define MOUSE_WHEEL_FACTOR 120 // (qt-)delta for turning the mouse wheel 1 click
+#define SMOOTH_SCROLL_DELTA 30 // pixel scroll offset
 
 
 Canvas::Canvas(Viewer *v, QWidget *parent) :
@@ -106,7 +107,9 @@ bool Canvas::event(QEvent *event) {
 }
 
 void Canvas::paintEvent(QPaintEvent * /*event*/) {
-//	cerr << "redraw" << endl;
+#ifdef DEBUG
+	cerr << "redraw" << endl;
+#endif
 	QPainter painter(this);
 	painter.fillRect(rect(), Qt::black);
 	layout->render(&painter);
@@ -149,10 +152,11 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 
 void Canvas::mouseMoveEvent(QMouseEvent *event) {
 	if (event->buttons() & Qt::LeftButton) {
-		layout->scroll_smooth(event->x() - mx, event->y() - my);
+		if (layout->scroll_smooth(event->x() - mx, event->y() - my)) {
+			update();
+		}
 		mx = event->x();
 		my = event->y();
-		update(); // TODO don't do this here
 	}
 }
 
@@ -160,14 +164,18 @@ void Canvas::wheelEvent(QWheelEvent *event) {
 	int d = event->delta();
 	if (event->orientation() == Qt::Vertical) {
 		if (layout->supports_smooth_scrolling()) {
-			layout->scroll_smooth(0, d);
+			if (layout->scroll_smooth(0, d)) {
+				update();
+			}
 		} else {
-			layout->scroll_page(-d / MOUSE_WHEEL_FACTOR);
+			if (layout->scroll_page(-d / MOUSE_WHEEL_FACTOR)) {
+				update();
+			}
 		}
-		update();
 	} else {
-		layout->scroll_smooth(d, 0);
-		update();
+		if (layout->scroll_smooth(d, 0)) {
+			update();
+		}
 	}
 }
 
@@ -194,23 +202,27 @@ void Canvas::set_grid_layout() {
 }
 
 void Canvas::page_up() {
-	layout->scroll_page(-1);
-	update();
+	if (layout->scroll_page(-1)) {
+		update();
+	}
 }
 
 void Canvas::page_down() {
-	layout->scroll_page(1);
-	update();
+	if (layout->scroll_page(1)) {
+		update();
+	}
 }
 
 void Canvas::page_first() {
-	layout->scroll_page(-1, false);
-	update();
+	if (layout->scroll_page(-1, false)) {
+		update();
+	}
 }
 
 void Canvas::page_last() {
-	layout->scroll_page(viewer->get_res()->get_page_count(), false);
-	update();
+	if (layout->scroll_page(viewer->get_res()->get_page_count(), false)) {
+		update();
+	}
 }
 
 void Canvas::auto_smooth_up() {
@@ -230,24 +242,28 @@ void Canvas::auto_smooth_down() {
 }
 
 void Canvas::smooth_up() {
-	layout->scroll_smooth(0, 30);
-	update();
+	if (layout->scroll_smooth(0, SMOOTH_SCROLL_DELTA)) {
+		update();
+	}
 }
 
 void Canvas::smooth_down() {
-	layout->scroll_smooth(0, -30);
-	update();
+	if (layout->scroll_smooth(0, -SMOOTH_SCROLL_DELTA)) {
+		update();
+	}
 }
 
 
 void Canvas::smooth_left() {
-	layout->scroll_smooth(30, 0);
-	update();
+	if (layout->scroll_smooth(SMOOTH_SCROLL_DELTA, 0)) {
+		update();
+	}
 }
 
 void Canvas::smooth_right() {
-	layout->scroll_smooth(-30, 0);
-	update();
+	if (layout->scroll_smooth(-SMOOTH_SCROLL_DELTA, 0)) {
+		update();
+	}
 }
 
 void Canvas::zoom_in() {
@@ -333,6 +349,8 @@ void Canvas::page_rendered(int page) {
 void Canvas::goto_page() {
 	int page = goto_line->text().toInt() - 1;
 	goto_line->hide();
-	layout->scroll_page(page, false);
+	if (layout->scroll_page(page, false)) {
+		update();
+	}
 }
 
