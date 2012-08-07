@@ -76,7 +76,8 @@ private:
 	QMutex requestMutex;
 	QMutex garbageMutex;
 	QSemaphore requestSemaphore;
-	std::list<std::pair<int,int> > requests;
+	int center_page;
+	std::map<int,int> requests;
 	std::set<int> garbage;
 	std::list<Poppler::LinkGoto *> **links;
 	QMutex link_mutex;

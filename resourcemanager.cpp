@@ -30,11 +30,34 @@ void Worker::run() {
 			break;
 		}
 
-		// get page number
+		// get next page to render
 		res->requestMutex.lock();
-		int page = res->requests.front().first;
-		int width = res->requests.front().second;
-		res->requests.pop_front();
+		int page, width;
+		map<int,int>::iterator less = res->requests.lower_bound(res->center_page);
+		map<int,int>::iterator greater = less--;
+
+		if (greater != res->requests.end()) {
+			if (greater != res->requests.begin()) {
+				// favour nearby page, go down first
+				if (greater->first + less->first <= res->center_page * 2) {
+					page = greater->first;
+					width = greater->second;
+					res->requests.erase(greater);
+				} else {
+					page = less->first;
+					width = less->second;
+					res->requests.erase(less);
+				}
+			} else {
+				page = greater->first;
+				width = greater->second;
+				res->requests.erase(greater);
+			}
+		} else {
+			page = less->first;
+			width = less->second;
+			res->requests.erase(less);
+		}
 		res->requestMutex.unlock();
 
 		// check for duplicate requests
@@ -103,7 +126,8 @@ void Worker::run() {
 
 
 //==[ ResourceManager ]========================================================
-ResourceManager::ResourceManager(QString file) {
+ResourceManager::ResourceManager(QString file) :
+		center_page(0) {
 	initialize(file);
 }
 
@@ -238,6 +262,9 @@ QImage *ResourceManager::get_page(int page, int width) {
 }
 
 void ResourceManager::collect_garbage(int keep_min, int keep_max) {
+	requestMutex.lock();
+	center_page = (keep_min + keep_max) / 2;
+	requestMutex.unlock();
 	// free distant pages
 	garbageMutex.lock();
 	for (set<int>::iterator it = garbage.begin(); it != garbage.end(); /* empty */) {
@@ -274,9 +301,13 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 		return;
 	}
 	requestMutex.lock();
-	while ((int) requests.size() > keep_max - keep_min + 1) {
-		requestSemaphore.acquire(1);
-		requests.pop_front();
+	for (map<int,int>::iterator it = requests.begin(); it != requests.end(); ) {
+		if (it->first < keep_min || it->first > keep_max) {
+			requestSemaphore.acquire(1);
+			requests.erase(it++);
+		} else {
+			++it;
+		}
 	}
 	requestMutex.unlock();
 }
@@ -287,16 +318,13 @@ void ResourceManager::unlock_page(int page) const {
 
 void ResourceManager::enqueue(int page, int width) {
 	requestMutex.lock();
-	// TODO might be slow
-	for (list<pair<int,int> >::iterator it = requests.begin(); it != requests.end(); ++it) {
-		if (it->first == page) {
-			requests.erase(it);
-			requestSemaphore.acquire(1);
-			break;
-		}
+	map<int,int>::iterator it = requests.find(page);
+	if (it == requests.end()) {
+		requests[page] = width;
+		requestSemaphore.release(1);
+	} else {
+		it->second = width;
 	}
-	requests.push_back(make_pair(page, width));
-	requestSemaphore.release(1);
 	requestMutex.unlock();
 }
 
