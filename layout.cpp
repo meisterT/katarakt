@@ -495,6 +495,9 @@ bool GridLayout::scroll_smooth(int dx, int dy) {
 bool GridLayout::scroll_page(int new_page, bool relative) {
 	int old_page = page;
 	if (total_height > height) {
+		if (!relative) {
+			new_page /= grid->get_column_count();
+		}
 		Layout::scroll_page(new_page * grid->get_column_count(), relative);
 	}
 	if ((page == border_page_h && off_y < border_off_h) || page > border_page_h) {
