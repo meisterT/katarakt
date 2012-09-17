@@ -18,6 +18,7 @@ using namespace std;
 // rounds a float when afterwards cast to int
 // seems to fix the mismatch between calculated page height and actual image height
 #define ROUND(x) ((x) + 0.5f)
+//#define ROUND(x) (x)
 
 
 //==[ Layout ]=================================================================
@@ -184,18 +185,38 @@ void PresentationLayout::render(QPainter *painter) {
 		page_height = ROUND(page_width / res->get_page_aspect(page));
 		center_y = (height - page_height) / 2;
 	}
-	QImage *img = res->get_page(page, page_width);
-	if (img != NULL) {
-		if (page_width != img->width()) { // draw scaled
-			QRect rect(center_x, center_y, page_width, page_height);
-			painter->drawImage(rect, *img);
-		} else { // draw as-is
-			painter->drawImage(center_x, center_y, *img);
+	const KPage *k_page = res->get_page(page, page_width);
+	if (k_page != NULL) {
+		const QImage *img = k_page->get_image();
+		if (img != NULL) {
+			int rot= (res->get_rotation() - k_page->get_rotation() + 4) % 4;
+			QRect rect;
+			painter->rotate(rot* 90);
+			// calculate page position
+			if (rot== 0) {
+				rect = QRect(center_x, center_y, page_width, page_height);
+			} else if (rot == 1) {
+				rect = QRect(center_y, -center_x - page_width,
+						page_height, page_width);
+			} else if (rot == 2) {
+				rect = QRect(-center_x - page_width, -center_y - page_height,
+						page_width, page_height);
+			} else if (rot == 3) {
+				rect = QRect(-center_y - page_height, center_x,
+						page_height, page_width);
+			}
+			if (page_width != k_page->get_width() || rot != 0) { // draw scaled
+				painter->drawImage(rect, *img);
+			} else { // draw as-is
+				painter->drawImage(rect.topLeft(), *img);
+			}
+			painter->rotate(-rot * 90);
 		}
-		res->unlock_page(page);
 	}
+	res->unlock_page(page);
 
 	// draw search rects
+	// TODO rotate correctly
 	if (search_visible) {
 		painter->setPen(QColor(0, 0, 0));
 		painter->setBrush(QColor(255, 0, 0, 64));
@@ -529,24 +550,41 @@ void GridLayout::render(QPainter *painter) {
 			int center_x = (grid_width - page_width) / 2;
 			int center_y = (grid_height - page_height) / 2;
 
-			QImage *img = res->get_page(last_page, page_width);
-			if (img != NULL) {
-/*				// debugging
-				int a = img->height(), b = ROUND(grid->get_height(last_page) * size);
-				if (a != b) {
-					// TODO fix this?
-					cerr << "image is " << (a - b) << " pixels bigger than expected" << endl;
-				} */
-				if (page_width != img->width()) { // draw scaled
-					QRect rect(wpos + center_x, hpos + center_y, page_width, page_height);
-					painter->drawImage(rect, *img);
-				} else { // draw as-is
-					painter->drawImage(wpos + center_x, hpos + center_y, *img);
+			const KPage *k_page = res->get_page(last_page, page_width);
+			if (k_page != NULL) {
+				const QImage *img = k_page->get_image();
+				if (img != NULL) {
+					int rot = (res->get_rotation() - k_page->get_rotation() + 4) % 4;
+					QRect rect;
+					painter->rotate(rot * 90);
+					// calculate page position
+					if (rot == 0) {
+						rect = QRect(wpos + center_x, hpos + center_y,
+								page_width, page_height);
+					} else if (rot == 1) {
+						rect = QRect(hpos + center_y, -wpos - center_x - page_width,
+								page_height, page_width);
+					} else if (rot == 2) {
+						rect = QRect(-wpos - center_x - page_width,
+								-hpos - center_y - page_height,
+								page_width, page_height);
+					} else if (rot == 3) {
+						rect = QRect(-hpos - center_y - page_height, wpos + center_x,
+								page_height, page_width);
+					}
+					// draw scaled
+					if (page_width != k_page->get_width() || rot != 0) {
+						painter->drawImage(rect, *img);
+					} else { // draw as-is
+						painter->drawImage(rect.topLeft(), *img);
+					}
+					painter->rotate(-rot * 90);
 				}
 				res->unlock_page(last_page);
 			}
 
 			// draw search rects
+			// TODO rotate correctly
 			if (search_visible) {
 				painter->setPen(QColor(0, 0, 0));
 				painter->setBrush(QColor(255, 0, 0, 64));

@@ -82,6 +82,8 @@ private:
 	void next_hit();
 	void previous_hit();
 	void focus_goto();
+	void rotate_left();
+	void rotate_right();
 
 	void add_sequence(QString key, func_t action);
 

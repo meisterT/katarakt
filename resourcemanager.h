@@ -17,6 +17,31 @@ class ResourceManager;
 class Canvas;
 
 
+class KPage {
+private:
+	KPage();
+	~KPage();
+
+public:
+	const QImage *get_image() const;
+	int get_width() const;
+	char get_rotation() const;
+
+private:
+	float width;
+	float height;
+	QImage img;
+	QImage thumbnail;
+	std::list<Poppler::LinkGoto *> *links;
+	QMutex mutex;
+	int status;
+	char rotation;
+
+	friend class Worker;
+	friend class ResourceManager;
+};
+
+
 class Worker : public QThread {
 	Q_OBJECT
 
@@ -47,13 +72,15 @@ public:
 	bool is_valid() const;
 
 	// page (meta)data
-	QImage *get_page(int page, int newWidth);
+	const KPage *get_page(int page, int newWidth);
 	float get_page_width(int page) const;
 	float get_page_height(int page) const;
 	float get_page_aspect(int page) const;
 	int get_page_count() const;
 	const std::list<Poppler::LinkGoto *> *get_links(int page);
 
+	int get_rotation() const;
+	void rotate(int value, bool relative = true);
 	void unlock_page(int page) const;
 
 	void collect_garbage(int keep_min, int keep_max);
@@ -72,24 +99,20 @@ private:
 	Worker *worker;
 
 	Poppler::Document *doc;
-	QMutex *imgMutex;
 	QMutex requestMutex;
 	QMutex garbageMutex;
 	QSemaphore requestSemaphore;
 	int center_page;
 	std::map<int,int> requests;
 	std::set<int> garbage;
-	std::list<Poppler::LinkGoto *> **links;
 	QMutex link_mutex;
 
-	QImage **image;
-	QImage *thumbnail;
-	int *image_status;
+	KPage *k_page;
 
 	friend class Worker;
 
-	float *page_width, *page_height;
 	int page_count;
+	int rotation;
 };
 
 #endif

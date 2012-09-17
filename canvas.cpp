@@ -63,6 +63,9 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	add_sequence("N", &Canvas::next_hit);
 	add_sequence("Shift+N", &Canvas::previous_hit);
 
+	add_sequence("u", &Canvas::rotate_left);
+	add_sequence("i", &Canvas::rotate_right);
+
 	goto_line = new GotoLine(viewer->get_res()->get_page_count(), this);
 	goto_line->hide(); // TODO why is it shown by default?
 	connect(goto_line, SIGNAL(returnPressed()), this, SLOT(goto_page()), Qt::UniqueConnection);
@@ -352,5 +355,16 @@ void Canvas::goto_page() {
 	if (layout->scroll_page(page, false)) {
 		update();
 	}
+}
+void Canvas::rotate_left() {
+	viewer->get_res()->rotate(-1);
+	layout->rebuild();
+	update();
+}
+
+void Canvas::rotate_right() {
+	viewer->get_res()->rotate(1);
+	layout->rebuild();
+	update();
 }
 
