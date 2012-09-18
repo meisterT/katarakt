@@ -220,16 +220,19 @@ void PresentationLayout::render(QPainter *painter) {
 	if (search_visible) {
 		painter->setPen(QColor(0, 0, 0));
 		painter->setBrush(QColor(255, 0, 0, 64));
-		double factor = page_width / res->get_page_width(page);
+		double w = res->get_page_width(page);
+		double h = res->get_page_height(page);
+		int r = res->get_rotation();
+		double factor = page_width / w;
 		map<int,list<Result> *>::iterator it = hits.find(page);
 		if (it != hits.end()) {
 			for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
 				if (i2 == hit_it) {
 					painter->setBrush(QColor(0, 255, 0, 64));
-					painter->drawRect(i2->scale_translate(factor, center_x, center_y));
+					painter->drawRect(i2->scale_translate(factor, w, h, center_x, center_y, r));
 					painter->setBrush(QColor(255, 0, 0, 64));
 				} else {
-					painter->drawRect(i2->scale_translate(factor, center_x, center_y));
+					painter->drawRect(i2->scale_translate(factor, w, h, center_x, center_y, r));
 				}
 			}
 		}
@@ -292,6 +295,21 @@ bool PresentationLayout::click_mouse(int mx, int my) {
 	// transform mouse coordinates
 	float x = (mx - center_x) / (float) page_width;
 	float y = (my - center_y) / (float) page_height;
+
+	// apply rotation
+	int rotation = res->get_rotation();
+	if (rotation == 1) {
+		float tmp = x;
+		x = y;
+		y = 1 - tmp;
+	} else if (rotation == 2) {
+		x = 1 - x;
+		y = 1 - y;
+	} else if (rotation == 3) {
+		float tmp = y;
+		y = x;
+		x = 1 - tmp;
+	}
 
 	// find matching box
 	const list<Poppler::LinkGoto *> *l = res->get_links(page);
@@ -588,15 +606,20 @@ void GridLayout::render(QPainter *painter) {
 			if (search_visible) {
 				painter->setPen(QColor(0, 0, 0));
 				painter->setBrush(QColor(255, 0, 0, 64));
+				double w = res->get_page_width(last_page);
+				double h = res->get_page_height(last_page);
+				int r = res->get_rotation();
 				map<int,list<Result> *>::iterator it = hits.find(last_page);
 				if (it != hits.end()) {
 					for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
 						if (i2 == hit_it) {
 							painter->setBrush(QColor(0, 255, 0, 64));
-							painter->drawRect(i2->scale_translate(size, wpos + center_x, hpos + center_y));
+							painter->drawRect(i2->scale_translate(size, w, h,
+										wpos + center_x, hpos + center_y, r));
 							painter->setBrush(QColor(255, 0, 0, 64));
 						} else {
-							painter->drawRect(i2->scale_translate(size, wpos + center_x, hpos + center_y));
+							painter->drawRect(i2->scale_translate(size, w, h,
+										wpos + center_x, hpos + center_y, r));
 						}
 					}
 				}
@@ -671,7 +694,9 @@ void GridLayout::view_hit() {
 		}
 	}
 	// get search rect coordinates relative to the current view
-	QRect r = hit_it->scale_translate(size, wpos + center_x, hpos + center_y);
+	QRect r = hit_it->scale_translate(size,
+			res->get_page_width(hit_page), res->get_page_height(hit_page),
+			wpos + center_x, hpos + center_y, res->get_rotation());
 	// move view horizontally
 	if (r.width() <= width * (1 - 2 * SEARCH_PADDING)) {
 		if (r.x() < width * SEARCH_PADDING) {
@@ -739,6 +764,21 @@ bool GridLayout::click_mouse(int mx, int my) {
 	// transform mouse coordinates
 	float x = (mx - center_x - wpos) / (float) page_width;
 	float y = (my - center_y - hpos) / (float) page_height;
+
+	// apply rotation
+	int rotation = res->get_rotation();
+	if (rotation == 1) {
+		float tmp = x;
+		x = y;
+		y = 1 - tmp;
+	} else if (rotation == 2) {
+		x = 1 - x;
+		y = 1 - y;
+	} else if (rotation == 3) {
+		float tmp = y;
+		y = x;
+		x = 1 - tmp;
+	}
 
 	// find matching box
 	const list<Poppler::LinkGoto *> *l = res->get_links(cur_page + cur_col);

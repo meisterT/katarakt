@@ -22,8 +22,8 @@ class Viewer;
 class Result {
 public:
 	Result(double _x1 = 0.0, double _y1 = 0.0, double _x2 = 0.0, double _y2 = 0.0);
-	QRect scale_translate(double factor, double off_x = 0.0, double off_y = 0.0);
-	QRect scale_translate(double factor, double off_x = 0.0, double off_y = 0.0) const;
+	QRect scale_translate(double scale, double width, double height,
+			double off_x, double off_y, int rotation) const;
 
 	double x1, y1, x2, y2;
 };

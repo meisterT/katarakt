@@ -17,14 +17,29 @@ Result::Result(double _x1, double _y1, double _x2, double _y2) :
 		x2(_x2), y2(_y2) {
 }
 
-QRect Result::scale_translate(double factor, double off_x, double off_y) {
-	return QRect(x1 * factor + off_x - RECT_EXPANSION, y1 * factor + off_y - RECT_EXPANSION,
-			(x2 - x1) * factor + RECT_EXPANSION * 2, (y2 - y1) * factor + RECT_EXPANSION * 2);
-}
-
-QRect Result::scale_translate(double factor, double off_x, double off_y) const {
-	return QRect(x1 * factor + off_x - RECT_EXPANSION, y1 * factor + off_y - RECT_EXPANSION,
-			(x2 - x1) * factor + RECT_EXPANSION * 2, (y2 - y1) * factor + RECT_EXPANSION * 2);
+QRect Result::scale_translate(double scale, double width, double height,
+		double off_x, double off_y, int rotation) const {
+	if (rotation == 0) {
+		return QRect(x1 * scale + off_x - RECT_EXPANSION,
+				y1 * scale + off_y - RECT_EXPANSION,
+				(x2 - x1) * scale + RECT_EXPANSION * 2,
+				(y2 - y1) * scale + RECT_EXPANSION * 2);
+	} else if (rotation == 1) {
+		return QRect((width - y2) * scale + off_x - RECT_EXPANSION,
+				x1 * scale + off_y - RECT_EXPANSION,
+				(y2 - y1) * scale + RECT_EXPANSION * 2,
+				(x2 - x1) * scale + RECT_EXPANSION * 2);
+	} else if (rotation == 2) {
+		return QRect((width - x2) * scale + off_x - RECT_EXPANSION,
+				(height - y2) * scale + off_y - RECT_EXPANSION,
+				(x2 - x1) * scale + RECT_EXPANSION * 2,
+				(y2 - y1) * scale + RECT_EXPANSION * 2);
+	} else {
+		return QRect(y1 * scale + off_x - RECT_EXPANSION,
+				(height - x2) * scale + off_y - RECT_EXPANSION,
+				(y2 - y1) * scale + RECT_EXPANSION * 2,
+				(x2 - x1) * scale + RECT_EXPANSION * 2);
+	}
 }
 
 
