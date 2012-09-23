@@ -30,7 +30,7 @@ class Canvas : public QWidget {
 	typedef void (Canvas::*func_t)();
 
 public:
-	Canvas(Viewer *v, QWidget *parent = 0);
+	Canvas(Viewer *v, int start_page = 0, QWidget *parent = 0);
 	~Canvas();
 
 	bool is_valid() const;

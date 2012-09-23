@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
-//#include <QLineEdit>
 #include <QKeySequence>
 #include <QSocketNotifier>
 #include <map>
@@ -20,8 +19,7 @@ class Viewer : public QWidget {
 	typedef void (Viewer::*func_t)();
 
 public:
-//	Viewer(ResourceManager *res, QWidget *parent = 0);
-	Viewer(QString _file, QWidget *parent = 0);
+	Viewer(QString _file, int start_page, bool fullscreen, QWidget *parent = 0);
 	~Viewer();
 
 	bool is_valid() const;
@@ -47,7 +45,6 @@ private:
 	ResourceManager *res;
 	Canvas *canvas;
 	SearchBar *search_bar;
-//	QLineEdit *search_bar;
 	QVBoxLayout *layout;
 
 	// signal handling

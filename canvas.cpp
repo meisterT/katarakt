@@ -13,7 +13,7 @@ using namespace std;
 #define SMOOTH_SCROLL_DELTA 30 // pixel scroll offset
 
 
-Canvas::Canvas(Viewer *v, QWidget *parent) :
+Canvas::Canvas(Viewer *v, int start_page, QWidget *parent) :
 		QWidget(parent),
 		viewer(v),
 		draw_overlay(true),
@@ -21,6 +21,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	setFocusPolicy(Qt::StrongFocus);
 
 	layout = new PresentationLayout(viewer->get_res());
+	layout->scroll_page(start_page, false); // apply start option
 
 	// prints the string representation of a key
 //	cerr << QKeySequence(Qt::Key_Equal).toString().toUtf8().constData() << endl;

@@ -13,8 +13,7 @@ using namespace std;
 
 int Viewer::sig_fd[2];
 
-//Viewer::Viewer(ResourceManager *res, QWidget *parent) :
-Viewer::Viewer(QString _file, QWidget *parent) :
+Viewer::Viewer(QString _file, int start_page, bool fullscreen, QWidget *parent) :
 		QWidget(parent),
 		file(_file),
 		res(NULL),
@@ -29,7 +28,7 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 		return;
 	}
 
-	canvas = new Canvas(this, this);
+	canvas = new Canvas(this, start_page, this);
 	if (!canvas->is_valid()) {
 		valid = false;
 		return;
@@ -82,6 +81,11 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 	resize(500, 500);
 	show();
 	search_bar->hide();
+
+	// apply start options
+	if (fullscreen) {
+		toggle_fullscreen();
+	}
 }
 
 Viewer::~Viewer() {
