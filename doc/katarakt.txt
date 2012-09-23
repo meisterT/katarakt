@@ -59,7 +59,9 @@ KEY BINDINGS
 */* ::
 	Show search bar
 *n*, *N* ::
-	focus next/previous search hit
+	Focus next/previous search hit
+*u*, *i* ::
+	Rotate pages left/right
 
 COMMUNITY
 ---------
