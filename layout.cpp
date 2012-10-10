@@ -212,8 +212,8 @@ void PresentationLayout::render(QPainter *painter) {
 			}
 			painter->rotate(-rot * 90);
 		}
+		res->unlock_page(page);
 	}
-	res->unlock_page(page);
 
 	// draw search rects
 	// TODO rotate correctly

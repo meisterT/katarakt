@@ -1,3 +1,4 @@
+#include <sys/inotify.h>
 #include "viewer.h"
 #include "resourcemanager.h"
 #include "canvas.h"
@@ -21,6 +22,9 @@ Viewer::Viewer(QString _file, int start_page, bool fullscreen, QWidget *parent) 
 		search_bar(NULL),
 		layout(NULL),
 		sig_notifier(NULL),
+#ifdef __linux__
+		i_notifier(NULL),
+#endif
 		valid(true) {
 	res = new ResourceManager(file);
 	if (!res->is_valid()) {
@@ -76,6 +80,23 @@ Viewer::Viewer(QString _file, int start_page, bool fullscreen, QWidget *parent) 
 	setLayout(layout);
 
 	QFileInfo info(file);
+	// setup inotify
+#ifdef __linux__
+	inotify_fd = inotify_init();
+	if (inotify_fd == -1) {
+		cerr << "inotify_init: " << strerror(errno) << endl;
+	} else {
+		inotify_wd  = inotify_add_watch(inotify_fd, info.path().toUtf8().constData(), IN_CLOSE_WRITE | IN_MOVED_TO);
+		if (inotify_wd == -1) {
+			cerr << "inotify_add_watch: " << strerror(errno) << endl;
+		} else {
+			i_notifier = new QSocketNotifier(inotify_fd, QSocketNotifier::Read, this);
+			connect(i_notifier, SIGNAL(activated(int)), this, SLOT(inotify_slot()),
+					Qt::UniqueConnection);
+		}
+	}
+#endif
+
 	setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
 	setMinimumSize(50, 50);
 	resize(500, 500);
@@ -89,6 +110,8 @@ Viewer::Viewer(QString _file, int start_page, bool fullscreen, QWidget *parent) 
 }
 
 Viewer::~Viewer() {
+	::close(inotify_fd);
+	delete i_notifier;
 	::close(sig_fd[0]);
 	::close(sig_fd[1]);
 	delete sig_notifier;
@@ -147,6 +170,38 @@ void Viewer::signal_handler(int /*unused*/) {
 	if (write(sig_fd[0], &tmp, sizeof(char)) < 0) {
 		cerr << "write: " << strerror(errno) << endl;
 	}
+}
+
+void Viewer::inotify_slot() {
+#ifdef __linux__
+	i_notifier->setEnabled(false);
+
+	size_t event_size = sizeof(struct inotify_event) + NAME_MAX + 1;
+	// take care of alignment
+	struct inotify_event i_buf[event_size / sizeof(struct inotify_event) + 1]; // has at least event_size
+	char *buf = reinterpret_cast<char *>(i_buf);
+
+	ssize_t bytes = read(inotify_fd, buf, sizeof(i_buf));
+	if (bytes == -1) {
+		cerr << "read: " << strerror(errno) << endl;
+	} else {
+		ssize_t offset = 0;
+		while (offset < bytes) {
+			struct inotify_event *event = reinterpret_cast<struct inotify_event *>(&buf[offset]);
+
+			QFileInfo info(file);
+			if (info.fileName() == event->name) {
+				reload();
+				i_notifier->setEnabled(true);
+				return;
+			}
+
+			offset += sizeof(struct inotify_event) + event->len;
+		}
+	}
+
+	i_notifier->setEnabled(true);
+#endif
 }
 
 void Viewer::toggle_fullscreen() {

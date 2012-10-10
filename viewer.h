@@ -32,6 +32,7 @@ public:
 
 public slots:
 	void signal_slot();
+	void inotify_slot();
 
 protected:
 	bool event(QEvent *event);
@@ -51,6 +52,12 @@ private:
 	static void signal_handler(int unused);
 	static int sig_fd[2];
 	QSocketNotifier *sig_notifier;
+
+#ifdef __linux__
+	int inotify_fd;
+	int inotify_wd;
+	QSocketNotifier *i_notifier;
+#endif
 
 	// key sequences
 	std::map<QKeySequence,func_t> sequences;
