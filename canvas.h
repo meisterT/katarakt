@@ -48,6 +48,7 @@ protected:
 	void mouseReleaseEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
 	void wheelEvent(QWheelEvent *event);
+	void mouseDoubleClickEvent(QMouseEvent * event);
 	void resizeEvent(QResizeEvent *event);
 
 private slots:

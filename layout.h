@@ -35,6 +35,7 @@ public:
 	virtual void advance_hit(bool forward = true);
 
 	virtual bool click_mouse(int mx, int my);
+	virtual bool goto_page_at(int mx, int my);
 
 	virtual bool get_search_visible() const;
 	virtual bool page_visible(int p) const = 0;
@@ -94,6 +95,7 @@ public:
 	void advance_hit(bool forward = true);
 
 	bool click_mouse(int mx, int my);
+	bool goto_page_at(int mx, int my);
 
 	bool page_visible(int p) const;
 

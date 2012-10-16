@@ -183,6 +183,13 @@ void Canvas::wheelEvent(QWheelEvent *event) {
 	}
 }
 
+void Canvas::mouseDoubleClickEvent(QMouseEvent * event) {
+	if (event->button() == Qt::LeftButton) {
+		layout->goto_page_at(event->x(), event->y());
+		update();
+	}
+}
+
 void Canvas::resizeEvent(QResizeEvent *event) {
 	layout->resize(event->size().width(), event->size().height());
 	goto_line->move(0, height() - goto_line->height());

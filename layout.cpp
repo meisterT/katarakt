@@ -143,6 +143,10 @@ bool Layout::click_mouse(int /*mx*/, int /*my*/) {
 	return false;
 }
 
+bool Layout::goto_page_at(int /*mx*/, int /*my*/) {
+	return false;
+}
+
 bool Layout::get_search_visible() const {
 	return search_visible;
 }
@@ -796,6 +800,43 @@ bool GridLayout::click_mouse(int mx, int my) {
 		count++;
 	}
 	return false;
+}
+
+bool GridLayout::goto_page_at(int mx, int my) {
+	// TODO ignore gaps?
+	// find vertical page
+	int cur_page = page;
+	int grid_height;
+	int hpos = off_y;
+	while ((grid_height = ROUND(grid->get_height(cur_page) * size)) > 0 &&
+			hpos < height) {
+		if (my < hpos + grid_height) {
+			break;
+		}
+		hpos += grid_height + USELESS_GAP;
+		cur_page += grid->get_column_count();
+	}
+	// find horizontal page
+	int cur_col = horizontal_page;
+	int grid_width;
+	int wpos = off_x;
+	while ((grid_width = grid->get_width(cur_col) * size) > 0 &&
+			cur_col < grid->get_column_count() &&
+			wpos < width) {
+		if (mx < wpos + grid_width) {
+			break;
+		}
+		wpos += grid_width + USELESS_GAP;
+		cur_col++;
+	}
+
+	int page = cur_page + cur_col;
+
+	// Set columns to 1 first, to show the correct page and not
+	// just the one at the start of a the row
+	set_columns(1, false);
+	scroll_page(page, false);
+	return true;
 }
 
 bool GridLayout::page_visible(int p) const {
