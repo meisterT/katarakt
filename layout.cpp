@@ -864,7 +864,7 @@ bool GridLayout::goto_page_at(int mx, int my) {
 	int new_page_height = ROUND(res->get_page_height(cur_page + cur_col) * size);
 	int new_y = y * new_page_height;
 
-	scroll_smooth(0, -new_y + height/2);
+	scroll_smooth(0, -new_y + height/2 - off_y);
 	return true;
 }
 
