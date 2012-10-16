@@ -802,6 +802,7 @@ bool GridLayout::click_mouse(int mx, int my) {
 	return false;
 }
 
+// FIXME crude copypasta.
 bool GridLayout::goto_page_at(int mx, int my) {
 	// TODO ignore gaps?
 	// find vertical page
@@ -832,10 +833,38 @@ bool GridLayout::goto_page_at(int mx, int my) {
 
 	int page = cur_page + cur_col;
 
-	// Set columns to 1 first, to show the correct page and not
-	// just the one at the start of a the row
+	int page_width = res->get_page_width(cur_page + cur_col) * size;
+	int page_height = ROUND(res->get_page_height(cur_page + cur_col) * size);
+
+	int center_x = (grid_width - page_width) / 2;
+	int center_y = (grid_height - page_height) / 2;
+
+	// transform mouse coordinates
+	float x = (mx - center_x - wpos) / (float) page_width;
+	float y = (my - center_y - hpos) / (float) page_height;
+
+	// apply rotation
+	int rotation = res->get_rotation();
+	if (rotation == 1) {
+		float tmp = x;
+		x = y;
+		y = 1 - tmp;
+	} else if (rotation == 2) {
+		x = 1 - x;
+		y = 1 - y;
+	} else if (rotation == 3) {
+		float tmp = y;
+		y = x;
+		x = 1 - tmp;
+	}
+
 	set_columns(1, false);
 	scroll_page(page, false);
+
+	int new_page_height = ROUND(res->get_page_height(cur_page + cur_col) * size);
+	int new_y = y * new_page_height;
+
+	scroll_smooth(0, -new_y + height/2);
 	return true;
 }
 
