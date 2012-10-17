@@ -103,6 +103,7 @@ private:
 	void initialize(int columns);
 	void set_constants();
 	void view_hit();
+	std::pair<int,QPointF> get_page_at(int x, int y);
 
 	Grid *grid;
 
