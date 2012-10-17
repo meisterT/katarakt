@@ -801,7 +801,8 @@ bool GridLayout::click_mouse(int mx, int my) {
 		if (page.second.x() >= r.left() && page.second.x() < r.right()) {
 			if (page.second.y() < r.top() && page.second.y() >= r.bottom()) {
 				int new_page = (*it)->destination().pageNumber();
-				scroll_page((new_page - 1) / grid->get_column_count(), false);
+				// TODO scroll_smooth() to the link position
+				scroll_page(new_page - 1, false);
 				return true;
 			}
 		}
