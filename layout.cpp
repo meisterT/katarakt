@@ -731,7 +731,7 @@ void GridLayout::view_hit() {
 	}
 }
 
-std::pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {
+pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {
 	// TODO ignore gaps?
 	// find vertical page
 	int cur_page = page;
@@ -810,7 +810,6 @@ bool GridLayout::click_mouse(int mx, int my) {
 	return false;
 }
 
-// FIXME crude copypasta.
 bool GridLayout::goto_page_at(int mx, int my) {
 	pair<int,QPointF> page = get_page_at(mx, my);
 
