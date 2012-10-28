@@ -1,0 +1,63 @@
+Katarakt
+========
+
+katarakt is a simple PDF viewer. It is designed to use as much of the available
+space as possible.
+
+Features
+--------
+There are currently two layouts.
+
+	*	The presentation layout is active by default. As the name suggests it
+		shows one slide at a time. Each page individually is scaled to use the
+		maximum available space.
+
+	*	The grid layout is a continuous viewing mode, and it supports as many
+		columns as you want. The relative size between pages is preserved, and
+		the biggest page is zoomed to fit the width of the window.
+
+In addition, with katarakt you can
+
+	*	search for text and step through the results
+
+	*	rotate pages in steps of 90 degrees
+
+	*	click on links to navigate through the document
+
+	*	reload the file to see changes e. g. while editing a LaTeX document.
+		With inotify, the document will automatically be reloaded when it changes.
+
+	*	set your own keybindings and customise options.
+
+Input is always responsive, because CPU-intensive operations like rendering and
+searching are done in parallel. Also, you don't have to wait after changing the
+scale or rotation, because the available pages are used until they get
+seamlessly replaced by new ones.
+
+
+Dependencies
+------------
+	*	qt-core, qt-gui version 4
+	*	poppler-qt >= 0.18
+
+Source code
+-----------
+You can browse the
+link:http://git.informatik.uni-erlangen.de/?p=katarakt[git repo]
+online or clone it directly:
+
+----
+git clone git://git.informatik.uni-erlangen.de/katarakt
+----
+
+Community
+---------
+Feel free to join _#katarakt_ on _freenode_.
+
+License
+-------
+Copyright (C) 2011-2012, Philipp Erhardt. All rights reserved.
+
+katarakt is free software. You can redistribute it and/or modify it under the
+terms of the simplified BSD license.
+
