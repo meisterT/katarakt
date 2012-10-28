@@ -5,7 +5,6 @@
 #include <QVBoxLayout>
 #include <QKeySequence>
 #include <QSocketNotifier>
-#include <map>
 
 
 class ResourceManager;
@@ -16,16 +15,13 @@ class SearchBar;
 class Viewer : public QWidget {
 	Q_OBJECT
 
-	typedef void (Viewer::*func_t)();
-
 public:
-	Viewer(QString _file, int start_page, bool fullscreen, QWidget *parent = 0);
+	Viewer(QString _file, QWidget *parent = 0);
 	~Viewer();
 
 	bool is_valid() const;
 	void focus_search();
 
-	void reload();
 
 	ResourceManager *get_res() const;
 	Canvas *get_canvas() const;
@@ -34,13 +30,12 @@ public slots:
 	void signal_slot();
 	void inotify_slot();
 
-protected:
-	bool event(QEvent *event);
-
-private:
 	void toggle_fullscreen();
 	void close_search();
-	void add_sequence(QString key, func_t action);
+	void reload();
+
+private:
+	void add_action(const char *action, const char *slot);
 
 	QString file;
 	ResourceManager *res;
@@ -59,8 +54,6 @@ private:
 	QSocketNotifier *i_notifier;
 #endif
 
-	// key sequences
-	std::map<QKeySequence,func_t> sequences;
 	bool valid;
 };
 

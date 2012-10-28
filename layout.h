@@ -1,9 +1,7 @@
 #ifndef LAYOUT_H
 #define LAYOUT_H
 
-#include <iostream>
 #include <QPainter>
-#include <QImage>
 #include <list>
 #include <map>
 
@@ -16,7 +14,7 @@ class Result;
 class Layout {
 public:
 	Layout(ResourceManager *_res, int _page = 0);
-	virtual ~Layout() {};
+	virtual ~Layout();
 
 	virtual int get_page() const;
 	virtual void rebuild();
@@ -54,6 +52,14 @@ protected:
 	int hit_page;
 	std::list<Result>::const_iterator hit_it;
 
+	// config options
+	int useless_gap;
+	int min_page_width;
+	int min_zoom;
+	int max_zoom;
+	float zoom_factor;
+	int prefetch_count;
+	float search_padding;
 };
 
 class PresentationLayout : public Layout {

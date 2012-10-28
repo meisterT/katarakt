@@ -9,8 +9,6 @@
 #include <QSemaphore>
 #include <list>
 #include <set>
-#include <utility>
-#include <cstring>
 
 
 class ResourceManager;
@@ -113,6 +111,10 @@ private:
 
 	int page_count;
 	int rotation;
+
+	// config options
+	bool smooth_downscaling;
+	int thumbnail_size;
 };
 
 #endif

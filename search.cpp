@@ -1,14 +1,11 @@
+#include <iostream>
 #include "search.h"
 #include "canvas.h"
 #include "viewer.h"
 #include "layout.h"
-#include <iostream>
+#include "config.h"
 
 using namespace std;
-
-
-// TODO put in a config source file
-#define RECT_EXPANSION 2
 
 
 //==[ Result ]=================================================================
@@ -19,26 +16,28 @@ Result::Result(double _x1, double _y1, double _x2, double _y2) :
 
 QRect Result::scale_translate(double scale, double width, double height,
 		double off_x, double off_y, int rotation) const {
+	static int rect_expansion = CFG::get_instance()->get_value("rect_expansion").toInt();
+
 	if (rotation == 0) {
-		return QRect(x1 * scale + off_x - RECT_EXPANSION,
-				y1 * scale + off_y - RECT_EXPANSION,
-				(x2 - x1) * scale + RECT_EXPANSION * 2,
-				(y2 - y1) * scale + RECT_EXPANSION * 2);
+		return QRect(x1 * scale + off_x - rect_expansion,
+				y1 * scale + off_y - rect_expansion,
+				(x2 - x1) * scale + rect_expansion * 2,
+				(y2 - y1) * scale + rect_expansion * 2);
 	} else if (rotation == 1) {
-		return QRect((width - y2) * scale + off_x - RECT_EXPANSION,
-				x1 * scale + off_y - RECT_EXPANSION,
-				(y2 - y1) * scale + RECT_EXPANSION * 2,
-				(x2 - x1) * scale + RECT_EXPANSION * 2);
+		return QRect((width - y2) * scale + off_x - rect_expansion,
+				x1 * scale + off_y - rect_expansion,
+				(y2 - y1) * scale + rect_expansion * 2,
+				(x2 - x1) * scale + rect_expansion * 2);
 	} else if (rotation == 2) {
-		return QRect((width - x2) * scale + off_x - RECT_EXPANSION,
-				(height - y2) * scale + off_y - RECT_EXPANSION,
-				(x2 - x1) * scale + RECT_EXPANSION * 2,
-				(y2 - y1) * scale + RECT_EXPANSION * 2);
+		return QRect((width - x2) * scale + off_x - rect_expansion,
+				(height - y2) * scale + off_y - rect_expansion,
+				(x2 - x1) * scale + rect_expansion * 2,
+				(y2 - y1) * scale + rect_expansion * 2);
 	} else {
-		return QRect(y1 * scale + off_x - RECT_EXPANSION,
-				(height - x2) * scale + off_y - RECT_EXPANSION,
-				(y2 - y1) * scale + RECT_EXPANSION * 2,
-				(x2 - x1) * scale + RECT_EXPANSION * 2);
+		return QRect(y1 * scale + off_x - rect_expansion,
+				(height - x2) * scale + off_y - rect_expansion,
+				(y2 - y1) * scale + rect_expansion * 2,
+				(x2 - x1) * scale + rect_expansion * 2);
 	}
 }
 
@@ -111,6 +110,8 @@ void SearchWorker::run() {
 			if (hits->size() > 0) {
 				hit_count += hits->size();
 				emit bar->search_done(page, hits);
+			} else {
+				delete hits;
 			}
 
 			// update progress label next to the search bar

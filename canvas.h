@@ -2,18 +2,10 @@
 #define CANVAS_H
 
 #include <QWidget>
-#include <QImage>
-#include <QPainter>
 #include <QPaintEvent>
-#include <QString>
-//#include <QKeyEvent>
 #include <QMouseEvent>
 #include <QWheelEvent>
-#include <QCoreApplication>
 #include <QResizeEvent>
-#include <QKeySequence>
-#include <iostream>
-#include <map>
 #include <list>
 #include <sys/socket.h>
 
@@ -27,10 +19,8 @@ class GotoLine;
 class Canvas : public QWidget {
 	Q_OBJECT
 
-	typedef void (Canvas::*func_t)();
-
 public:
-	Canvas(Viewer *v, int start_page = 0, QWidget *parent = 0);
+	Canvas(Viewer *v, QWidget *parent = 0);
 	~Canvas();
 
 	bool is_valid() const;
@@ -40,10 +30,7 @@ public:
 
 protected:
 	// QT event handling
-	bool event(QEvent *event);
-
 	void paintEvent(QPaintEvent *event);
-//	void keyPressEvent(QKeyEvent *event);
 	void mousePressEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
@@ -58,7 +45,6 @@ private slots:
 	void page_rendered(int page);
 	void goto_page();
 
-private:
 	// primitive actions
 	void set_presentation_layout();
 	void set_grid_layout();
@@ -86,15 +72,13 @@ private:
 	void rotate_left();
 	void rotate_right();
 
-	void add_sequence(QString key, func_t action);
+private:
+	void add_action(const char *action, const char *slot);
 
 	Viewer *viewer;
 	Layout *layout;
 
 	GotoLine *goto_line;
-
-	// key sequences
-	std::map<QKeySequence,func_t> sequences;
 
 	int mx, my;
 	int mx_down, my_down;
@@ -103,6 +87,9 @@ private:
 
 	bool valid;
 
+	// config options
+	int mouse_wheel_factor;
+	int smooth_scroll_delta;
 };
 
 #endif

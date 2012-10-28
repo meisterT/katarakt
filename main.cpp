@@ -4,6 +4,7 @@
 #include <getopt.h>
 #include "resourcemanager.h"
 #include "viewer.h"
+#include "config.h"
 
 using namespace std;
 
@@ -22,9 +23,6 @@ int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
 
 	// parse command line options
-	int start_page = 0;
-	bool fullscreen = false;
-
 	struct option long_options[] = {
 		{"page",		required_argument,	NULL,	'p'},
 		{"fullscreen",	no_argument,		NULL,	'f'},
@@ -41,10 +39,10 @@ int main(int argc, char *argv[]) {
 		switch (c) {
 			case 'p':
 				// currently no warning message on wrong input
-				start_page = atoi(optarg) - 1;
+				CFG::get_instance()->set_value("start_page", atoi(optarg) - 1);
 				break;
 			case 'f':
-				fullscreen = true;
+				CFG::get_instance()->set_value("fullscreen", true);
 				break;
 			case 'h':
 				print_help(argv[0]);
@@ -60,7 +58,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	Viewer katarakt(QString::fromUtf8(argv[optind]), start_page, fullscreen);
+	Viewer katarakt(QString::fromUtf8(argv[optind]));
 	if (!katarakt.is_valid()) {
 		return 1;
 	}

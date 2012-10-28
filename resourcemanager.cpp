@@ -1,13 +1,9 @@
+#include <iostream>
 #include "resourcemanager.h"
 #include "canvas.h"
-#include <iostream>
+#include "config.h"
 
 using namespace std;
-
-
-// TODO put in a config source file
-#define SMOOTH_DOWNSCALING true // filter when creating thumbnail image
-#define THUMBNAIL_SIZE 32
 
 
 //==[ Katarakt Page ]==========================================================
@@ -18,6 +14,12 @@ KPage::KPage() :
 }
 
 KPage::~KPage() {
+	if (links != NULL) {
+		for (list<Poppler::LinkGoto *>::iterator it = links->begin();
+				it != links->end(); ++it) {
+			delete *it;
+		}
+	}
 	delete links;
 }
 
@@ -145,6 +147,8 @@ void Worker::run() {
 			Q_FOREACH(Poppler::Link *l, p->links()) {
 				if (l->linkType() == Poppler::Link::Goto) {
 					lg->push_back(static_cast<Poppler::LinkGoto *>(l));
+				} else {
+					delete(l);
 				}
 			}
 
@@ -162,6 +166,11 @@ void Worker::run() {
 ResourceManager::ResourceManager(QString file) :
 		center_page(0),
 		rotation(0) {
+	// load config options
+	CFG *config = CFG::get_instance();
+	smooth_downscaling = config->get_value("smooth_downscaling").toBool();
+	thumbnail_size = config->get_value("thumbnail_size").toInt();
+
 	initialize(file);
 }
 
@@ -275,12 +284,12 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 		// create thumbnail
 		if (k_page[page].thumbnail.isNull()) {
 			Qt::TransformationMode mode = Qt::FastTransformation;
-			if (SMOOTH_DOWNSCALING) {
+			if (smooth_downscaling) {
 				mode = Qt::SmoothTransformation;
 			}
 			// scale
 			k_page[page].thumbnail = k_page[page].img.scaled(
-					QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE),
+					QSize(thumbnail_size, thumbnail_size),
 					Qt::IgnoreAspectRatio, mode);
 			// rotate
 			if (k_page[page].rotation != 0) {

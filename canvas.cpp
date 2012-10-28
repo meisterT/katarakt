@@ -1,19 +1,22 @@
+#include <QAction>
+#include <QStringListIterator>
+#include <QKeySequence>
+#include <QCoreApplication>
+#include <QString>
+#include <QPainter>
+#include <iostream>
 #include "canvas.h"
 #include "viewer.h"
 #include "layout.h"
 #include "resourcemanager.h"
 #include "search.h"
 #include "gotoline.h"
+#include "config.h"
 
 using namespace std;
 
 
-// TODO put in a config source file
-#define MOUSE_WHEEL_FACTOR 120 // (qt-)delta for turning the mouse wheel 1 click
-#define SMOOTH_SCROLL_DELTA 30 // pixel scroll offset
-
-
-Canvas::Canvas(Viewer *v, int start_page, QWidget *parent) :
+Canvas::Canvas(Viewer *v, QWidget *parent) :
 		QWidget(parent),
 		viewer(v),
 		draw_overlay(true),
@@ -21,51 +24,41 @@ Canvas::Canvas(Viewer *v, int start_page, QWidget *parent) :
 	setFocusPolicy(Qt::StrongFocus);
 
 	layout = new PresentationLayout(viewer->get_res());
-	layout->scroll_page(start_page, false); // apply start option
+
+	// load config options
+	CFG *config = CFG::get_instance();
+	// apply start option
+	layout->scroll_page(config->get_value("start_page").toInt(), false);
+
+	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
+	smooth_scroll_delta = config->get_value("smooth_scroll_delta").toInt();
+	// setup keys
+	add_action("set_presentation_layout", SLOT(set_presentation_layout()));
+	add_action("set_grid_layout", SLOT(set_grid_layout()));
+	add_action("page_down", SLOT(page_down()));
+	add_action("page_up", SLOT(page_up()));
+	add_action("page_first", SLOT(page_first()));
+	add_action("page_last", SLOT(page_last()));
+	add_action("focus_goto", SLOT(focus_goto()));
+	add_action("auto_smooth_up", SLOT(auto_smooth_up()));
+	add_action("auto_smooth_down", SLOT(auto_smooth_down()));
+	add_action("smooth_left", SLOT(smooth_left()));
+	add_action("smooth_right", SLOT(smooth_right()));
+	add_action("zoom_in", SLOT(zoom_in()));
+	add_action("zoom_out", SLOT(zoom_out()));
+	add_action("reset_zoom", SLOT(reset_zoom()));
+	add_action("columns_inc", SLOT(columns_inc()));
+	add_action("columns_dec", SLOT(columns_dec()));
+	add_action("toggle_overlay", SLOT(toggle_overlay()));
+	add_action("quit", SLOT(quit()));
+	add_action("search", SLOT(search()));
+	add_action("next_hit", SLOT(next_hit()));
+	add_action("previous_hit", SLOT(previous_hit()));
+	add_action("rotate_left", SLOT(rotate_left()));
+	add_action("rotate_right", SLOT(rotate_right()));
 
 	// prints the string representation of a key
 //	cerr << QKeySequence(Qt::Key_Equal).toString().toUtf8().constData() << endl;
-
-	// key -> function mapping
-	add_sequence("1", &Canvas::set_presentation_layout);
-	add_sequence("2", &Canvas::set_grid_layout);
-
-	add_sequence("Space", &Canvas::page_down);
-	add_sequence("PgDown", &Canvas::page_down);
-	add_sequence("Down", &Canvas::page_down);
-
-	add_sequence("Backspace", &Canvas::page_up);
-	add_sequence("PgUp", &Canvas::page_up);
-	add_sequence("Up", &Canvas::page_up);
-
-	add_sequence("G", &Canvas::page_first);
-	add_sequence("Shift+G", &Canvas::page_last);
-	add_sequence("Ctrl+G", &Canvas::focus_goto);
-
-	add_sequence("K", &Canvas::auto_smooth_up);
-	add_sequence("J", &Canvas::auto_smooth_down);
-	add_sequence("H", &Canvas::smooth_left);
-	add_sequence("L", &Canvas::smooth_right);
-
-	add_sequence("+", &Canvas::zoom_in);
-	add_sequence("=", &Canvas::zoom_in);
-	add_sequence("-", &Canvas::zoom_out);
-	add_sequence("Z", &Canvas::reset_zoom);
-
-	add_sequence("]", &Canvas::columns_inc);
-	add_sequence("[", &Canvas::columns_dec);
-
-	add_sequence("T", &Canvas::toggle_overlay);
-
-	add_sequence("Q", &Canvas::quit);
-	add_sequence("W,E,E,E", &Canvas::quit); // just messing around :)
-
-	add_sequence("/", &Canvas::search);
-	add_sequence("N", &Canvas::next_hit);
-	add_sequence("Shift+N", &Canvas::previous_hit);
-
-	add_sequence("u", &Canvas::rotate_left);
-	add_sequence("i", &Canvas::rotate_right);
 
 	goto_line = new GotoLine(viewer->get_res()->get_page_count(), this);
 	goto_line->hide(); // TODO why is it shown by default?
@@ -89,25 +82,18 @@ void Canvas::reload() {
 	update();
 }
 
-void Canvas::add_sequence(QString key, func_t action) {
-	QKeySequence s(key);
-	sequences[s] = action;
-	grabShortcut(s, Qt::WidgetShortcut);
+void Canvas::add_action(const char *action, const char *slot) {
+	QStringListIterator i(CFG::get_instance()->get_keys(action));
+	while (i.hasNext()) {
+		QAction *a = new QAction(this);
+		a->setShortcut(QKeySequence(i.next()));
+		addAction(a);
+		connect(a, SIGNAL(triggered()), this, slot);
+	}
 }
 
 const Layout *Canvas::get_layout() const {
 	return layout;
-}
-
-bool Canvas::event(QEvent *event) {
-	if (event->type() == QEvent::Shortcut) {
-		QShortcutEvent *s = static_cast<QShortcutEvent*>(event);
-		if (sequences.find(s->key()) != sequences.end()) {
-			(this->*sequences[s->key()])();
-		}
-		return true;
-	}
-	return QWidget::event(event);
 }
 
 void Canvas::paintEvent(QPaintEvent * /*event*/) {
@@ -172,7 +158,7 @@ void Canvas::wheelEvent(QWheelEvent *event) {
 				update();
 			}
 		} else {
-			if (layout->scroll_page(-d / MOUSE_WHEEL_FACTOR)) {
+			if (layout->scroll_page(-d / mouse_wheel_factor)) {
 				update();
 			}
 		}
@@ -253,26 +239,26 @@ void Canvas::auto_smooth_down() {
 }
 
 void Canvas::smooth_up() {
-	if (layout->scroll_smooth(0, SMOOTH_SCROLL_DELTA)) {
+	if (layout->scroll_smooth(0, smooth_scroll_delta)) {
 		update();
 	}
 }
 
 void Canvas::smooth_down() {
-	if (layout->scroll_smooth(0, -SMOOTH_SCROLL_DELTA)) {
+	if (layout->scroll_smooth(0, -smooth_scroll_delta)) {
 		update();
 	}
 }
 
 
 void Canvas::smooth_left() {
-	if (layout->scroll_smooth(SMOOTH_SCROLL_DELTA, 0)) {
+	if (layout->scroll_smooth(smooth_scroll_delta, 0)) {
 		update();
 	}
 }
 
 void Canvas::smooth_right() {
-	if (layout->scroll_smooth(-SMOOTH_SCROLL_DELTA, 0)) {
+	if (layout->scroll_smooth(-smooth_scroll_delta, 0)) {
 		update();
 	}
 }

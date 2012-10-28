@@ -1,20 +1,22 @@
+#include <iostream>
+#include <QFileInfo>
+#include <QAction>
+#include <csignal>
+#include <cerrno>
+#include <unistd.h>
 #include <sys/inotify.h>
 #include "viewer.h"
 #include "resourcemanager.h"
 #include "canvas.h"
 #include "search.h"
-#include <iostream>
-#include <QFileInfo>
-#include <csignal>
-#include <cerrno>
-#include <unistd.h>
+#include "config.h"
 
 using namespace std;
 
 
 int Viewer::sig_fd[2];
 
-Viewer::Viewer(QString _file, int start_page, bool fullscreen, QWidget *parent) :
+Viewer::Viewer(QString _file, QWidget *parent) :
 		QWidget(parent),
 		file(_file),
 		res(NULL),
@@ -32,7 +34,7 @@ Viewer::Viewer(QString _file, int start_page, bool fullscreen, QWidget *parent) 
 		return;
 	}
 
-	canvas = new Canvas(this, start_page, this);
+	canvas = new Canvas(this, this);
 	if (!canvas->is_valid()) {
 		valid = false;
 		return;
@@ -67,10 +69,10 @@ Viewer::Viewer(QString _file, int start_page, bool fullscreen, QWidget *parent) 
 		return;
 	}
 
-	// TODO these sequences conflict between widgets
-	add_sequence("F", &Viewer::toggle_fullscreen);
-	add_sequence("Esc", &Viewer::close_search);
-	add_sequence("R", &Viewer::reload);
+	// setup keys
+	add_action("toggle_fullscreen", SLOT(toggle_fullscreen()));
+	add_action("close_search", SLOT(close_search()));
+	add_action("reload", SLOT(reload()));
 
 	layout = new QVBoxLayout();
 	layout->setContentsMargins(0, 0, 0, 0);
@@ -104,7 +106,7 @@ Viewer::Viewer(QString _file, int start_page, bool fullscreen, QWidget *parent) 
 	search_bar->hide();
 
 	// apply start options
-	if (fullscreen) {
+	if (CFG::get_instance()->get_value("fullscreen").toBool()) {
 		toggle_fullscreen();
 	}
 }
@@ -213,20 +215,13 @@ void Viewer::close_search() {
 	search_bar->hide();
 }
 
-bool Viewer::event(QEvent *event) {
-	if (event->type() == QEvent::Shortcut) {
-		QShortcutEvent *s = static_cast<QShortcutEvent*>(event);
-		if (sequences.find(s->key()) != sequences.end()) {
-			(this->*sequences[s->key()])();
-		}
-		return true;
+void Viewer::add_action(const char *action, const char *slot) {
+	QStringListIterator i(CFG::get_instance()->get_keys(action));
+	while (i.hasNext()) {
+		QAction *a = new QAction(this);
+		a->setShortcut(QKeySequence(i.next()));
+		addAction(a);
+		connect(a, SIGNAL(triggered()), this, slot);
 	}
-	return QWidget::event(event);
-}
-
-void Viewer::add_sequence(QString key, func_t action) {
-	QKeySequence s(key);
-	sequences[s] = action;
-	grabShortcut(s, Qt::WindowShortcut);
 }
 
