@@ -31,7 +31,8 @@ Layout::Layout(ResourceManager *_res, int _page) :
 }
 
 Layout::~Layout() {
-	clear_hits();
+	// nothing here
+	// destructor call could be layout change -> data still needed
 }
 
 int Layout::get_page() const {
@@ -547,10 +548,12 @@ bool GridLayout::scroll_page(int new_page, bool relative) {
 	int old_off_y = off_y;
 	if (total_height > height) {
 		if (!relative) {
-			new_page = new_page / grid->get_column_count() * grid->get_column_count();
-			page += new_page;
+			if (new_page >= 0) { // else int rounding is bad, < 0 has to stay < 0
+				new_page /= grid->get_column_count();
+			}
+			page = new_page * grid->get_column_count();
 		} else {
-			page = new_page;
+			page += new_page * grid->get_column_count();
 		}
 	}
 	if ((page == 0 && off_y > 0) || page < 0) {
