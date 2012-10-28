@@ -72,6 +72,11 @@ KEY BINDINGS
 *u*, *i* ::
 	Rotate pages left/right
 
+CONFIGURATION
+-------------
+Variables and key bindings can be changed by modifying the katarakt.ini file.
+By default it is read from '$XDG_CONFIG_HOME'.
+
 COMMUNITY
 ---------
 Feel free to join the IRC channel '#katarakt' on freenode.
