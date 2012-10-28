@@ -544,17 +544,23 @@ bool GridLayout::scroll_smooth(int dx, int dy) {
 
 bool GridLayout::scroll_page(int new_page, bool relative) {
 	int old_page = page;
+	int old_off_y = off_y;
 	if (total_height > height) {
 		if (!relative) {
-			new_page /= grid->get_column_count();
+			new_page = new_page / grid->get_column_count() * grid->get_column_count();
+			page += new_page;
+		} else {
+			page = new_page;
 		}
-		Layout::scroll_page(new_page * grid->get_column_count(), relative);
 	}
-	if ((page == border_page_h && off_y < border_off_h) || page > border_page_h) {
+	if (page == 0 && off_y > 0 || page < 0) {
+		page = 0;
+		off_y = 0;
+	} else if ((page == border_page_h && off_y < border_off_h) || page > border_page_h) {
 		page = border_page_h;
 		off_y = border_off_h;
 	}
-	return page != old_page;
+	return page != old_page || off_y != old_off_y;
 }
 
 void GridLayout::render(QPainter *painter) {
