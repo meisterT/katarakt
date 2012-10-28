@@ -1,7 +1,7 @@
 Katarakt
 ========
 
-katarakt is a simple PDF viewer. It is designed to use as much of the available
+katarakt is a simple PDF viewer. It is designed to use as much available screen
 space as possible.
 
 Features
@@ -10,7 +10,7 @@ There are currently two layouts.
 
 	*	The presentation layout is active by default. As the name suggests it
 		shows one slide at a time. Each page individually is scaled to use the
-		maximum available space.
+		maximum available screen space.
 
 	*	The grid layout is a continuous viewing mode, and it supports as many
 		columns as you want. The relative size between pages is preserved, and
