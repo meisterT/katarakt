@@ -553,7 +553,7 @@ bool GridLayout::scroll_page(int new_page, bool relative) {
 			page = new_page;
 		}
 	}
-	if (page == 0 && off_y > 0 || page < 0) {
+	if ((page == 0 && off_y > 0) || page < 0) {
 		page = 0;
 		off_y = 0;
 	} else if ((page == border_page_h && off_y < border_off_h) || page > border_page_h) {
