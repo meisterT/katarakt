@@ -4,7 +4,9 @@
 #include <csignal>
 #include <cerrno>
 #include <unistd.h>
+#ifdef __linux__
 #include <sys/inotify.h>
+#endif
 #include "viewer.h"
 #include "resourcemanager.h"
 #include "canvas.h"
@@ -112,8 +114,10 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 }
 
 Viewer::~Viewer() {
+#ifdef __linux__
 	::close(inotify_fd);
 	delete i_notifier;
+#endif
 	::close(sig_fd[0]);
 	::close(sig_fd[1]);
 	delete sig_notifier;
