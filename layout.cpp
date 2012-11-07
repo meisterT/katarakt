@@ -698,8 +698,14 @@ void GridLayout::view_hit() {
 	int center_y = (grid->get_height(hit_page) * size - page_height) / 2;
 
 	int wpos = off_x;
-	for (int i = 0; i < hit_page % grid->get_column_count(); i++) {
-		wpos += grid->get_width(i) * size + useless_gap;
+	if (hit_page % grid->get_column_count() > horizontal_page) {
+		for (int i = horizontal_page; i < hit_page % grid->get_column_count(); i++) {
+			wpos += grid->get_width(i) * size + useless_gap;
+		}
+	} else {
+		for (int i = horizontal_page; i > hit_page % grid->get_column_count(); i--) {
+			wpos -= grid->get_width(i) * size + useless_gap;
+		}
 	}
 	int hpos = off_y;
 	if (hit_page > page) {
