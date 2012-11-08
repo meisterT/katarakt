@@ -325,6 +325,9 @@ bool PresentationLayout::click_mouse(int mx, int my) {
 
 	// find matching box
 	const list<Poppler::LinkGoto *> *l = res->get_links(page);
+	if (l == NULL) {
+		return false;
+	}
 	for (list<Poppler::LinkGoto *>::const_iterator it = l->begin();
 			it != l->end(); ++it) {
 		QRectF r = (*it)->linkArea();
