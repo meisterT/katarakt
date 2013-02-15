@@ -2,6 +2,7 @@
 #include <QString>
 #include <iostream>
 #include <getopt.h>
+#include "download.h"
 #include "resourcemanager.h"
 #include "viewer.h"
 #include "config.h"
@@ -58,7 +59,11 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	Viewer katarakt(QString::fromUtf8(argv[optind]));
+	Download download;
+	QString file = download.load(QString::fromUtf8(argv[optind]));
+	std::cerr << "filename: " << file.toStdString() << std::endl;
+
+	Viewer katarakt(file);
 	if (!katarakt.is_valid()) {
 		return 1;
 	}
