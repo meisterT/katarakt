@@ -61,7 +61,6 @@ int main(int argc, char *argv[]) {
 
 	Download download;
 	QString file = download.load(QString::fromUtf8(argv[optind]));
-	std::cerr << "filename: " << file.toStdString() << std::endl;
 
 	Viewer katarakt(file);
 	if (!katarakt.is_valid()) {
