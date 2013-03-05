@@ -1,7 +1,5 @@
 #include "download.h"
-
 #include <iostream>
-
 #include <QEventLoop>
 #include <QUrl>
 #include <QNetworkRequest>
@@ -9,6 +7,8 @@
 #include <QByteArray>
 #include <QDir>
 #include <QFileInfo>
+
+using namespace std;
 
 
 Download::Download() :
@@ -21,27 +21,23 @@ Download::~Download() {
 	delete file;
 }
 
-
-
 QString Download::load(QString f) {
 	QUrl url(f);
-
-	if( url.isLocalFile() || url.isRelative() ) {
-		// found local file
-		// do not download
+	if (url.isLocalFile() || url.isRelative()) {
+		// found local file, do not download
 		return QDir::toNativeSeparators(url.toLocalFile());
 	}
 
 	QEventLoop loop;
-	QObject::connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
-	QNetworkRequest request(url);
-	QNetworkReply *reply = manager->get(request);
+	QObject::connect(manager, SIGNAL(finished(QNetworkReply *)), &loop, SLOT(quit()));
+	QNetworkReply *reply = manager->get(QNetworkRequest(url));
+	QObject::connect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(progress(qint64, qint64)));
 	loop.exec();
 #ifdef DEBUG
-	std::cerr << "File downloaded" << std::endl;
+	cerr << "File downloaded" << endl;
 #endif
 
-	// find uniq temporary filename
+	// find unique temporary filename
 	QFileInfo fileInfo(url.path());
 	QString fileName = fileInfo.fileName();
 	delete file;
@@ -49,18 +45,25 @@ QString Download::load(QString f) {
 	file->setAutoRemove(true);
 	file->open();
 
-	if(reply->error() != QNetworkReply::NoError || !reply->isReadable()) {
-		std::cerr << "Download failed" << std::cerr;
+	if (reply->error() != QNetworkReply::NoError || !reply->isReadable()) {
+		cerr << reply->errorString().toStdString() << endl;
 		return NULL;
 	}
 
 	// store data in tempfile
 	QByteArray data = reply->readAll();
-	qint64 len = file->write(data);
+	reply->deleteLater();
+	file->write(data);
 	file->close();
 #ifdef DEBUG
-	std::cerr << "filename: " << file.toStdString() << std::endl;
+	cerr << "filename: " << file.toStdString() << endl;
 #endif
 	return file->fileName();
+}
+
+void Download::progress(qint64 bytes_received, qint64 bytes_total) {
+	cout.precision(1);
+	cout << fixed << (bytes_received / 1024.0f) << "/";
+	cout << (bytes_total / 1024.0f) << "KB downloaded\r";
 }
 

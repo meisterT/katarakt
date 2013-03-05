@@ -61,6 +61,9 @@ int main(int argc, char *argv[]) {
 
 	Download download;
 	QString file = download.load(QString::fromUtf8(argv[optind]));
+	if (file == NULL) {
+		return 1;
+	}
 
 	Viewer katarakt(file);
 	if (!katarakt.is_valid()) {

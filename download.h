@@ -6,7 +6,8 @@
 #include <QTemporaryFile>
 
 
-class Download {
+class Download : public QObject {
+	Q_OBJECT
 
 public:
 	Download();
@@ -14,10 +15,13 @@ public:
 
 	QString load(QString);
 
+private slots:
+	void progress(qint64 bytes_received, qint64 bytes_total);
+
 private:
 	QNetworkAccessManager *manager;
 	QTemporaryFile *file;
-
 };
 
 #endif
+
