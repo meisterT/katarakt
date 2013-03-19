@@ -29,6 +29,8 @@ In addition, with katarakt you can
 
 	*	set your own keybindings and customise options.
 
+	*	open a URL. Remote documents are downloaded automatically.
+
 Input is always responsive, because CPU-intensive operations like rendering and
 searching are done in parallel. Also, you don't have to wait after changing the
 scale or rotation, because the available pages are used until they get
