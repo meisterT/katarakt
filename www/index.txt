@@ -54,6 +54,8 @@ Community
 ---------
 Feel free to join _#katarakt_ on _freenode_.
 
+You can find a bugtracker at http://redmine.cs.fau.de/redmine/projects/katarakt.
+
 License
 -------
 Copyright (C) 2011-2012, Philipp Erhardt. All rights reserved.
