@@ -444,8 +444,14 @@ void GridLayout::rebuild() {
 }
 
 void GridLayout::resize(int w, int h) {
+	float old_size = size;
 	Layout::resize(w, h);
 	set_constants();
+
+	off_x = off_x * size / old_size;
+	off_y = off_y * size / old_size;
+//	off_y = (off_y - height / 2) * size / old_size + height / 2;
+	scroll_smooth(0, 0);
 }
 
 void GridLayout::set_zoom(int new_zoom, bool relative) {
