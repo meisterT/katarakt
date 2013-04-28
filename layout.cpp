@@ -186,6 +186,7 @@ int PresentationLayout::calculate_fit_width(int page) {
 }
 
 void PresentationLayout::render(QPainter *painter) {
+	// TODO duplicate code
 	int page_width = width, page_height = height;
 	int center_x = 0, center_y = 0;
 
@@ -282,6 +283,17 @@ void PresentationLayout::render(QPainter *painter) {
 }
 
 void PresentationLayout::advance_hit(bool forward) {
+	Layout::advance_hit(forward);
+	view_hit();
+}
+
+void PresentationLayout::advance_invisible_hit(bool forward) {
+	if (forward) {
+		hit_it = hits[hit_page]->end();
+		--hit_it;
+	} else {
+		hit_it = hits[hit_page]->begin();
+	}
 	Layout::advance_hit(forward);
 	view_hit();
 }
@@ -698,7 +710,59 @@ void GridLayout::advance_hit(bool forward) {
 	view_hit();
 }
 
+void GridLayout::advance_invisible_hit(bool forward) {
+	QRect r;
+	list<Result>::const_iterator it = hit_it;
+	do {
+		Layout::advance_hit(forward);
+		r = get_hit_rect();
+		if (r.x() < 0 || r.y() < 0 ||
+				r.x() + r.width() >= width ||
+				r.y() + r.height() >= height) {
+			break; // TODO always breaks for boxes larger than the viewport
+		}
+	} while (it != hit_it);
+	view_hit(r);
+}
+
 void GridLayout::view_hit() {
+	QRect r = get_hit_rect();
+	view_hit(r);
+}
+
+void GridLayout::view_hit(const QRect &r) {
+	// move view horizontally
+	if (r.width() <= width * (1 - 2 * search_padding)) {
+		if (r.x() < width * search_padding) {
+			scroll_smooth(width * search_padding - r.x(), 0);
+		} else if (r.x() + r.width() > width * (1 - search_padding)) {
+			scroll_smooth(width * (1 - search_padding) - r.x() - r.width(), 0);
+		}
+	} else {
+		int center = (width - r.width()) / 2;
+		if (center < 0) {
+			center = 0;
+		}
+		scroll_smooth(center - r.x(), 0);
+	}
+	// vertically
+	if (r.height() <= height * (1 - 2 * search_padding)) {
+		if (r.y() < height * search_padding) {
+			scroll_smooth(0, height * search_padding - r.y());
+		} else if (r.y() + r.height() > height * (1 - search_padding)) {
+			scroll_smooth(0, height * (1 - search_padding) - r.y() - r.height());
+		}
+	} else {
+		int center = (height - r.height()) / 2;
+		if (center < 0) {
+			center = 0;
+		}
+		scroll_smooth(0, center - r.y());
+	}
+}
+
+
+QRect GridLayout::get_hit_rect() {
 	// calculate offsets
 	int page_width = res->get_page_width(hit_page) * size;
 	int page_height = ROUND(res->get_page_height(hit_page) * size);
@@ -729,37 +793,9 @@ void GridLayout::view_hit() {
 		}
 	}
 	// get search rect coordinates relative to the current view
-	QRect r = hit_it->scale_translate(size,
+	return hit_it->scale_translate(size,
 			res->get_page_width(hit_page), res->get_page_height(hit_page),
 			wpos + center_x, hpos + center_y, res->get_rotation());
-	// move view horizontally
-	if (r.width() <= width * (1 - 2 * search_padding)) {
-		if (r.x() < width * search_padding) {
-			scroll_smooth(width * search_padding - r.x(), 0);
-		} else if (r.x() + r.width() > width * (1 - search_padding)) {
-			scroll_smooth(width * (1 - search_padding) - r.x() - r.width(), 0);
-		}
-	} else {
-		int center = (width - r.width()) / 2;
-		if (center < 0) {
-			center = 0;
-		}
-		scroll_smooth(center - r.x(), 0);
-	}
-	// vertically
-	if (r.height() <= height * (1 - 2 * search_padding)) {
-		if (r.y() < height * search_padding) {
-			scroll_smooth(0, height * search_padding - r.y());
-		} else if (r.y() + r.height() > height * (1 - search_padding)) {
-			scroll_smooth(0, height * (1 - search_padding) - r.y() - r.height());
-		}
-	} else {
-		int center = (height - r.height()) / 2;
-		if (center < 0) {
-			center = 0;
-		}
-		scroll_smooth(0, center - r.y());
-	}
 }
 
 pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {

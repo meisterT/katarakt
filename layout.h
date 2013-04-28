@@ -31,6 +31,7 @@ public:
 	virtual void set_hits(int page, std::list<Result> *l);
 	virtual void set_search_visible(bool visible);
 	virtual void advance_hit(bool forward = true);
+	virtual void advance_invisible_hit(bool forward = true) = 0;
 
 	virtual bool click_mouse(int mx, int my);
 	virtual bool goto_page_at(int mx, int my);
@@ -73,6 +74,7 @@ public:
 	void render(QPainter *painter);
 
 	void advance_hit(bool forward = true);
+	void advance_invisible_hit(bool forward = true);
 
 	bool click_mouse(int mx, int my);
 
@@ -99,6 +101,7 @@ public:
 	void render(QPainter *painter);
 
 	void advance_hit(bool forward = true);
+	void advance_invisible_hit(bool forward = true);
 
 	bool click_mouse(int mx, int my);
 	bool goto_page_at(int mx, int my);
@@ -109,6 +112,8 @@ private:
 	void initialize(int columns);
 	void set_constants();
 	void view_hit();
+	void view_hit(const QRect &r);
+	QRect get_hit_rect();
 	std::pair<int,QPointF> get_page_at(int x, int y);
 
 	Grid *grid;

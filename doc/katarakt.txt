@@ -69,6 +69,8 @@ KEY BINDINGS
 	Show search bar
 *n*, *N* ::
 	Focus next/previous search hit
+*\^n*, *^N* ::
+	Focus next/previous search hit that is currently not visible
 *u*, *i* ::
 	Rotate pages left/right
 

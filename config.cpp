@@ -48,6 +48,8 @@ CFG::CFG() :
 	keys["search"] = QStringList() << "/";
 	keys["next_hit"] = QStringList() << "N";
 	keys["previous_hit"] = QStringList() << "Shift+N";
+	keys["next_invisible_hit"] = QStringList() << "Ctrl+N";
+	keys["previous_invisible_hit"] = QStringList() << "Ctrl+Shift+N";
 	keys["rotate_left"] = QStringList() << "U";
 	keys["rotate_right"] = QStringList() << "I";
 	// viewer keys

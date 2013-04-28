@@ -54,6 +54,8 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	add_action("search", SLOT(search()));
 	add_action("next_hit", SLOT(next_hit()));
 	add_action("previous_hit", SLOT(previous_hit()));
+	add_action("next_invisible_hit", SLOT(next_invisible_hit()));
+	add_action("previous_invisible_hit", SLOT(previous_invisible_hit()));
 	add_action("rotate_left", SLOT(rotate_left()));
 	add_action("rotate_right", SLOT(rotate_right()));
 
@@ -311,6 +313,20 @@ void Canvas::next_hit() {
 void Canvas::previous_hit() {
 	if (layout->get_search_visible()) {
 		layout->advance_hit(false);
+		update();
+	}
+}
+
+void Canvas::next_invisible_hit() {
+	if (layout->get_search_visible()) {
+		layout->advance_invisible_hit();
+		update();
+	}
+}
+
+void Canvas::previous_invisible_hit() {
+	if (layout->get_search_visible()) {
+		layout->advance_invisible_hit(false);
 		update();
 	}
 }

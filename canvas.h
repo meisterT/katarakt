@@ -68,6 +68,8 @@ private slots:
 	void search();
 	void next_hit();
 	void previous_hit();
+	void next_invisible_hit();
+	void previous_invisible_hit();
 	void focus_goto();
 	void rotate_left();
 	void rotate_right();
