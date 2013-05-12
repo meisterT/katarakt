@@ -220,6 +220,7 @@ void SearchBar::connect_canvas(Canvas *c) const {
 }
 
 void SearchBar::focus() {
+	line->setText(term);
 	line->setFocus(Qt::OtherFocusReason);
 	line->selectAll();
 	show();
