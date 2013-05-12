@@ -242,8 +242,10 @@ void SearchBar::set_text() {
 	if (!is_valid()) {
 		return;
 	}
-	// do not search for the same term twice
+	// do not start the same search again but signal slots
 	if (term == line->text()) {
+		emit search_done(viewer->get_canvas()->get_layout()->get_page(), NULL);
+		viewer->get_canvas()->setFocus(Qt::OtherFocusReason);
 		return;
 	}
 

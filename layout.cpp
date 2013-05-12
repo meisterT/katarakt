@@ -98,6 +98,23 @@ void Layout::clear_hits() {
 }
 
 void Layout::set_hits(int page, list<Result> *l) {
+	// no new search, just view hit on the current page or below. wraps.
+	if (l == NULL) {
+		map<int,list<Result> *>::iterator it = hits.lower_bound(page);
+		if (it != hits.end()) {
+			hit_page = it->first;
+			hit_it = hits[hit_page]->begin();
+			view_hit();
+		} else {
+			if (hits.size() != 0) {
+				hit_page = hits.lower_bound(0)->first;
+				hit_it = hits[hit_page]->begin();
+				view_hit();
+			}
+		}
+		return;
+	}
+
 	// new search -> initialize highlight
 	if (hits.size() == 0) {
 		hit_page = page;
