@@ -52,8 +52,10 @@ private slots:
 	void page_down();
 	void page_first();
 	void page_last();
-	void auto_smooth_up();
-	void auto_smooth_down();
+	void half_screen_up();
+	void half_screen_down();
+	void screen_up();
+	void screen_down();
 	void smooth_up();
 	void smooth_down();
 	void smooth_left();
@@ -92,6 +94,7 @@ private:
 	// config options
 	int mouse_wheel_factor;
 	int smooth_scroll_delta;
+	float screen_scroll_factor;
 };
 
 #endif

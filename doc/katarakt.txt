@@ -34,6 +34,11 @@ OPTIONS
 *-h*, *--help*::
 	Print help and exit.
 
+CONFIGURATION
+-------------
+Variables and key bindings can be changed by modifying the katarakt.ini file.
+By default it is read from '$XDG_CONFIG_HOME'.
+
 KEY BINDINGS
 ------------
 *q* ::
@@ -45,10 +50,15 @@ KEY BINDINGS
 	Switch to 'grid layout'. Views pages in a continuous fashion, scaled to fit
 	the width. Supports columns.
 
-*Up*, *Down*, *PgUp*, *PgDown*, *BackSpace*, *Space* ::
-	Move from page to page
-*h*, *j*, *k*, *l* ::
-	Move smoothly
+*Up*, *Down*, *Left*, *Right*, *k*, *j*, *h*, *l* ::
+	Move around (up/down/left/right)
+*\^u*, *^d* ::
+	Scroll up/down half the screen
+*BackSpace*, *Space*, *\^b*, *^f* ::
+	Scroll up/down the screen. By default scrolls 90% to create an overlapping region
+*PgUp*, *PgDown* ::
+	Scroll up/down one page. Kind of swaps the pages in place
+
 *g*, *G* ::
 	Go to the first/last page
 *^g* ::
@@ -74,10 +84,37 @@ KEY BINDINGS
 *u*, *i* ::
 	Rotate pages left/right
 
-CONFIGURATION
--------------
-Variables and key bindings can be changed by modifying the katarakt.ini file.
-By default it is read from '$XDG_CONFIG_HOME'.
+VARIABLES
+---------
+'int' *mouse_wheel_factor* ::
+	120: QT delta for turning the mouse wheel 1 click
+'int' *smooth_scroll_delta* ::
+	30: pixel offset when moving around
+'float' *screen_scroll_factor* ::
+	0.9: factor for scrolling the screen. Should be \<= 1 to create an overlapping region
+
+'int' *useless_gap* ::
+	2: gap between two pages in pixels
+'int' *min_page_width* ::
+	150: pages can not be smaller than this
+'int' *min_zoom* ::
+	-14: smallest zoom value
+'int' *max_zoom* ::
+	30: biggest zoom value
+'float' *zoom_factor* ::
+	0.05: influences the number of steps between min and max
+'int' *prefetch_count* ::
+	3: number of pages exceeding the currently visible ones to render, back- and forwards respectively
+'float' *search_padding* ::
+	0.2: factor of the area on the screen to display search hits in. Moves search hits towards the center
+
+'bool' *smooth_downscaling* ::
+	true: enables the higher quality downsampling filter
+'int' *thumbnail_size* ::
+	32: one dimension of square thumbnails saved at run-time for every page that was once rendered
+
+'int' *rect_expansion* ::
+	2: number of pixels search rects are expanded by
 
 COMMUNITY
 ---------

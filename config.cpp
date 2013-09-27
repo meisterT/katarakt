@@ -10,6 +10,7 @@ CFG::CFG() :
 	// canvas options
 	defaults["mouse_wheel_factor"] = 120; // (qt-)delta for turning the mouse wheel 1 click
 	defaults["smooth_scroll_delta"] = 30; // pixel scroll offset
+	defaults["screen_scroll_factor"] = 0.9; // creates overlap for scrolling 1 screen down, should be <= 1
 	// layout options
 	defaults["useless_gap"] = 2;
 	defaults["min_page_width"] = 150;
@@ -29,15 +30,18 @@ CFG::CFG() :
 	// canvas keys
 	keys["set_presentation_layout"] = QStringList() << "1";
 	keys["set_grid_layout"] = QStringList() << "2";
-	keys["page_down"] = QStringList() << "Space" << "PgDown" << "Down";
-	keys["page_up"] = QStringList() << "Backspace" << "PgUp" << "Up";
+	keys["page_up"] = QStringList() << "PgUp";
+	keys["page_down"] = QStringList() << "PgDown";
 	keys["page_first"] = QStringList() << "G";
 	keys["page_last"] = QStringList() << "Shift+G";
-	keys["focus_goto"] = QStringList() << "Ctrl+G";
-	keys["auto_smooth_up"] = QStringList() << "K";
-	keys["auto_smooth_down"] = QStringList() << "J";
-	keys["smooth_left"] = QStringList() << "H";
-	keys["smooth_right"] = QStringList() << "L";
+	keys["half_screen_up"] = QStringList() << "Ctrl+U";
+	keys["half_screen_down"] = QStringList() << "Ctrl+D";
+	keys["screen_up"] = QStringList() << "Backspace" << "Ctrl+B";
+	keys["screen_down"] = QStringList() << "Space" << "Ctrl+F";
+	keys["smooth_up"] = QStringList() << "Up" << "K";
+	keys["smooth_down"] = QStringList() << "Down" << "J";
+	keys["smooth_left"] = QStringList() << "Left" << "H";
+	keys["smooth_right"] = QStringList() << "Right" << "L";
 	keys["zoom_in"] = QStringList() << "=" << "+";
 	keys["zoom_out"] = QStringList() << "-";
 	keys["reset_zoom"] = QStringList() << "Z";
@@ -50,6 +54,7 @@ CFG::CFG() :
 	keys["previous_hit"] = QStringList() << "Shift+N";
 	keys["next_invisible_hit"] = QStringList() << "Ctrl+N";
 	keys["previous_invisible_hit"] = QStringList() << "Ctrl+Shift+N";
+	keys["focus_goto"] = QStringList() << "Ctrl+G";
 	keys["rotate_left"] = QStringList() << "U";
 	keys["rotate_right"] = QStringList() << "I";
 	// viewer keys

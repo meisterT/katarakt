@@ -32,16 +32,20 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
 	smooth_scroll_delta = config->get_value("smooth_scroll_delta").toInt();
+	screen_scroll_factor = config->get_value("screen_scroll_factor").toFloat();
 	// setup keys
 	add_action("set_presentation_layout", SLOT(set_presentation_layout()));
 	add_action("set_grid_layout", SLOT(set_grid_layout()));
-	add_action("page_down", SLOT(page_down()));
 	add_action("page_up", SLOT(page_up()));
+	add_action("page_down", SLOT(page_down()));
 	add_action("page_first", SLOT(page_first()));
 	add_action("page_last", SLOT(page_last()));
-	add_action("focus_goto", SLOT(focus_goto()));
-	add_action("auto_smooth_up", SLOT(auto_smooth_up()));
-	add_action("auto_smooth_down", SLOT(auto_smooth_down()));
+	add_action("half_screen_up", SLOT(half_screen_up()));
+	add_action("half_screen_down", SLOT(half_screen_down()));
+	add_action("screen_up", SLOT(screen_up()));
+	add_action("screen_down", SLOT(screen_down()));
+	add_action("smooth_up", SLOT(smooth_up()));
+	add_action("smooth_down", SLOT(smooth_down()));
 	add_action("smooth_left", SLOT(smooth_left()));
 	add_action("smooth_right", SLOT(smooth_right()));
 	add_action("zoom_in", SLOT(zoom_in()));
@@ -56,6 +60,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	add_action("previous_hit", SLOT(previous_hit()));
 	add_action("next_invisible_hit", SLOT(next_invisible_hit()));
 	add_action("previous_invisible_hit", SLOT(previous_invisible_hit()));
+	add_action("focus_goto", SLOT(focus_goto()));
 	add_action("rotate_left", SLOT(rotate_left()));
 	add_action("rotate_right", SLOT(rotate_right()));
 
@@ -200,6 +205,7 @@ void Canvas::set_grid_layout() {
 	update();
 }
 
+// general movement
 void Canvas::page_up() {
 	if (layout->scroll_page(-1)) {
 		update();
@@ -224,44 +230,84 @@ void Canvas::page_last() {
 	}
 }
 
-void Canvas::auto_smooth_up() {
+void Canvas::half_screen_up() {
 	if (layout->supports_smooth_scrolling()) {
-		smooth_up();
-	} else {
+		if (layout->scroll_smooth(0, height() * 0.5f)) {
+			update();
+		}
+	} else { // fallback
 		page_up();
 	}
 }
 
-void Canvas::auto_smooth_down() {
+void Canvas::half_screen_down() {
 	if (layout->supports_smooth_scrolling()) {
-		smooth_down();
-	} else {
+		if (layout->scroll_smooth(0, -height() * 0.5f)) {
+			update();
+		}
+	} else { // fallback
+		page_down();
+	}
+}
+
+void Canvas::screen_up() {
+	if (layout->supports_smooth_scrolling()) {
+		if (layout->scroll_smooth(0, height() * screen_scroll_factor)) {
+			update();
+		}
+	} else { // fallback
+		page_up();
+	}
+}
+
+void Canvas::screen_down() {
+	if (layout->supports_smooth_scrolling()) {
+		if (layout->scroll_smooth(0, -height() * screen_scroll_factor)) {
+			update();
+		}
+	} else { // fallback
 		page_down();
 	}
 }
 
 void Canvas::smooth_up() {
-	if (layout->scroll_smooth(0, smooth_scroll_delta)) {
-		update();
+	if (layout->supports_smooth_scrolling()) {
+		if (layout->scroll_smooth(0, smooth_scroll_delta)) {
+			update();
+		}
+	} else { // fallback
+		page_up();
 	}
 }
 
 void Canvas::smooth_down() {
-	if (layout->scroll_smooth(0, -smooth_scroll_delta)) {
-		update();
+	if (layout->supports_smooth_scrolling()) {
+		if (layout->scroll_smooth(0, -smooth_scroll_delta)) {
+			update();
+		}
+	} else { // fallback
+		page_down();
 	}
 }
 
 
 void Canvas::smooth_left() {
-	if (layout->scroll_smooth(smooth_scroll_delta, 0)) {
-		update();
+	if (layout->supports_smooth_scrolling()) {
+		if (layout->scroll_smooth(smooth_scroll_delta, 0)) {
+			update();
+		}
+	} else { // fallback
+		page_up();
 	}
 }
 
 void Canvas::smooth_right() {
-	if (layout->scroll_smooth(-smooth_scroll_delta, 0)) {
-		update();
+	if (layout->supports_smooth_scrolling()) {
+		if (layout->scroll_smooth(-smooth_scroll_delta, 0)) {
+			update();
+		}
+	} else { // fallback
+		page_down();
 	}
 }
 
