@@ -56,7 +56,7 @@ QString Download::load(QString f) {
 	file->write(data);
 	file->close();
 #ifdef DEBUG
-	cerr << "filename: " << file.toStdString() << endl;
+	cerr << "filename: " << file->fileName().toStdString() << endl;
 #endif
 	return file->fileName();
 }
