@@ -351,29 +351,33 @@ void Canvas::search() {
 
 void Canvas::next_hit() {
 	if (layout->get_search_visible()) {
-		layout->advance_hit();
-		update();
+		if (layout->advance_hit()) {
+			update();
+		}
 	}
 }
 
 void Canvas::previous_hit() {
 	if (layout->get_search_visible()) {
-		layout->advance_hit(false);
-		update();
+		if (layout->advance_hit(false)) {
+			update();
+		}
 	}
 }
 
 void Canvas::next_invisible_hit() {
 	if (layout->get_search_visible()) {
-		layout->advance_invisible_hit();
-		update();
+		if (layout->advance_invisible_hit()) {
+			update();
+		}
 	}
 }
 
 void Canvas::previous_invisible_hit() {
 	if (layout->get_search_visible()) {
-		layout->advance_invisible_hit(false);
-		update();
+		if (layout->advance_invisible_hit(false)) {
+			update();
+		}
 	}
 }
 

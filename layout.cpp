@@ -134,9 +134,9 @@ void Layout::set_search_visible(bool visible) {
 	search_visible = visible;
 }
 
-void Layout::advance_hit(bool forward) {
+bool Layout::advance_hit(bool forward) {
 	if (hits.size() == 0) {
-		return;
+		return false;
 	}
 	// find next hit
 	if (forward) {
@@ -162,6 +162,7 @@ void Layout::advance_hit(bool forward) {
 			--hit_it;
 		}
 	}
+	return true;
 }
 
 bool Layout::click_mouse(int /*mx*/, int /*my*/) {
@@ -299,12 +300,19 @@ void PresentationLayout::render(QPainter *painter) {
 	res->collect_garbage(page - prefetch_count * 3, page + prefetch_count * 3);
 }
 
-void PresentationLayout::advance_hit(bool forward) {
-	Layout::advance_hit(forward);
-	view_hit();
+bool PresentationLayout::advance_hit(bool forward) {
+	if (Layout::advance_hit(forward)) {
+		view_hit();
+		return true;
+	}
+	return false;
 }
 
-void PresentationLayout::advance_invisible_hit(bool forward) {
+bool PresentationLayout::advance_invisible_hit(bool forward) {
+	if (hits.size() == 0) {
+		return false;
+	}
+
 	if (forward) {
 		hit_it = hits[hit_page]->end();
 		--hit_it;
@@ -313,6 +321,7 @@ void PresentationLayout::advance_invisible_hit(bool forward) {
 	}
 	Layout::advance_hit(forward);
 	view_hit();
+	return true;
 }
 
 void PresentationLayout::view_hit() {
@@ -722,12 +731,19 @@ void GridLayout::render(QPainter *painter) {
 	}
 }
 
-void GridLayout::advance_hit(bool forward) {
-	Layout::advance_hit(forward);
-	view_hit();
+bool GridLayout::advance_hit(bool forward) {
+	if (Layout::advance_hit(forward)) {
+		view_hit();
+		return true;
+	}
+	return false;
 }
 
-void GridLayout::advance_invisible_hit(bool forward) {
+bool GridLayout::advance_invisible_hit(bool forward) {
+	if (hits.size() == 0) {
+		return false;
+	}
+
 	QRect r;
 	list<Result>::const_iterator it = hit_it;
 	do {
@@ -740,6 +756,7 @@ void GridLayout::advance_invisible_hit(bool forward) {
 		}
 	} while (it != hit_it);
 	view_hit(r);
+	return true;
 }
 
 void GridLayout::view_hit() {

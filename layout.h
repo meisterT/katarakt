@@ -30,8 +30,8 @@ public:
 	virtual void clear_hits();
 	virtual void set_hits(int page, std::list<Result> *l);
 	virtual void set_search_visible(bool visible);
-	virtual void advance_hit(bool forward = true);
-	virtual void advance_invisible_hit(bool forward = true) = 0;
+	virtual bool advance_hit(bool forward = true);
+	virtual bool advance_invisible_hit(bool forward = true) = 0;
 
 	virtual bool click_mouse(int mx, int my);
 	virtual bool goto_page_at(int mx, int my);
@@ -73,8 +73,8 @@ public:
 	bool scroll_smooth(int dx, int dy);
 	void render(QPainter *painter);
 
-	void advance_hit(bool forward = true);
-	void advance_invisible_hit(bool forward = true);
+	bool advance_hit(bool forward = true);
+	bool advance_invisible_hit(bool forward = true);
 
 	bool click_mouse(int mx, int my);
 
@@ -100,8 +100,8 @@ public:
 	bool scroll_page(int new_page, bool relative = true);
 	void render(QPainter *painter);
 
-	void advance_hit(bool forward = true);
-	void advance_invisible_hit(bool forward = true);
+	bool advance_hit(bool forward = true);
+	bool advance_invisible_hit(bool forward = true);
 
 	bool click_mouse(int mx, int my);
 	bool goto_page_at(int mx, int my);
