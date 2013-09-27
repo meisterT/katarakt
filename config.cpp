@@ -32,8 +32,8 @@ CFG::CFG() :
 	keys["set_grid_layout"] = QStringList() << "2";
 	keys["page_up"] = QStringList() << "PgUp";
 	keys["page_down"] = QStringList() << "PgDown";
-	keys["page_first"] = QStringList() << "G";
-	keys["page_last"] = QStringList() << "Shift+G";
+	keys["page_first"] = QStringList() << "Home" << "G";
+	keys["page_last"] = QStringList() << "End" << "Shift+G";
 	keys["half_screen_up"] = QStringList() << "Ctrl+U";
 	keys["half_screen_down"] = QStringList() << "Ctrl+D";
 	keys["screen_up"] = QStringList() << "Backspace" << "Ctrl+B";

@@ -59,7 +59,7 @@ KEY BINDINGS
 *PgUp*, *PgDown* ::
 	Scroll up/down one page. Kind of swaps the pages in place
 
-*g*, *G* ::
+*Home*, *End*, *g*, *G* ::
 	Go to the first/last page
 *^g* ::
 	Show 'goto page' bar
