@@ -72,10 +72,6 @@ CFG &CFG::operator=(const CFG &/*other*/) {
 }
 
 CFG::~CFG() {
-	// do not write temporary options to disk
-	settings.remove("start_page");
-	settings.remove("fullscreen");
-
 //	set_defaults(); // uncomment to create ini file with all the default settings
 }
 
@@ -87,6 +83,9 @@ void CFG::set_defaults() {
 		settings.setValue(it.key(), it.value());
 	}
 	settings.endGroup();
+
+	tmp_values["start_page"] = 0;
+	tmp_values["fullscreen"] = false;
 
 	settings.beginGroup("Keys");
 	QHashIterator<QString,QStringList> i2(keys);
@@ -108,6 +107,14 @@ QVariant CFG::get_value(const char *key) const {
 
 void CFG::set_value(const char *key, QVariant value) {
 	settings.setValue(QString("Settings/") + key, value);
+}
+
+QVariant CFG::get_tmp_value(const char *key) const {
+	return tmp_values[key];
+}
+
+void CFG::set_tmp_value(const char *key, QVariant value) {
+	tmp_values[key] = value;
 }
 
 QStringList CFG::get_keys(const char *action) const {

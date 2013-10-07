@@ -28,7 +28,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	// load config options
 	CFG *config = CFG::get_instance();
 	// apply start option
-	layout->scroll_page(config->get_value("start_page").toInt(), false);
+	layout->scroll_page(config->get_tmp_value("start_page").toInt(), false);
 
 	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
 	smooth_scroll_delta = config->get_value("smooth_scroll_delta").toInt();

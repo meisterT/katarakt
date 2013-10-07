@@ -19,6 +19,7 @@ private:
 
 	QSettings settings;
 	QHash<QString,QVariant> defaults;
+	QHash<QString,QVariant> tmp_values; // not persistent
 	QHash<QString,QStringList> keys;
 
 public:
@@ -26,6 +27,9 @@ public:
 
 	QVariant get_value(const char *key) const;
 	void set_value(const char *key, QVariant value);
+
+	QVariant get_tmp_value(const char *key) const;
+	void set_tmp_value(const char *key, QVariant value);
 
 	QStringList get_keys(const char *action) const;
 };

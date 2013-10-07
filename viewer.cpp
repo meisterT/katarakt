@@ -108,7 +108,7 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 	search_bar->hide();
 
 	// apply start options
-	if (CFG::get_instance()->get_value("fullscreen").toBool()) {
+	if (CFG::get_instance()->get_tmp_value("fullscreen").toBool()) {
 		toggle_fullscreen();
 	}
 }

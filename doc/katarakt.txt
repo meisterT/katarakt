@@ -10,7 +10,7 @@ katarakt - a simple PDF viewer with two layouts
 
 SYNOPSIS
 --------
-*katarakt* ['OPTIONS'] 'FILE'|'URL'
+*katarakt* (['OPTIONS'] 'FILE'|'URL')+
 
 DESCRIPTION
 -----------
@@ -24,6 +24,8 @@ default.
 The 'grid layout' is much more advanced and offers continuous (smooth, per
 pixel) scrolling, zooming and adjusting the column count. Pages keep their
 correct relative size and are shown in a grid.
+
+For every file passed on the command line a process is spawned.
 
 OPTIONS
 -------

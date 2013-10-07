@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QString>
+#include <QProcess>
 #include <iostream>
 #include <getopt.h>
 #include "download.h"
@@ -40,10 +41,10 @@ int main(int argc, char *argv[]) {
 		switch (c) {
 			case 'p':
 				// currently no warning message on wrong input
-				CFG::get_instance()->set_value("start_page", atoi(optarg) - 1);
+				CFG::get_instance()->set_tmp_value("start_page", atoi(optarg) - 1);
 				break;
 			case 'f':
-				CFG::get_instance()->set_value("fullscreen", true);
+				CFG::get_instance()->set_tmp_value("fullscreen", true);
 				break;
 			case 'h':
 				print_help(argv[0]);
@@ -57,6 +58,15 @@ int main(int argc, char *argv[]) {
 	if (argv[optind] == NULL) {
 		cerr << "Not enough arguments" << endl;
 		return 1;
+	}
+
+	// fork more processes if there are arguments left
+	if (optind < argc - 1) {
+		QStringList l;
+		for (int i = optind + 1; i < argc; i++) {
+			l << argv[i];
+		}
+		QProcess::startDetached(argv[0], l);
 	}
 
 	Download download;
