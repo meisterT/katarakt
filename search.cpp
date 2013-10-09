@@ -151,18 +151,21 @@ SearchBar::SearchBar(QString file, Viewer *v, QWidget *parent) :
 	layout->addWidget(progress);
 	setLayout(layout);
 
-	initialize(file);
+	initialize(file, QByteArray());
 }
 
-void SearchBar::initialize(QString file) {
+void SearchBar::initialize(QString &file, const QByteArray &password) {
 	worker = NULL;
-	doc = Poppler::Document::load(file);
+
+	doc = Poppler::Document::load(file, QByteArray(), password);
+
 	if (doc == NULL) {
 		// poppler already prints a debug message
 		return;
 	}
 	if (doc->isLocked()) {
-		cerr << "missing password" << endl;
+		// poppler already prints a debug message
+//		cerr << "missing password" << endl;
 		delete doc;
 		doc = NULL;
 		return;
@@ -194,9 +197,9 @@ void SearchBar::shutdown() {
 	delete worker;
 }
 
-void SearchBar::load(QString file) {
+void SearchBar::load(QString &file, const QByteArray &password) {
 	shutdown();
-	initialize(file);
+	initialize(file, password);
 
 	// clear old search results if initialisation failed
 	if (!is_valid()) {

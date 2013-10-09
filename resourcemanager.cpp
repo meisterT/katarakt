@@ -164,6 +164,7 @@ void Worker::run() {
 
 //==[ ResourceManager ]========================================================
 ResourceManager::ResourceManager(QString file) :
+		doc(NULL),
 		center_page(0),
 		rotation(0) {
 	// load config options
@@ -171,22 +172,27 @@ ResourceManager::ResourceManager(QString file) :
 	smooth_downscaling = config->get_value("smooth_downscaling").toBool();
 	thumbnail_size = config->get_value("thumbnail_size").toInt();
 
-	initialize(file);
+	initialize(file, QByteArray());
 }
 
-void ResourceManager::initialize(QString file) {
+void ResourceManager::initialize(QString &file, const QByteArray &password) {
 	page_count = 0;
-	worker = NULL;
-	doc = Poppler::Document::load(file);
+	k_page = NULL;
+
+	doc = Poppler::Document::load(file, QByteArray(), password);
+
+	worker = new Worker();
+	worker->setResManager(this);
+	worker->start();
+
 	if (doc == NULL) {
 		// poppler already prints a debug message
 //		cerr << "failed to open file" << endl;
 		return;
 	}
 	if (doc->isLocked()) {
-		cerr << "missing password" << endl;
-		delete doc;
-		doc = NULL;
+		// poppler already prints a debug message
+//		cerr << "missing password" << endl;
 		return;
 	}
 	doc->setRenderHint(Poppler::Document::Antialiasing, true);
@@ -195,6 +201,7 @@ void ResourceManager::initialize(QString file) {
 //	if (POPPLER_CHECK_VERSION(0, 18, 0)) { // TODO is there a working macro?
 		doc->setRenderHint(Poppler::Document::TextSlightHinting, true);
 //	}
+	// TODO there are more hints now
 
 	page_count = doc->numPages();
 
@@ -209,10 +216,6 @@ void ResourceManager::initialize(QString file) {
 		k_page[i].height = p->pageSizeF().height();
 		delete p;
 	}
-
-	worker = new Worker();
-	worker->setResManager(this);
-	worker->start();
 }
 
 ResourceManager::~ResourceManager() {
@@ -228,21 +231,25 @@ void ResourceManager::shutdown() {
 	garbageMutex.unlock();
 	requests.clear();
 	requestSemaphore.acquire(requestSemaphore.available());
-	if (doc == NULL) {
-		return;
-	}
 	delete doc;
 	delete[] k_page;
 	delete worker;
 }
 
-void ResourceManager::load(QString file) {
+void ResourceManager::load(QString &file, const QByteArray &password) {
 	shutdown();
-	initialize(file);
+	initialize(file, password);
 }
 
 bool ResourceManager::is_valid() const {
 	return (doc != NULL);
+}
+
+bool ResourceManager::is_locked() const {
+	if (doc == NULL) {
+		return false;
+	}
+	return doc->isLocked();
 }
 
 void ResourceManager::connect_canvas(Canvas *c) const {

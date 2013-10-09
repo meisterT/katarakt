@@ -51,7 +51,7 @@ public:
 	SearchBar(QString file, Viewer *v, QWidget *parent = 0);
 	~SearchBar();
 
-	void load(QString file);
+	void load(QString &file, const QByteArray &password);
 	bool is_valid() const;
 	void connect_canvas(Canvas *c) const;
 	void focus();
@@ -70,7 +70,7 @@ private slots:
 	void set_text();
 
 private:
-	void initialize(QString file);
+	void initialize(QString &file, const QByteArray &password);
 	void join_threads();
 	void shutdown();
 

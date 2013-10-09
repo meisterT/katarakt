@@ -1,6 +1,7 @@
 #include <iostream>
 #include <QFileInfo>
 #include <QAction>
+#include <QFileDialog>
 #include <csignal>
 #include <cerrno>
 #include <unistd.h>
@@ -32,8 +33,8 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 		valid(true) {
 	res = new ResourceManager(file);
 	if (!res->is_valid()) {
-		valid = false;
-		return;
+//		valid = false;
+//		return;
 	}
 
 	canvas = new Canvas(this, this);
@@ -45,8 +46,8 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 
 	search_bar = new SearchBar(file, this, this);
 	if (!search_bar->is_valid()) {
-		valid = false;
-		return;
+//		valid = false;
+//		return;
 	}
 	search_bar->connect_canvas(canvas);
 
@@ -75,10 +76,35 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 	add_action("toggle_fullscreen", SLOT(toggle_fullscreen()));
 	add_action("close_search", SLOT(close_search()));
 	add_action("reload", SLOT(reload()));
+	add_action("open", SLOT(open()));
 
 	layout = new QVBoxLayout();
 	layout->setContentsMargins(0, 0, 0, 0);
 	layout->setSpacing(0);
+
+	// initialize info bar
+	QIcon::setThemeName(CFG::get_instance()->get_value("icon_theme").toString());
+
+	info_label_icon.setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	info_password.setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+	info_widget.setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
+	info_label_text.setWordWrap(true);
+	info_label_text.setTextFormat(Qt::PlainText);
+	info_password.setEchoMode(QLineEdit::Password);
+
+	info_layout.addWidget(&info_label_icon);
+	info_layout.addWidget(&info_label_text);
+	info_layout.addWidget(&info_password);
+	info_widget.setLayout(&info_layout);
+
+	layout->addWidget(&info_widget);
+	connect(&info_password, SIGNAL(returnPressed()), this, SLOT(reload()),
+			Qt::UniqueConnection);
+
+	update_info_widget();
+
+
 	layout->addWidget(canvas);
 	layout->addWidget(search_bar);
 	setLayout(layout);
@@ -105,7 +131,9 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 	setMinimumSize(50, 50);
 	resize(500, 500);
 	show();
+
 	search_bar->hide();
+	info_password.setFocus(Qt::OtherFocusReason); // only works if shown
 
 	// apply start options
 	if (CFG::get_instance()->get_tmp_value("fullscreen").toBool()) {
@@ -140,15 +168,51 @@ void Viewer::reload() {
 	cerr << "reloading file " << file.toUtf8().constData() << endl;
 #endif
 
-	res->load(file);
-	// do not connect non-existing worker to canvas
-	if (res->is_valid()) {
-		res->connect_canvas(canvas);
-	}
+	res->load(file, info_password.text().toLatin1());
+	res->connect_canvas(canvas);
 
-	search_bar->load(file);
+	search_bar->load(file, info_password.text().toLatin1());
+
+	update_info_widget();
 
 	canvas->reload();
+}
+
+void Viewer::open() {
+	QString new_file = QFileDialog::getOpenFileName(this, "Open File", "", "PDF Files (*.pdf)");
+	if (!new_file.isNull()) {
+		file = new_file;
+		reload();
+	}
+}
+
+void Viewer::update_info_widget() {
+	if (!res->is_valid() || !search_bar->is_valid()) {
+		QIcon icon;
+
+		if (!res->is_locked()) {
+			icon = QIcon::fromTheme("dialog-error");
+
+			info_label_text.setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+			info_label_text.setText(
+				QString("Failed to open file '") + file + QString("'."));
+
+			info_password.hide();
+		} else {
+			icon = QIcon::fromTheme("dialog-password");
+
+			info_label_text.setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+			info_label_text.setText("password:");
+
+			info_password.show();
+			info_password.setFocus(Qt::OtherFocusReason);
+			info_password.clear();
+		}
+		info_label_icon.setPixmap(icon.pixmap(32, 32));
+		info_widget.show();
+	} else {
+		info_widget.hide();
+	}
 }
 
 ResourceManager *Viewer::get_res() const {

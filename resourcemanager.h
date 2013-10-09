@@ -64,10 +64,11 @@ public:
 	ResourceManager(QString file);
 	~ResourceManager();
 
-	void load(QString file);
+	void load(QString &file, const QByteArray &password);
 
 	// document opened correctly?
 	bool is_valid() const;
+	bool is_locked() const;
 
 	// page (meta)data
 	const KPage *get_page(int page, int newWidth);
@@ -89,7 +90,7 @@ private:
 	void enqueue(int page, int width);
 	bool render(int offset);
 
-	void initialize(QString file);
+	void initialize(QString &file, const QByteArray &password);
 	void join_threads();
 	void shutdown();
 

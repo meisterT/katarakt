@@ -24,7 +24,12 @@ CFG::CFG() :
 	defaults["thumbnail_size"] = 32;
 	// search options
 	defaults["rect_expansion"] = 2;
+	// viewer options
+	defaults["icon_theme"] = "";
 	settings.endGroup();
+
+	tmp_values["start_page"] = 0;
+	tmp_values["fullscreen"] = false;
 
 	settings.beginGroup("keys");
 	// canvas keys
@@ -61,6 +66,7 @@ CFG::CFG() :
 	keys["toggle_fullscreen"] = QStringList() << "F";
 	keys["close_search"] = QStringList() << "Esc";
 	keys["reload"] = QStringList() << "R";
+	keys["open"] = QStringList() << "O";
 	settings.endGroup();
 }
 
@@ -83,9 +89,6 @@ void CFG::set_defaults() {
 		settings.setValue(it.key(), it.value());
 	}
 	settings.endGroup();
-
-	tmp_values["start_page"] = 0;
-	tmp_values["fullscreen"] = false;
 
 	settings.beginGroup("Keys");
 	QHashIterator<QString,QStringList> i2(keys);
