@@ -29,11 +29,13 @@ For every file passed on the command line a process is spawned.
 
 OPTIONS
 -------
-*-p*, *--page* 'NUM'::
+*-p*, *--page* 'NUM' ::
 	Start showing page 'NUM'.
-*-f*, *--fullscreen*::
+*-f*, *--fullscreen* ::
 	Start in fullscreen mode.
-*-h*, *--help*::
+*-q*, *--quit* ::
+	Quit on initialization failure.
+*-h*, *--help* ::
 	Print help and exit.
 
 CONFIGURATION
@@ -71,6 +73,8 @@ KEY BINDINGS
 	Toggle page number display
 *r* ::
 	Reload document
+*o* ::
+	Open a different document, shows a file dialog
 *-*, *+*, *=* ::
 	Adjust zoom level ('grid layout' only)
 *z* ::
@@ -117,6 +121,11 @@ VARIABLES
 
 'int' *rect_expansion* ::
 	2: number of pixels search rects are expanded by
+
+'bool' *quit_on_init_fail* ::
+	false: Quit katarakt if the document fails to open
+'string' *icon_theme* ::
+	The name of your icon theme. Fill in if auto detection fails.
 
 COMMUNITY
 ---------
