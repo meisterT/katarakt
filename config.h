@@ -30,6 +30,7 @@ public:
 
 	QVariant get_tmp_value(const char *key) const;
 	void set_tmp_value(const char *key, QVariant value);
+	bool has_tmp_value(const char *key) const;
 
 	QStringList get_keys(const char *action) const;
 };

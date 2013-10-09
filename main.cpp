@@ -18,6 +18,7 @@ static void print_help(char *name) {
 	cout << "Options:" << endl;
 	cout << "  -p, --page NUM      Start showing page NUM" << endl;
 	cout << "  -f, --fullscreen    Start in fullscreen mode" << endl;
+	cout << "  -q, --quit          Quit on initialization failure" << endl;
 	cout << "  -h, --help          Print this help and exit" << endl;
 }
 
@@ -28,13 +29,14 @@ int main(int argc, char *argv[]) {
 	struct option long_options[] = {
 		{"page",		required_argument,	NULL,	'p'},
 		{"fullscreen",	no_argument,		NULL,	'f'},
+		{"quit",		no_argument,		NULL,	'q'},
 		{"help",		no_argument,		NULL,	'h'},
 		{NULL, 0, NULL, 0}
 	};
 	int c;
 	int option_index = 0;
 	while (1) {
-		c = getopt_long(argc, argv, "+p:fh", long_options, &option_index);
+		c = getopt_long(argc, argv, "+p:fqh", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
@@ -45,6 +47,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'f':
 				CFG::get_instance()->set_tmp_value("fullscreen", true);
+				break;
+			case 'q':
+				CFG::get_instance()->set_tmp_value("quit_on_init_fail", true);
 				break;
 			case 'h':
 				print_help(argv[0]);

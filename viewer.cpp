@@ -33,8 +33,12 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 		valid(true) {
 	res = new ResourceManager(file);
 	if (!res->is_valid()) {
-//		valid = false;
-//		return;
+		// the command line option toggles the value set in the config
+		if (CFG::get_instance()->get_value("quit_on_init_fail").toBool() !=
+				CFG::get_instance()->has_tmp_value("quit_on_init_fail")) {
+			valid = false;
+			return;
+		}
 	}
 
 	canvas = new Canvas(this, this);
@@ -46,8 +50,11 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 
 	search_bar = new SearchBar(file, this, this);
 	if (!search_bar->is_valid()) {
-//		valid = false;
-//		return;
+		if (CFG::get_instance()->get_value("quit_on_init_fail").toBool() !=
+				CFG::get_instance()->has_tmp_value("quit_on_init_fail")) {
+			valid = false;
+			return;
+		}
 	}
 	search_bar->connect_canvas(canvas);
 

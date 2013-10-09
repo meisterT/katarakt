@@ -25,6 +25,7 @@ CFG::CFG() :
 	// search options
 	defaults["rect_expansion"] = 2;
 	// viewer options
+	defaults["quit_on_init_fail"] = false;
 	defaults["icon_theme"] = "";
 	settings.endGroup();
 
@@ -118,6 +119,10 @@ QVariant CFG::get_tmp_value(const char *key) const {
 
 void CFG::set_tmp_value(const char *key, QVariant value) {
 	tmp_values[key] = value;
+}
+
+bool CFG::has_tmp_value(const char *key) const {
+	return tmp_values.contains(key);
 }
 
 QStringList CFG::get_keys(const char *action) const {
