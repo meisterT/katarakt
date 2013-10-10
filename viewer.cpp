@@ -189,6 +189,8 @@ void Viewer::open() {
 	QString new_file = QFileDialog::getOpenFileName(this, "Open File", "", "PDF Files (*.pdf)");
 	if (!new_file.isNull()) {
 		file = new_file;
+		QFileInfo info(file);
+		setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
 		reload();
 	}
 }
