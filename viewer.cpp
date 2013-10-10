@@ -197,7 +197,13 @@ void Viewer::update_info_widget() {
 	if (!res->is_valid() || !search_bar->is_valid()) {
 		QIcon icon;
 
-		if (!res->is_locked()) {
+		if (file == "") {
+			icon = QIcon::fromTheme("dialog-information");
+
+			info_label_text.setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+			info_label_text.setText("No file opened.");
+			info_password.hide();
+		} else if (!res->is_locked()) {
 			icon = QIcon::fromTheme("dialog-error");
 
 			info_label_text.setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);

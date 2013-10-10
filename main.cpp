@@ -60,11 +60,6 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (argv[optind] == NULL) {
-		cerr << "Not enough arguments" << endl;
-		return 1;
-	}
-
 	// fork more processes if there are arguments left
 	if (optind < argc - 1) {
 		QStringList l;
@@ -74,11 +69,15 @@ int main(int argc, char *argv[]) {
 		QProcess::startDetached(argv[0], l);
 	}
 
+	QString file;
 	Download download;
-	QString file = download.load(QString::fromUtf8(argv[optind]));
-	if (file == NULL) {
-		return 1;
+	if (argv[optind] != NULL) {
+		file = download.load(QString::fromUtf8(argv[optind]));
+		if (file == NULL) {
+			return 1;
+		}
 	}
+	// else no argument given, "open" empty string
 
 	Viewer katarakt(file);
 	if (!katarakt.is_valid()) {
