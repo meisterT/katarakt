@@ -190,6 +190,18 @@ void Viewer::open() {
 	if (!new_file.isNull()) {
 		file = new_file;
 		QFileInfo info(file);
+
+		// re-setup inotify watch
+#ifdef __linux__
+		if (inotify_fd != -1) {
+			inotify_rm_watch(inotify_fd, inotify_wd);
+
+			inotify_wd  = inotify_add_watch(inotify_fd, info.path().toUtf8().constData(), IN_CLOSE_WRITE | IN_MOVED_TO);
+			if (inotify_wd == -1) {
+				cerr << "inotify_add_watch: " << strerror(errno) << endl;
+			}
+		}
+#endif
 		setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
 		reload();
 	}
