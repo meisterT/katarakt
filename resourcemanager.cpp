@@ -2,6 +2,7 @@
 #include "resourcemanager.h"
 #include "canvas.h"
 #include "config.h"
+#include "util.h"
 
 using namespace std;
 
@@ -198,10 +199,15 @@ void ResourceManager::initialize(QString &file, const QByteArray &password) {
 	doc->setRenderHint(Poppler::Document::Antialiasing, true);
 	doc->setRenderHint(Poppler::Document::TextAntialiasing, true);
 	doc->setRenderHint(Poppler::Document::TextHinting, true);
-//	if (POPPLER_CHECK_VERSION(0, 18, 0)) { // TODO is there a working macro?
-		doc->setRenderHint(Poppler::Document::TextSlightHinting, true);
-//	}
-	// TODO there are more hints now
+#if POPPLER_VERSION >= POPPLER_VERSION_CHECK(0, 18, 0)
+	doc->setRenderHint(Poppler::Document::TextSlightHinting, true);
+#endif
+#if POPPLER_VERSION >= POPPLER_VERSION_CHECK(0, 22, 0)
+//	doc->setRenderHint(Poppler::Document::OverprintPreview, true); // TODO what is this?
+#endif
+#if POPPLER_VERSION >= POPPLER_VERSION_CHECK(0, 24, 0)
+	doc->setRenderHint(Poppler::Document::ThinLineShape, true); // TODO what's the difference between ThinLineSolid and ThinLineShape?
+#endif
 
 	page_count = doc->numPages();
 

@@ -15,6 +15,27 @@ using namespace std;
 //#define ROUND(x) (x)
 
 
+static const QRectF rotate_rect(const QRectF &rect, float w, float h, int rotation) {
+	if (rotation == 0) {
+		return rect;
+	} else if (rotation == 1) {
+		return QRectF(w - rect.bottom(), rect.left(), rect.height(), rect.width());
+	} else if (rotation == 2) {
+		return QRectF(w - rect.right(), h - rect.bottom(), rect.width(), rect.height());
+	} else {
+		return QRectF(rect.top(), h - rect.right(), rect.height(), rect.width());
+	}
+}
+
+static QRect transform_rect(const QRectF &rect, float scale, int off_x, int off_y) {
+	static int rect_expansion = CFG::get_instance()->get_value("rect_expansion").toInt();
+	return QRect(rect.x() * scale + off_x - rect_expansion,
+			rect.y() * scale + off_y - rect_expansion,
+			rect.width() * scale + 2 * rect_expansion,
+			rect.height() * scale + 2 * rect_expansion);
+}
+
+
 //==[ Layout ]=================================================================
 Layout::Layout(ResourceManager *_res, int _page) :
 		res(_res), page(_page), off_x(0), off_y(0), width(0), height(0),
@@ -91,16 +112,16 @@ bool Layout::scroll_page(int new_page, bool relative) {
 }
 
 void Layout::clear_hits() {
-	for (map<int,list<Result> *>::iterator it = hits.begin(); it != hits.end(); ++it) {
+	for (map<int,QList<QRectF> *>::iterator it = hits.begin(); it != hits.end(); ++it) {
 		delete it->second;
 	}
 	hits.clear();
 }
 
-void Layout::set_hits(int page, list<Result> *l) {
+void Layout::set_hits(int page, QList<QRectF> *l) {
 	// no new search, just view hit on the current page or below. wraps.
 	if (l == NULL) {
-		map<int,list<Result> *>::iterator it = hits.lower_bound(page);
+		map<int,QList<QRectF> *>::iterator it = hits.lower_bound(page);
 		if (it != hits.end()) {
 			hit_page = it->first;
 			hit_it = hits[hit_page]->begin();
@@ -123,7 +144,7 @@ void Layout::set_hits(int page, list<Result> *l) {
 	}
 
 	// just to be safe - prevent memory leaks
-	map<int,list<Result> *>::iterator it = hits.find(page);
+	map<int,QList<QRectF> *>::iterator it = hits.find(page);
 	if (it != hits.end()) {
 		delete it->second;
 	}
@@ -142,7 +163,7 @@ bool Layout::advance_hit(bool forward) {
 	if (forward) {
 		++hit_it;
 		if (hit_it == hits[hit_page]->end()) { // this was the last hit on that page
-			map<int,list<Result> *>::const_iterator it = hits.upper_bound(hit_page);
+			map<int,QList<QRectF> *>::const_iterator it = hits.upper_bound(hit_page);
 			if (it == hits.end()) { // this was the last page with a hit -> wrap
 				it = hits.begin();
 			}
@@ -152,7 +173,7 @@ bool Layout::advance_hit(bool forward) {
 	// find previous hit
 	} else {
 		if (hit_it == hits[hit_page]->begin()) { // this was the first hit on that page
-			map<int,list<Result> *>::const_reverse_iterator it(hits.lower_bound(hit_page));
+			map<int,QList<QRectF> *>::const_reverse_iterator it(hits.lower_bound(hit_page));
 			if (it == hits.rend()) { // this was the first page with a hit -> wrap
 				it = hits.rbegin();
 			}
@@ -251,19 +272,19 @@ void PresentationLayout::render(QPainter *painter) {
 	if (search_visible) {
 		painter->setPen(QColor(0, 0, 0));
 		painter->setBrush(QColor(255, 0, 0, 64));
-		double w = res->get_page_width(page);
-		double h = res->get_page_height(page);
-		int r = res->get_rotation();
-		double factor = page_width / w;
-		map<int,list<Result> *>::iterator it = hits.find(page);
+		float w = res->get_page_width(page);
+		float h = res->get_page_height(page);
+		float factor = page_width / w;
+		map<int,QList<QRectF> *>::iterator it = hits.find(page);
 		if (it != hits.end()) {
-			for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
+			for (QList<QRectF>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
 				if (i2 == hit_it) {
 					painter->setBrush(QColor(0, 255, 0, 64));
-					painter->drawRect(i2->scale_translate(factor, w, h, center_x, center_y, r));
+				}
+				QRectF rot = rotate_rect(*i2, w, h, res->get_rotation());
+				painter->drawRect(transform_rect(rot, factor, center_x, center_y));
+				if (i2 == hit_it) {
 					painter->setBrush(QColor(255, 0, 0, 64));
-				} else {
-					painter->drawRect(i2->scale_translate(factor, w, h, center_x, center_y, r));
 				}
 			}
 		}
@@ -673,20 +694,18 @@ void GridLayout::render(QPainter *painter) {
 			if (search_visible) {
 				painter->setPen(QColor(0, 0, 0));
 				painter->setBrush(QColor(255, 0, 0, 64));
-				double w = res->get_page_width(last_page);
-				double h = res->get_page_height(last_page);
-				int r = res->get_rotation();
-				map<int,list<Result> *>::iterator it = hits.find(last_page);
+				float w = res->get_page_width(last_page);
+				float h = res->get_page_height(last_page);
+				map<int,QList<QRectF> *>::iterator it = hits.find(last_page);
 				if (it != hits.end()) {
-					for (list<Result>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
+					for (QList<QRectF>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
 						if (i2 == hit_it) {
 							painter->setBrush(QColor(0, 255, 0, 64));
-							painter->drawRect(i2->scale_translate(size, w, h,
-										wpos + center_x, hpos + center_y, r));
+						}
+						QRectF rot = rotate_rect(*i2, w, h, res->get_rotation());
+						painter->drawRect(transform_rect(rot, size, wpos + center_x, hpos + center_y));
+						if (i2 == hit_it) {
 							painter->setBrush(QColor(255, 0, 0, 64));
-						} else {
-							painter->drawRect(i2->scale_translate(size, w, h,
-										wpos + center_x, hpos + center_y, r));
 						}
 					}
 				}
@@ -745,7 +764,7 @@ bool GridLayout::advance_invisible_hit(bool forward) {
 	}
 
 	QRect r;
-	list<Result>::const_iterator it = hit_it;
+	QList<QRectF>::const_iterator it = hit_it;
 	do {
 		Layout::advance_hit(forward);
 		r = get_hit_rect();
@@ -827,9 +846,9 @@ QRect GridLayout::get_hit_rect() {
 		}
 	}
 	// get search rect coordinates relative to the current view
-	return hit_it->scale_translate(size,
-			res->get_page_width(hit_page), res->get_page_height(hit_page),
-			wpos + center_x, hpos + center_y, res->get_rotation());
+	QRectF rot = rotate_rect(*hit_it, res->get_page_width(hit_page),
+			res->get_page_height(hit_page), res->get_rotation());
+	return transform_rect(rot, size, wpos + center_x, hpos + center_y);
 }
 
 pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {

@@ -4,42 +4,9 @@
 #include "viewer.h"
 #include "layout.h"
 #include "config.h"
+#include "util.h"
 
 using namespace std;
-
-
-//==[ Result ]=================================================================
-Result::Result(double _x1, double _y1, double _x2, double _y2) :
-		x1(_x1), y1(_y1),
-		x2(_x2), y2(_y2) {
-}
-
-QRect Result::scale_translate(double scale, double width, double height,
-		double off_x, double off_y, int rotation) const {
-	static int rect_expansion = CFG::get_instance()->get_value("rect_expansion").toInt();
-
-	if (rotation == 0) {
-		return QRect(x1 * scale + off_x - rect_expansion,
-				y1 * scale + off_y - rect_expansion,
-				(x2 - x1) * scale + rect_expansion * 2,
-				(y2 - y1) * scale + rect_expansion * 2);
-	} else if (rotation == 1) {
-		return QRect((width - y2) * scale + off_x - rect_expansion,
-				x1 * scale + off_y - rect_expansion,
-				(y2 - y1) * scale + rect_expansion * 2,
-				(x2 - x1) * scale + rect_expansion * 2);
-	} else if (rotation == 2) {
-		return QRect((width - x2) * scale + off_x - rect_expansion,
-				(height - y2) * scale + off_y - rect_expansion,
-				(x2 - x1) * scale + rect_expansion * 2,
-				(y2 - y1) * scale + rect_expansion * 2);
-	} else {
-		return QRect(y1 * scale + off_x - rect_expansion,
-				(height - x2) * scale + off_y - rect_expansion,
-				(y2 - y1) * scale + rect_expansion * 2,
-				(x2 - x1) * scale + rect_expansion * 2);
-	}
-}
 
 
 //==[ SearchWorker ]===========================================================
@@ -86,14 +53,21 @@ void SearchWorker::run() {
 			}
 
 			// collect all occurrences
-			list<Result> *hits = new list<Result>;
-			Result rect;
+			QList<QRectF> *hits = new QList<QRectF>;
 			// TODO option for case sensitive
+#if POPPLER_VERSION < POPPLER_VERSION_CHECK(0, 22, 0)
+			// old search interface, slow for many hits per page
+			double x = 0, y = 0, x2 = 0, y2 = 0;
 			while (!stop && !die &&
-					p->search(search_term, rect.x1, rect.y1, rect.x2, rect.y2,
-						Poppler::Page::NextResult, Poppler::Page::CaseInsensitive)) {
-				hits->push_back(rect);
+					p->search(search_term, x, y, x2, y2, Poppler::Page::NextResult,
+						Poppler::Page::CaseInsensitive)) {
+				hits->push_back(QRectF(x, y, x2 - x, y2 - y));
 			}
+#else
+			// new search interface
+			QList<QRectF> tmp = p->search(search_term, Poppler::Page::CaseInsensitive);
+			hits->swap(tmp);
+#endif
 #ifdef DEBUG
 			if (hits->size() > 0) {
 				cerr << hits->size() << " hits on page " << page << endl;
@@ -215,8 +189,8 @@ bool SearchBar::is_valid() const {
 void SearchBar::connect_canvas(Canvas *c) const {
 	connect(this, SIGNAL(search_clear()), c, SLOT(search_clear()),
 			Qt::UniqueConnection);
-	connect(this, SIGNAL(search_done(int, std::list<Result> *)),
-			c, SLOT(search_done(int, std::list<Result> *)),
+	connect(this, SIGNAL(search_done(int, QList<QRectF> *)),
+			c, SLOT(search_done(int, QList<QRectF> *)),
 			Qt::UniqueConnection);
 	connect(this, SIGNAL(search_visible(bool)),
 			c, SLOT(search_visible(bool)), Qt::UniqueConnection);

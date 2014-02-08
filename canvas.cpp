@@ -393,7 +393,7 @@ void Canvas::search_clear() {
 	update();
 }
 
-void Canvas::search_done(int page, list<Result> *l) {
+void Canvas::search_done(int page, QList<QRectF> *l) {
 	layout->set_hits(page, l);
 	update();
 }

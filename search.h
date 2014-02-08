@@ -11,22 +11,12 @@
 #include <QHBoxLayout>
 #include <QRect>
 #include <QEvent>
-#include <list>
+#include <QList>
 
 
 class SearchBar;
 class Canvas;
 class Viewer;
-
-
-class Result {
-public:
-	Result(double _x1 = 0.0, double _y1 = 0.0, double _x2 = 0.0, double _y2 = 0.0);
-	QRect scale_translate(double scale, double width, double height,
-			double off_x, double off_y, int rotation) const;
-
-	double x1, y1, x2, y2;
-};
 
 
 class SearchWorker : public QThread {
@@ -58,7 +48,7 @@ public:
 
 signals:
 	void search_clear();
-	void search_done(int page, std::list<Result> *hits);
+	void search_done(int page, QList<QRectF> *hits);
 	void search_visible(bool visible);
 	void update_label_text(const QString &text);
 

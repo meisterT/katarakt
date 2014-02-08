@@ -6,13 +6,12 @@
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <QResizeEvent>
-#include <list>
+#include <QList>
 #include <sys/socket.h>
 
 
 class Viewer;
 class Layout;
-class Result;
 class GotoLine;
 
 
@@ -40,7 +39,7 @@ protected:
 
 private slots:
 	void search_clear();
-	void search_done(int page, std::list<Result> *l);
+	void search_done(int page, QList<QRectF> *l);
 	void search_visible(bool visible);
 	void page_rendered(int page);
 	void goto_page();

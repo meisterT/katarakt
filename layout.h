@@ -2,13 +2,12 @@
 #define LAYOUT_H
 
 #include <QPainter>
-#include <list>
+#include <QList>
 #include <map>
 
 
 class ResourceManager;
 class Grid;
-class Result;
 
 
 class Layout {
@@ -28,7 +27,7 @@ public:
 	virtual void render(QPainter *painter) = 0;
 
 	virtual void clear_hits();
-	virtual void set_hits(int page, std::list<Result> *l);
+	virtual void set_hits(int page, QList<QRectF> *l);
 	virtual void set_search_visible(bool visible);
 	virtual bool advance_hit(bool forward = true);
 	virtual bool advance_invisible_hit(bool forward = true) = 0;
@@ -48,10 +47,10 @@ protected:
 	int width, height;
 
 	// search results
-	std::map<int,std::list<Result> *> hits;
+	std::map<int,QList<QRectF> *> hits;
 	bool search_visible;
 	int hit_page;
-	std::list<Result>::const_iterator hit_it;
+	QList<QRectF>::const_iterator hit_it;
 
 	// config options
 	int useless_gap;
