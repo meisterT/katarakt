@@ -92,6 +92,8 @@ KEY BINDINGS
 
 VARIABLES
 ---------
+'string' *default_layout* ::
+	presentation: the layout on startup. Possible values: 'presentation', 'grid'
 'int' *mouse_wheel_factor* ::
 	120: QT delta for turning the mouse wheel 1 click
 'int' *smooth_scroll_delta* ::

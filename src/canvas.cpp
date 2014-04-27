@@ -25,10 +25,16 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 		valid(true) {
 	setFocusPolicy(Qt::StrongFocus);
 
-	layout = new PresentationLayout(viewer->get_res());
-
 	// load config options
 	CFG *config = CFG::get_instance();
+
+	QString default_layout = config->get_value("default_layout").toString();
+	if (default_layout == "grid") {
+		layout = new GridLayout(viewer->get_res());
+	} else { // "presentation" and everything else
+		layout = new PresentationLayout(viewer->get_res());
+	}
+
 	// apply start option
 	layout->scroll_page(config->get_tmp_value("start_page").toInt(), false);
 

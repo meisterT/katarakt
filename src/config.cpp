@@ -8,6 +8,7 @@ CFG::CFG() :
 
 	settings.beginGroup("Settings");
 	// canvas options
+	defaults["default_layout"] = "presentation";
 	defaults["mouse_wheel_factor"] = 120; // (qt-)delta for turning the mouse wheel 1 click
 	defaults["smooth_scroll_delta"] = 30; // pixel scroll offset
 	defaults["screen_scroll_factor"] = 0.9; // creates overlap for scrolling 1 screen down, should be <= 1
