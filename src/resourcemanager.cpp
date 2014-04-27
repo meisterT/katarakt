@@ -206,7 +206,7 @@ void ResourceManager::initialize(QString &file, const QByteArray &password) {
 //	doc->setRenderHint(Poppler::Document::OverprintPreview, true); // TODO what is this?
 #endif
 #if POPPLER_VERSION >= POPPLER_VERSION_CHECK(0, 24, 0)
-	doc->setRenderHint(Poppler::Document::ThinLineShape, true); // TODO what's the difference between ThinLineSolid and ThinLineShape?
+	doc->setRenderHint(Poppler::Document::ThinLineSolid, true); // TODO what's the difference between ThinLineSolid and ThinLineShape?
 #endif
 
 	page_count = doc->numPages();

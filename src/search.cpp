@@ -2,9 +2,9 @@
 #include "search.h"
 #include "canvas.h"
 #include "viewer.h"
-#include "layout.h"
 #include "config.h"
 #include "util.h"
+#include "layout/layout.h"
 
 using namespace std;
 

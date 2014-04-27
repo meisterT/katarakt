@@ -7,7 +7,9 @@
 #include <iostream>
 #include "canvas.h"
 #include "viewer.h"
-#include "layout.h"
+#include "layout/layout.h"
+#include "layout/presentationlayout.h"
+#include "layout/gridlayout.h"
 #include "resourcemanager.h"
 #include "search.h"
 #include "gotoline.h"
