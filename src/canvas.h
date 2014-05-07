@@ -91,6 +91,7 @@ private:
 	bool valid;
 
 	// config options
+	int background_opacity;
 	int mouse_wheel_factor;
 	int smooth_scroll_delta;
 	float screen_scroll_factor;

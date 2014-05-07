@@ -146,6 +146,11 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 	if (CFG::get_instance()->get_tmp_value("fullscreen").toBool()) {
 		toggle_fullscreen();
 	}
+
+	// enable transparency, but only in the right places
+	setAttribute(Qt::WA_TranslucentBackground);
+	search_bar->setAutoFillBackground(true);
+	info_widget.setAutoFillBackground(true);
 }
 
 Viewer::~Viewer() {

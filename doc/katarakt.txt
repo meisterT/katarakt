@@ -92,6 +92,8 @@ KEY BINDINGS
 
 VARIABLES
 ---------
+'int' *background_opacity* ::
+	223: opacity of the black background in range [0..255]. Only works when using a compositor.
 'string' *default_layout* ::
 	presentation: the layout on startup. Possible values: 'presentation', 'grid'
 'int' *mouse_wheel_factor* ::

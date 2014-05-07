@@ -28,6 +28,8 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	// load config options
 	CFG *config = CFG::get_instance();
 
+	background_opacity = config->get_value("background_opacity").toInt();
+
 	QString default_layout = config->get_value("default_layout").toString();
 	if (default_layout == "grid") {
 		layout = new GridLayout(viewer->get_res());
@@ -116,7 +118,11 @@ void Canvas::paintEvent(QPaintEvent * /*event*/) {
 	cerr << "redraw" << endl;
 #endif
 	QPainter painter(this);
-	painter.fillRect(rect(), Qt::black);
+	if (viewer->isFullScreen()) {
+		painter.fillRect(rect(), QColor(0, 0, 0));
+	} else {
+		painter.fillRect(rect(), QColor(0, 0, 0, background_opacity));
+	}
 	layout->render(&painter);
 
 	QString title = QString("page %1/%2")
