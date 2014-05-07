@@ -91,8 +91,8 @@ bool Canvas::is_valid() const {
 	return valid;
 }
 
-void Canvas::reload() {
-	layout->rebuild();
+void Canvas::reload(bool clamp) {
+	layout->rebuild(clamp);
 	goto_line->set_page_count(viewer->get_res()->get_page_count());
 	update();
 }

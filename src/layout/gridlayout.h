@@ -14,7 +14,7 @@ public:
 	GridLayout(Layout& old_layout, int columns = 1);
 	~GridLayout();
 
-	void rebuild();
+	void rebuild(bool clamp = true);
 	void resize(int w, int h);
 	void set_zoom(int new_zoom, bool relative = true);
 	void set_columns(int new_columns, bool relative = true);
@@ -32,8 +32,8 @@ public:
 	bool page_visible(int p) const;
 
 private:
-	void initialize(int columns);
-	void set_constants();
+	void initialize(int columns, bool clamp = true);
+	void set_constants(bool clamp = true);
 	void view_hit();
 	void view_hit(const QRect &r);
 	QRect get_hit_rect();

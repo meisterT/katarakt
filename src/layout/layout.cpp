@@ -33,12 +33,14 @@ int Layout::get_page() const {
 	return page;
 }
 
-void Layout::rebuild() {
+void Layout::rebuild(bool clamp) {
 	// clamp to available pages
+	// not clamping is useful when inotify reloads a broken TeX document;
+	// you don't have to scroll back to the previous position after fixing it
 	if (page < 0) {
 		page = 0;
 	}
-	if (page >= res->get_page_count()) {
+	if (clamp && page >= res->get_page_count()) {
 		page = res->get_page_count() - 1;
 	}
 }

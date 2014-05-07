@@ -170,7 +170,7 @@ void Viewer::focus_search() {
 	search_bar->focus();
 }
 
-void Viewer::reload() {
+void Viewer::reload(bool clamp) {
 #ifdef DEBUG
 	cerr << "reloading file " << file.toUtf8().constData() << endl;
 #endif
@@ -182,7 +182,7 @@ void Viewer::reload() {
 
 	update_info_widget();
 
-	canvas->reload();
+	canvas->reload(clamp);
 }
 
 void Viewer::open() {
@@ -288,7 +288,7 @@ void Viewer::inotify_slot() {
 
 			QFileInfo info(file);
 			if (info.fileName() == event->name) {
-				reload();
+				reload(false); // don't clamp
 				i_notifier->setEnabled(true);
 				return;
 			}

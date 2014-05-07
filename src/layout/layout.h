@@ -16,7 +16,7 @@ public:
 	virtual ~Layout();
 
 	virtual int get_page() const;
-	virtual void rebuild();
+	virtual void rebuild(bool clamp = true);
 	virtual void resize(int w, int h);
 	virtual void set_zoom(int new_zoom, bool relative = true);
 	virtual void set_columns(int new_columns, bool relative = true);

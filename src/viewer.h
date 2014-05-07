@@ -33,7 +33,7 @@ public slots:
 
 	void toggle_fullscreen();
 	void close_search();
-	void reload();
+	void reload(bool clamp = true);
 	void open();
 
 private:

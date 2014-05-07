@@ -30,17 +30,21 @@ GridLayout::~GridLayout() {
 	delete grid;
 }
 
-void GridLayout::initialize(int columns) {
+void GridLayout::initialize(int columns, bool clamp) {
 	grid = new Grid(res, columns);
 
 //	size = 0.6;
 //	size = 250 / grid->get_width(0);
 //	size = width / grid->get_width(0);
 
-	set_constants();
+	set_constants(clamp);
 }
 
-void GridLayout::set_constants() {
+void GridLayout::set_constants(bool clamp) {
+	if (res->get_page_count() == 0) {
+		return;
+	}
+
 	// calculate fit
 	int used = 0;
 	for (int i = 0; i < grid->get_column_count(); i++) {
@@ -96,15 +100,18 @@ void GridLayout::set_constants() {
 	}
 
 	// update view
-	scroll_smooth(0, 0);
+	// TODO not updating when not clamping is not the best solution
+	if (clamp) {
+		scroll_smooth(0, 0);
+	}
 }
 
-void GridLayout::rebuild() {
-	Layout::rebuild();
+void GridLayout::rebuild(bool clamp) {
+	Layout::rebuild(clamp);
 	// rebuild non-dynamic data
 	int columns = grid->get_column_count();
 	delete grid;
-	initialize(columns);
+	initialize(columns, clamp);
 }
 
 void GridLayout::resize(int w, int h) {
@@ -519,7 +526,9 @@ bool GridLayout::click_mouse(int mx, int my) {
 
 	// find matching box
 	const list<Poppler::LinkGoto *> *l = res->get_links(page.first);
-	int count = 0;
+	if (l == NULL) {
+		return false;
+	}
 	for (list<Poppler::LinkGoto *>::const_iterator it = l->begin();
 			it != l->end(); ++it) {
 		QRectF r = (*it)->linkArea();
@@ -531,7 +540,6 @@ bool GridLayout::click_mouse(int mx, int my) {
 				return true;
 			}
 		}
-		count++;
 	}
 	return false;
 }

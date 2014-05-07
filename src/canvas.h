@@ -23,7 +23,7 @@ public:
 	~Canvas();
 
 	bool is_valid() const;
-	void reload();
+	void reload(bool clamp);
 
 	const Layout *get_layout() const;
 
