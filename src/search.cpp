@@ -37,10 +37,20 @@ void SearchWorker::run() {
 		QString search_term = bar->term;
 		bar->term_mutex.unlock();
 
+		// check if term contains upper case letters; if so, do case sensitive search (smartcase)
+		bool has_upper_case = false;
+		for (QString::const_iterator it = search_term.begin(); it != search_term.end(); it++) {
+			if (it->isUpper()) {
+				has_upper_case = true;
+				break;
+			}
+		}
+
 #ifdef DEBUG
 		cerr << "'" << search_term.toUtf8().constData() << "'" << endl;
 #endif
-		emit bar->update_label_text("0\% searched, 0 hits");
+		emit bar->update_label_text(QString("[%1] 0\% searched, 0 hits")
+			.arg(has_upper_case ? "Case" : "no case"));
 
 		// search all pages
 		int hit_count = 0;
@@ -60,12 +70,13 @@ void SearchWorker::run() {
 			double x = 0, y = 0, x2 = 0, y2 = 0;
 			while (!stop && !die &&
 					p->search(search_term, x, y, x2, y2, Poppler::Page::NextResult,
-						Poppler::Page::CaseInsensitive)) {
+						has_upper_case ? Poppler::Page::CaseSensitive : Poppler::Page::CaseInsensitive)) {
 				hits->push_back(QRectF(x, y, x2 - x, y2 - y));
 			}
 #else
 			// new search interface
-			QList<QRectF> tmp = p->search(search_term, Poppler::Page::CaseInsensitive);
+			QList<QRectF> tmp = p->search(search_term,
+					has_upper_case ? Poppler::Page::CaseSensitive : Poppler::Page::CaseInsensitive);
 			hits->swap(tmp);
 #endif
 #ifdef DEBUG
@@ -91,7 +102,8 @@ void SearchWorker::run() {
 			// update progress label next to the search bar
 			int percent = ((page + bar->doc->numPages() - start)
 					% bar->doc->numPages()) * 100 / bar->doc->numPages();
-			QString progress = QString("%1\% searched, %2 hits")
+			QString progress = QString("[%1] %2\% searched, %3 hits")
+				.arg(has_upper_case ? "Case" : "no case")
 				.arg(percent)
 				.arg(hit_count);
 			emit bar->update_label_text(progress);
@@ -103,7 +115,9 @@ void SearchWorker::run() {
 #ifdef DEBUG
 		cerr << "done!" << endl;
 #endif
-		emit bar->update_label_text(QString("done, %1 hits").arg(hit_count));
+		emit bar->update_label_text(QString("[%1] done, %2 hits")
+				.arg(has_upper_case ? "Case" : "no case")
+				.arg(hit_count));
 	}
 }
 
