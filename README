@@ -7,7 +7,14 @@ Dependencies
 qt-core, qt-gui version 4
 poppler-qt >= 0.18
 
+For a faster search implementation you need poppler-qt >= 0.22
+
 Building
 --------
-qmake
+To build katarakt type:
+qmake-qt4
 make
+
+To build the manpage/homepage type:
+a2x -f manpage doc/katarakt.txt
+asciidoc www/index.txt

@@ -10,7 +10,7 @@ katarakt - a simple PDF viewer with two layouts
 
 SYNOPSIS
 --------
-*katarakt* (['OPTIONS'] 'FILE'|'URL')+
+*katarakt* (['OPTIONS'] 'FILE'|'URL')*
 
 DESCRIPTION
 -----------
