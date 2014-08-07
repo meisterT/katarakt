@@ -11,7 +11,6 @@ public:
 	~PresentationLayout() {};
 
 	bool supports_smooth_scrolling() const;
-	bool scroll_smooth(int dx, int dy);
 	void render(QPainter *painter);
 
 	bool advance_hit(bool forward = true);

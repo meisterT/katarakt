@@ -11,7 +11,7 @@ using namespace std;
 
 //==[ Layout ]=================================================================
 Layout::Layout(ResourceManager *_res, int _page) :
-		res(_res), page(_page), off_x(0), off_y(0), width(0), height(0),
+		res(_res), page(_page), width(0), height(0),
 		search_visible(false) {
 	// load config options
 	CFG *config = CFG::get_instance();
@@ -31,6 +31,17 @@ Layout::~Layout() {
 
 int Layout::get_page() const {
 	return page;
+}
+
+void Layout::activate(const Layout *old_layout) {
+	page = old_layout->page;
+	width = old_layout->width;
+	height = old_layout->height;
+
+	hits = old_layout->hits; // TODO unneccessary copy
+	search_visible = old_layout->search_visible;
+	hit_page = old_layout->hit_page;
+	hit_it = old_layout->hit_it;
 }
 
 void Layout::rebuild(bool clamp) {
@@ -63,10 +74,9 @@ bool Layout::supports_smooth_scrolling() const {
 	return true;
 }
 
-bool Layout::scroll_smooth(int dx, int dy) {
-	off_x += dx;
-	off_y += dy;
-	return true;
+bool Layout::scroll_smooth(int /*dx*/, int /*dy*/) {
+	// implement in child classes where necessary
+	return false;
 }
 
 bool Layout::scroll_page(int new_page, bool relative) {
@@ -78,7 +88,6 @@ bool Layout::scroll_page(int new_page, bool relative) {
 	}
 	if (page < 0) {
 		page = 0;
-		off_y = 0;
 	}
 	if (page > res->get_page_count() - 1) {
 		page = res->get_page_count() - 1;

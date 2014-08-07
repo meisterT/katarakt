@@ -22,11 +22,6 @@ bool PresentationLayout::supports_smooth_scrolling() const {
 	return false;
 }
 
-bool PresentationLayout::scroll_smooth(int /*dx*/, int /*dy*/) {
-	// ignore smooth scrolling
-	return false;
-}
-
 int PresentationLayout::calculate_fit_width(int page) {
 	if ((float) width / height > res->get_page_aspect(page)) {
 		return res->get_page_aspect(page) * height;

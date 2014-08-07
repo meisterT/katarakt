@@ -16,6 +16,7 @@ public:
 	virtual ~Layout();
 
 	virtual int get_page() const;
+	void activate(const Layout *old_layout);
 	virtual void rebuild(bool clamp = true);
 	virtual void resize(int w, int h);
 	virtual void set_zoom(int new_zoom, bool relative = true);
@@ -43,11 +44,10 @@ protected:
 
 	ResourceManager *res;
 	int page;
-	int off_x, off_y;
 	int width, height;
 
 	// search results
-	std::map<int,QList<QRectF> *> hits;
+	std::map<int,QList<QRectF> *> hits; // TODO make pointer
 	bool search_visible;
 	int hit_page;
 	QList<QRectF>::const_iterator hit_it;

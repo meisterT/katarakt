@@ -14,6 +14,7 @@ using namespace std;
 //==[ GridLayout ]=============================================================
 GridLayout::GridLayout(ResourceManager *_res, int page, int columns) :
 		Layout(_res, page),
+		off_x(0), off_y(0),
 		horizontal_page(0),
 		zoom(0) {
 	initialize(columns);

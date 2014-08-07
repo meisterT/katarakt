@@ -41,6 +41,7 @@ private:
 
 	Grid *grid;
 
+	int off_x, off_y;
 	int horizontal_page;
 	int last_visible_page;
 	float size;

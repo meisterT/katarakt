@@ -12,6 +12,8 @@
 
 class Viewer;
 class Layout;
+class PresentationLayout;
+class GridLayout;
 class GotoLine;
 
 
@@ -79,7 +81,9 @@ private:
 	void add_action(const char *action, const char *slot);
 
 	Viewer *viewer;
-	Layout *layout;
+	Layout *cur_layout;
+	PresentationLayout *presentation_layout;
+	GridLayout *grid_layout;
 
 	GotoLine *goto_line;
 

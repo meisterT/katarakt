@@ -30,15 +30,18 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 	background_opacity = config->get_value("background_opacity").toInt();
 
+	presentation_layout = new PresentationLayout(viewer->get_res());
+	grid_layout = new GridLayout(viewer->get_res());
+
 	QString default_layout = config->get_value("default_layout").toString();
 	if (default_layout == "grid") {
-		layout = new GridLayout(viewer->get_res());
+		cur_layout = grid_layout;
 	} else { // "presentation" and everything else
-		layout = new PresentationLayout(viewer->get_res());
+		cur_layout = presentation_layout;
 	}
 
 	// apply start option
-	layout->scroll_page(config->get_tmp_value("start_page").toInt(), false);
+	cur_layout->scroll_page(config->get_tmp_value("start_page").toInt(), false);
 
 	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
 	smooth_scroll_delta = config->get_value("smooth_scroll_delta").toInt();
@@ -85,8 +88,9 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 Canvas::~Canvas() {
 	delete goto_line;
-	layout->clear_hits();
-	delete layout;
+	cur_layout->clear_hits();
+	delete presentation_layout;
+	delete grid_layout;
 }
 
 bool Canvas::is_valid() const {
@@ -94,7 +98,7 @@ bool Canvas::is_valid() const {
 }
 
 void Canvas::reload(bool clamp) {
-	layout->rebuild(clamp);
+	cur_layout->rebuild(clamp);
 	goto_line->set_page_count(viewer->get_res()->get_page_count());
 	update();
 }
@@ -110,7 +114,7 @@ void Canvas::add_action(const char *action, const char *slot) {
 }
 
 const Layout *Canvas::get_layout() const {
-	return layout;
+	return cur_layout;
 }
 
 void Canvas::paintEvent(QPaintEvent * /*event*/) {
@@ -123,10 +127,10 @@ void Canvas::paintEvent(QPaintEvent * /*event*/) {
 	} else {
 		painter.fillRect(rect(), QColor(0, 0, 0, background_opacity));
 	}
-	layout->render(&painter);
+	cur_layout->render(&painter);
 
 	QString title = QString("page %1/%2")
-		.arg(layout->get_page() + 1)
+		.arg(cur_layout->get_page() + 1)
 		.arg(viewer->get_res()->get_page_count());
 
 	if (draw_overlay) {
@@ -154,7 +158,7 @@ void Canvas::mousePressEvent(QMouseEvent *event) {
 void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 	if (event->button() == Qt::LeftButton) {
 		if (mx_down == event->x() && my_down == event->y()) {
-			if (layout->click_mouse(mx_down, my_down)) {
+			if (cur_layout->click_mouse(mx_down, my_down)) {
 				update();
 			}
 		}
@@ -163,7 +167,7 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 
 void Canvas::mouseMoveEvent(QMouseEvent *event) {
 	if (event->buttons() & Qt::LeftButton) {
-		if (layout->scroll_smooth(event->x() - mx, event->y() - my)) {
+		if (cur_layout->scroll_smooth(event->x() - mx, event->y() - my)) {
 			update();
 		}
 		mx = event->x();
@@ -174,17 +178,17 @@ void Canvas::mouseMoveEvent(QMouseEvent *event) {
 void Canvas::wheelEvent(QWheelEvent *event) {
 	int d = event->delta();
 	if (event->orientation() == Qt::Vertical) {
-		if (layout->supports_smooth_scrolling()) {
-			if (layout->scroll_smooth(0, d)) {
+		if (cur_layout->supports_smooth_scrolling()) {
+			if (cur_layout->scroll_smooth(0, d)) {
 				update();
 			}
 		} else {
-			if (layout->scroll_page(-d / mouse_wheel_factor)) {
+			if (cur_layout->scroll_page(-d / mouse_wheel_factor)) {
 				update();
 			}
 		}
 	} else {
-		if (layout->scroll_smooth(d, 0)) {
+		if (cur_layout->scroll_smooth(d, 0)) {
 			update();
 		}
 	}
@@ -192,61 +196,59 @@ void Canvas::wheelEvent(QWheelEvent *event) {
 
 void Canvas::mouseDoubleClickEvent(QMouseEvent * event) {
 	if (event->button() == Qt::LeftButton) {
-		layout->goto_page_at(event->x(), event->y());
+		cur_layout->goto_page_at(event->x(), event->y());
 		update();
 	}
 }
 
 void Canvas::resizeEvent(QResizeEvent *event) {
-	layout->resize(event->size().width(), event->size().height());
+	cur_layout->resize(event->size().width(), event->size().height());
 	goto_line->move(0, height() - goto_line->height());
 	update();
 }
 
 // primitive actions
-// TODO find a more compact way?
 void Canvas::set_presentation_layout() {
-	Layout *old_layout = layout;
-	layout = new PresentationLayout(*old_layout);
-	delete old_layout;
+	presentation_layout->activate(cur_layout);
+	cur_layout = presentation_layout;
 	update();
 }
 
 void Canvas::set_grid_layout() {
-	Layout *old_layout = layout;
-	layout = new GridLayout(*old_layout);
-	delete old_layout;
+	grid_layout->activate(cur_layout);
+	grid_layout->rebuild();
+	cur_layout = grid_layout;
 	update();
 }
 
 // general movement
 void Canvas::page_up() {
-	if (layout->scroll_page(-1)) {
+	if (cur_layout->scroll_page(-1)) {
 		update();
 	}
 }
 
 void Canvas::page_down() {
-	if (layout->scroll_page(1)) {
+	if (cur_layout->scroll_page(1)) {
 		update();
 	}
 }
 
 void Canvas::page_first() {
-	if (layout->scroll_page(-1, false)) {
+	if (cur_layout->scroll_page(-1, false)) {
 		update();
 	}
 }
 
 void Canvas::page_last() {
-	if (layout->scroll_page(viewer->get_res()->get_page_count(), false)) {
+	if (cur_layout->scroll_page(viewer->get_res()->get_page_count(), false)) {
 		update();
 	}
 }
 
 void Canvas::half_screen_up() {
-	if (layout->supports_smooth_scrolling()) {
-		if (layout->scroll_smooth(0, height() * 0.5f)) {
+	if (cur_layout->supports_smooth_scrolling()) {
+		if (cur_layout->scroll_smooth(0, height() * 0.5f)) {
 			update();
 		}
 	} else { // fallback
@@ -255,8 +257,8 @@ void Canvas::half_screen_up() {
 }
 
 void Canvas::half_screen_down() {
-	if (layout->supports_smooth_scrolling()) {
-		if (layout->scroll_smooth(0, -height() * 0.5f)) {
+	if (cur_layout->supports_smooth_scrolling()) {
+		if (cur_layout->scroll_smooth(0, -height() * 0.5f)) {
 			update();
 		}
 	} else { // fallback
@@ -265,8 +267,8 @@ void Canvas::half_screen_down() {
 }
 
 void Canvas::screen_up() {
-	if (layout->supports_smooth_scrolling()) {
-		if (layout->scroll_smooth(0, height() * screen_scroll_factor)) {
+	if (cur_layout->supports_smooth_scrolling()) {
+		if (cur_layout->scroll_smooth(0, height() * screen_scroll_factor)) {
 			update();
 		}
 	} else { // fallback
@@ -275,8 +277,8 @@ void Canvas::screen_up() {
 }
 
 void Canvas::screen_down() {
-	if (layout->supports_smooth_scrolling()) {
-		if (layout->scroll_smooth(0, -height() * screen_scroll_factor)) {
+	if (cur_layout->supports_smooth_scrolling()) {
+		if (cur_layout->scroll_smooth(0, -height() * screen_scroll_factor)) {
 			update();
 		}
 	} else { // fallback
@@ -285,8 +287,8 @@ void Canvas::screen_down() {
 }
 
 void Canvas::smooth_up() {
-	if (layout->supports_smooth_scrolling()) {
-		if (layout->scroll_smooth(0, smooth_scroll_delta)) {
+	if (cur_layout->supports_smooth_scrolling()) {
+		if (cur_layout->scroll_smooth(0, smooth_scroll_delta)) {
 			update();
 		}
 	} else { // fallback
@@ -295,8 +297,8 @@ void Canvas::smooth_up() {
 }
 
 void Canvas::smooth_down() {
-	if (layout->supports_smooth_scrolling()) {
-		if (layout->scroll_smooth(0, -smooth_scroll_delta)) {
+	if (cur_layout->supports_smooth_scrolling()) {
+		if (cur_layout->scroll_smooth(0, -smooth_scroll_delta)) {
 			update();
 		}
 	} else { // fallback
@@ -306,8 +308,8 @@ void Canvas::smooth_down() {
 
 
 void Canvas::smooth_left() {
-	if (layout->supports_smooth_scrolling()) {
-		if (layout->scroll_smooth(smooth_scroll_delta, 0)) {
+	if (cur_layout->supports_smooth_scrolling()) {
+		if (cur_layout->scroll_smooth(smooth_scroll_delta, 0)) {
 			update();
 		}
 	} else { // fallback
@@ -316,8 +318,8 @@ void Canvas::smooth_left() {
 }
 
 void Canvas::smooth_right() {
-	if (layout->supports_smooth_scrolling()) {
-		if (layout->scroll_smooth(-smooth_scroll_delta, 0)) {
+	if (cur_layout->supports_smooth_scrolling()) {
+		if (cur_layout->scroll_smooth(-smooth_scroll_delta, 0)) {
 			update();
 		}
 	} else { // fallback
@@ -326,27 +328,27 @@ void Canvas::smooth_right() {
 }
 
 void Canvas::zoom_in() {
-	layout->set_zoom(1);
+	cur_layout->set_zoom(1);
 	update();
 }
 
 void Canvas::zoom_out() {
-	layout->set_zoom(-1);
+	cur_layout->set_zoom(-1);
 	update();
 }
 
 void Canvas::reset_zoom() {
-	layout->set_zoom(0, false);
+	cur_layout->set_zoom(0, false);
 	update();
 }
 
 void Canvas::columns_inc() {
-	layout->set_columns(1);
+	cur_layout->set_columns(1);
 	update();
 }
 
 void Canvas::columns_dec() {
-	layout->set_columns(-1);
+	cur_layout->set_columns(-1);
 	update();
 }
 
@@ -364,32 +366,32 @@ void Canvas::search() {
 }
 
 void Canvas::next_hit() {
-	if (layout->get_search_visible()) {
-		if (layout->advance_hit()) {
+	if (cur_layout->get_search_visible()) {
+		if (cur_layout->advance_hit()) {
 			update();
 		}
 	}
 }
 
 void Canvas::previous_hit() {
-	if (layout->get_search_visible()) {
-		if (layout->advance_hit(false)) {
+	if (cur_layout->get_search_visible()) {
+		if (cur_layout->advance_hit(false)) {
 			update();
 		}
 	}
 }
 
 void Canvas::next_invisible_hit() {
-	if (layout->get_search_visible()) {
-		if (layout->advance_invisible_hit()) {
+	if (cur_layout->get_search_visible()) {
+		if (cur_layout->advance_invisible_hit()) {
 			update();
 		}
 	}
 }
 
 void Canvas::previous_invisible_hit() {
-	if (layout->get_search_visible()) {
-		if (layout->advance_invisible_hit(false)) {
+	if (cur_layout->get_search_visible()) {
+		if (cur_layout->advance_invisible_hit(false)) {
 			update();
 		}
 	}
@@ -397,28 +399,28 @@ void Canvas::previous_invisible_hit() {
 
 void Canvas::focus_goto() {
 	goto_line->setFocus();
-	goto_line->setText(QString::number(layout->get_page() + 1));
+	goto_line->setText(QString::number(cur_layout->get_page() + 1));
 	goto_line->selectAll();
 	goto_line->show();
 }
 
 void Canvas::search_clear() {
-	layout->clear_hits();
+	cur_layout->clear_hits();
 	update();
 }
 
 void Canvas::search_done(int page, QList<QRectF> *l) {
-	layout->set_hits(page, l);
+	cur_layout->set_hits(page, l);
 	update();
 }
 
 void Canvas::search_visible(bool visible) {
-	layout->set_search_visible(visible);
+	cur_layout->set_search_visible(visible);
 	update();
 }
 
 void Canvas::page_rendered(int page) {
-	if (layout->page_visible(page)) {
+	if (cur_layout->page_visible(page)) {
 		update();
 	}
 }
@@ -426,19 +428,19 @@ void Canvas::page_rendered(int page) {
 void Canvas::goto_page() {
 	int page = goto_line->text().toInt() - 1;
 	goto_line->hide();
-	if (layout->scroll_page(page, false)) {
+	if (cur_layout->scroll_page(page, false)) {
 		update();
 	}
 }
 void Canvas::rotate_left() {
 	viewer->get_res()->rotate(-1);
-	layout->rebuild();
+	cur_layout->rebuild();
 	update();
 }
 
 void Canvas::rotate_right() {
 	viewer->get_res()->rotate(1);
-	layout->rebuild();
+	cur_layout->rebuild();
 	update();
 }
 
