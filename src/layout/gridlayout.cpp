@@ -47,7 +47,7 @@ void GridLayout::set_constants(bool clamp) {
 	}
 
 	// calculate fit
-	int used = 0;
+	float used = 0;
 	for (int i = 0; i < grid->get_column_count(); i++) {
 		used += grid->get_width(i);
 	}
