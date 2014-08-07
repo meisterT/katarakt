@@ -236,13 +236,14 @@ bool GridLayout::scroll_page(int new_page, bool relative) {
 		} else {
 			page += new_page * grid->get_column_count();
 		}
-	}
-	if ((page == 0 && off_y > 0) || page < 0) {
-		page = 0;
-		off_y = 0;
-	} else if ((page == border_page_h && off_y < border_off_h) || page > border_page_h) {
-		page = border_page_h;
-		off_y = border_off_h;
+		// clamp height
+		if ((page == 0 && off_y > 0) || page < 0) { // top border
+			page = 0;
+			off_y = 0;
+		} else if ((page == border_page_h && off_y < border_off_h) || page > border_page_h) { // bottom border
+			page = border_page_h;
+			off_y = border_off_h;
+		}
 	}
 	return page != old_page || off_y != old_off_y;
 }
