@@ -16,7 +16,7 @@ public:
 
 	void rebuild(bool clamp = true);
 	void resize(int w, int h);
-	void set_zoom(int new_zoom, bool relative = true);
+	bool set_zoom(int new_zoom, bool relative = true);
 	void set_columns(int new_columns, bool relative = true);
 
 	bool scroll_smooth(int dx, int dy);

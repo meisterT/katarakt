@@ -126,7 +126,7 @@ void GridLayout::resize(int w, int h) {
 	scroll_smooth(0, 0);
 }
 
-void GridLayout::set_zoom(int new_zoom, bool relative) {
+bool GridLayout::set_zoom(int new_zoom, bool relative) {
 	float old_factor = 1 + zoom * zoom_factor;
 	if (relative) {
 		zoom += new_zoom;
@@ -140,10 +140,15 @@ void GridLayout::set_zoom(int new_zoom, bool relative) {
 	}
 	float new_factor = 1 + zoom * zoom_factor;
 
+	if (old_factor == new_factor) {
+		return false;
+	}
+
 	off_x = (off_x - width / 2) * new_factor / old_factor + width / 2;
 	off_y = (off_y - height / 2) * new_factor / old_factor + height / 2;
 
 	set_constants();
+	return true;
 }
 
 void GridLayout::set_columns(int new_columns, bool relative) {

@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QString>
 #include <QPainter>
+#include <QApplication>
 #include <iostream>
 #include "canvas.h"
 #include "viewer.h"
@@ -180,20 +181,32 @@ void Canvas::mouseMoveEvent(QMouseEvent *event) {
 
 void Canvas::wheelEvent(QWheelEvent *event) {
 	int d = event->delta();
-	if (event->orientation() == Qt::Vertical) {
-		if (cur_layout->supports_smooth_scrolling()) {
-			if (cur_layout->scroll_smooth(0, d)) {
+	switch (QApplication::keyboardModifiers()) {
+		// scroll
+		case Qt::NoModifier:
+			if (event->orientation() == Qt::Vertical) {
+				if (cur_layout->supports_smooth_scrolling()) {
+					if (cur_layout->scroll_smooth(0, d)) {
+						update();
+					}
+				} else {
+					if (cur_layout->scroll_page(-d / mouse_wheel_factor)) {
+						update();
+					}
+				}
+			} else {
+				if (cur_layout->scroll_smooth(d, 0)) {
+					update();
+				}
+			}
+			break;
+
+		// zoom
+		case Qt::ControlModifier:
+			if (cur_layout->set_zoom(d / mouse_wheel_factor)) {
 				update();
 			}
-		} else {
-			if (cur_layout->scroll_page(-d / mouse_wheel_factor)) {
-				update();
-			}
-		}
-	} else {
-		if (cur_layout->scroll_smooth(d, 0)) {
-			update();
-		}
+			break;
 	}
 }
 
@@ -338,18 +351,21 @@ void Canvas::smooth_right() {
 }
 
 void Canvas::zoom_in() {
-	cur_layout->set_zoom(1);
-	update();
+	if (cur_layout->set_zoom(1)) {
+		update();
+	}
 }
 
 void Canvas::zoom_out() {
-	cur_layout->set_zoom(-1);
-	update();
+	if (cur_layout->set_zoom(-1)) {
+		update();
+	}
 }
 
 void Canvas::reset_zoom() {
-	cur_layout->set_zoom(0, false);
-	update();
+	if (cur_layout->set_zoom(0, false)) {
+		update();
+	}
 }
 
 void Canvas::columns_inc() {

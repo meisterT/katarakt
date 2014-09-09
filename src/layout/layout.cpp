@@ -61,8 +61,9 @@ void Layout::resize(int w, int h) {
 	height = h;
 }
 
-void Layout::set_zoom(int /*new_zoom*/, bool /*relative*/) {
+bool Layout::set_zoom(int /*new_zoom*/, bool /*relative*/) {
 	// implement in child classes where necessary
+	return false;
 }
 
 void Layout::set_columns(int /*new_columns*/, bool /*relative*/) {
