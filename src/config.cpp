@@ -38,6 +38,7 @@ CFG::CFG() :
 	// canvas keys
 	keys["set_presentation_layout"] = QStringList() << "1";
 	keys["set_grid_layout"] = QStringList() << "2";
+	keys["set_presenter_layout"] = QStringList() << "3";
 	keys["page_up"] = QStringList() << "PgUp";
 	keys["page_down"] = QStringList() << "PgDown";
 	keys["page_first"] = QStringList() << "Home" << "G";

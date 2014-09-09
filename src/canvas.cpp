@@ -10,6 +10,7 @@
 #include "layout/layout.h"
 #include "layout/presentationlayout.h"
 #include "layout/gridlayout.h"
+#include "layout/presenterlayout.h"
 #include "resourcemanager.h"
 #include "search.h"
 #include "gotoline.h"
@@ -32,6 +33,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 	presentation_layout = new PresentationLayout(viewer->get_res());
 	grid_layout = new GridLayout(viewer->get_res());
+	presenter_layout = new PresenterLayout(viewer->get_res());
 
 	QString default_layout = config->get_value("default_layout").toString();
 	if (default_layout == "grid") {
@@ -49,6 +51,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	// setup keys
 	add_action("set_presentation_layout", SLOT(set_presentation_layout()));
 	add_action("set_grid_layout", SLOT(set_grid_layout()));
+	add_action("set_presenter_layout", SLOT(set_presenter_layout()));
 	add_action("page_up", SLOT(page_up()));
 	add_action("page_down", SLOT(page_down()));
 	add_action("page_first", SLOT(page_first()));
@@ -218,6 +221,13 @@ void Canvas::set_grid_layout() {
 	grid_layout->activate(cur_layout);
 	grid_layout->rebuild();
 	cur_layout = grid_layout;
+	update();
+}
+
+void Canvas::set_presenter_layout() {
+	presenter_layout->activate(cur_layout);
+	presenter_layout->rebuild();
+	cur_layout = presenter_layout;
 	update();
 }
 

@@ -21,19 +21,21 @@ private:
 	~KPage();
 
 public:
-	const QImage *get_image() const;
-	int get_width() const;
-	char get_rotation() const;
+	const QImage *get_image(int index = 0) const;
+	int get_width(int index = 0) const;
+	char get_rotation(int index = 0) const;
+//	QString get_label() const;
 
 private:
 	float width;
 	float height;
-	QImage img;
+	QImage img[3];
 	QImage thumbnail;
+//	QString label;
 	std::list<Poppler::LinkGoto *> *links;
 	QMutex mutex;
-	int status;
-	char rotation;
+	int status[3];
+	char rotation[3];
 
 	friend class Worker;
 	friend class ResourceManager;
@@ -71,10 +73,13 @@ public:
 	bool is_locked() const;
 
 	// page (meta)data
-	const KPage *get_page(int page, int newWidth);
+	const KPage *get_page(int page, int newWidth, int index = 0);
+//	QString get_page_label(int page) const;
 	float get_page_width(int page) const;
 	float get_page_height(int page) const;
 	float get_page_aspect(int page) const;
+	float get_min_aspect() const;
+	float get_max_aspect() const;
 	int get_page_count() const;
 	const std::list<Poppler::LinkGoto *> *get_links(int page);
 
@@ -87,7 +92,7 @@ public:
 	void connect_canvas(Canvas *c) const;
 
 private:
-	void enqueue(int page, int width);
+	void enqueue(int page, int width, int index = 0);
 	bool render(int offset);
 
 	void initialize(QString &file, const QByteArray &password);
@@ -102,7 +107,9 @@ private:
 	QMutex garbageMutex;
 	QSemaphore requestSemaphore;
 	int center_page;
-	std::map<int,int> requests;
+	float max_aspect;
+	float min_aspect;
+	std::map<int,std::pair<int,int> > requests; // page, index, width
 	std::set<int> garbage;
 	QMutex link_mutex;
 

@@ -21,7 +21,7 @@ public:
 	bool page_visible(int p) const;
 
 private:
-	int calculate_fit_width(int page);
+	int calculate_fit_width(int page) const;
 	void view_hit();
 };
 

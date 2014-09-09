@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 #include "resourcemanager.h"
 #include "canvas.h"
 #include "config.h"
@@ -9,9 +10,11 @@ using namespace std;
 
 //==[ Katarakt Page ]==========================================================
 KPage::KPage() :
-		links(NULL),
-		status(0),
-		rotation(0) {
+		links(NULL) {
+	for (int i = 0; i < 3; i++) {
+		status[i] = 0;
+		rotation[i] = 0;
+	}
 }
 
 KPage::~KPage() {
@@ -24,23 +27,31 @@ KPage::~KPage() {
 	delete links;
 }
 
-const QImage *KPage::get_image() const {
-	if (img.isNull()) {
-		if (thumbnail.isNull()) {
-			return NULL;
+const QImage *KPage::get_image(int index) const {
+	// return any available image, try the right index first
+	for (int i = 3; i > 0; i--) {
+		if (!img[(index + i) % 3].isNull()) {
+			return &img[(index + i) % 3];
 		}
+	}
+	if (thumbnail.isNull()) {
+		return NULL;
+	} else {
 		return &thumbnail;
 	}
-	return &img;
 }
 
-int KPage::get_width() const {
-	return status;
+int KPage::get_width(int index) const {
+	return status[index];
 }
 
-char KPage::get_rotation() const {
-	return rotation;
+char KPage::get_rotation(int index) const {
+	return rotation[index];
 }
+
+//QString KPage::get_label() const {
+//	return label;
+//}
 
 
 //==[ Worker ]=================================================================
@@ -65,38 +76,42 @@ void Worker::run() {
 
 		// get next page to render
 		res->requestMutex.lock();
-		int page, width;
-		map<int,int>::iterator less = res->requests.lower_bound(res->center_page);
-		map<int,int>::iterator greater = less--;
+		int page, width, index;
+		map<int,pair<int,int> >::iterator less = res->requests.lower_bound(res->center_page);
+		map<int,pair<int,int> >::iterator greater = less--;
 
 		if (greater != res->requests.end()) {
 			if (greater != res->requests.begin()) {
 				// favour nearby page, go down first
 				if (greater->first + less->first <= res->center_page * 2) {
 					page = greater->first;
-					width = greater->second;
+					index = greater->second.first;
+					width = greater->second.second;
 					res->requests.erase(greater);
 				} else {
 					page = less->first;
-					width = less->second;
+					index = less->second.first;
+					width = less->second.second;
 					res->requests.erase(less);
 				}
 			} else {
 				page = greater->first;
-				width = greater->second;
+				index = greater->second.first;
+				width = greater->second.second;
 				res->requests.erase(greater);
 			}
 		} else {
 			page = less->first;
-			width = less->second;
+			index = less->second.first;
+			width = less->second.second;
 			res->requests.erase(less);
 		}
 		res->requestMutex.unlock();
 
 		// check for duplicate requests
 		res->k_page[page].mutex.lock();
-		if (res->k_page[page].status == width &&
-				res->k_page[page].rotation == res->rotation) {
+		if (res->k_page[page].status[index] == width &&
+				res->k_page[page].rotation[index] == res->rotation) {
 			res->k_page[page].mutex.unlock();
 			continue;
 		}
@@ -105,7 +120,7 @@ void Worker::run() {
 
 		// open page
 #ifdef DEBUG
-		cerr << "    rendering page " << page << endl;
+		cerr << "    rendering page " << page << " for index " << index<< endl;
 #endif
 		Poppler::Page *p = res->doc->page(page);
 		if (p == NULL) {
@@ -125,16 +140,16 @@ void Worker::run() {
 
 		// put page
 		res->k_page[page].mutex.lock();
-		if (!res->k_page[page].img.isNull()) {
-			res->k_page[page].img = QImage(); // assign null image
+		if (!res->k_page[page].img[index].isNull()) {
+			res->k_page[page].img[index] = QImage(); // assign null image
 		}
-		res->k_page[page].img = img;
-		res->k_page[page].status = width;
-		res->k_page[page].rotation = rotation;
+		res->k_page[page].img[index] = img;
+		res->k_page[page].status[index] = width;
+		res->k_page[page].rotation[index] = rotation;
 		res->k_page[page].mutex.unlock();
 
 		res->garbageMutex.lock();
-		res->garbage.insert(page);
+		res->garbage.insert(page); // TODO add index information?
 		res->garbageMutex.unlock();
 
 		emit page_rendered(page);
@@ -211,6 +226,9 @@ void ResourceManager::initialize(QString &file, const QByteArray &password) {
 
 	page_count = doc->numPages();
 
+	min_aspect = numeric_limits<float>::max();
+	max_aspect = numeric_limits<float>::min();
+
 	k_page = new KPage[get_page_count()];
 	for (int i = 0; i < get_page_count(); i++) {
 		Poppler::Page *p = doc->page(i);
@@ -220,6 +238,19 @@ void ResourceManager::initialize(QString &file, const QByteArray &password) {
 		}
 		k_page[i].width = p->pageSizeF().width();
 		k_page[i].height = p->pageSizeF().height();
+
+		float aspect = k_page[i].width / k_page[i].height;
+		if (aspect < min_aspect) {
+			min_aspect = aspect;
+		}
+		if (aspect > max_aspect) {
+			max_aspect = aspect;
+		}
+
+//		k_page[i].label = p->label();
+//		if (k_page[i].label != QString::number(i + 1)) {
+//			cout << i << endl;
+//		}
 		delete p;
 	}
 }
@@ -262,17 +293,17 @@ void ResourceManager::connect_canvas(Canvas *c) const {
 	worker->connect_signal(c);
 }
 
-const KPage *ResourceManager::get_page(int page, int width) {
+const KPage *ResourceManager::get_page(int page, int width, int index) {
 	if (page < 0 || page >= get_page_count()) {
 		return NULL;
 	}
 
 	// page not available or wrong size/rotation
 	k_page[page].mutex.lock();
-	if (k_page[page].img.isNull() ||
-			k_page[page].status != width ||
-			k_page[page].rotation != rotation) {
-		enqueue(page, width);
+	if (k_page[page].img[index].isNull() ||
+			k_page[page].status[index] != width ||
+			k_page[page].rotation[index] != rotation) {
+		enqueue(page, width, index);
 	}
 	return &k_page[page];
 }
@@ -300,21 +331,29 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 			if (smooth_downscaling) {
 				mode = Qt::SmoothTransformation;
 			}
-			// scale
-			k_page[page].thumbnail = k_page[page].img.scaled(
-					QSize(thumbnail_size, thumbnail_size),
-					Qt::IgnoreAspectRatio, mode);
-			// rotate
-			if (k_page[page].rotation != 0) {
-				QTransform trans;
-				trans.rotate(-k_page[page].rotation * 90);
-				k_page[page].thumbnail = k_page[page].thumbnail.transformed(
-						trans);
+			// find the index of the rendered image
+			for (int i = 0; i < 3; i++) {
+				if (!k_page[page].img[i].isNull()) {
+					// scale
+					k_page[page].thumbnail = k_page[page].img[i].scaled(
+							QSize(thumbnail_size, thumbnail_size),
+							Qt::IgnoreAspectRatio, mode);
+					// rotate
+					if (k_page[page].rotation[i] != 0) {
+						QTransform trans;
+						trans.rotate(-k_page[page].rotation[i] * 90);
+						k_page[page].thumbnail = k_page[page].thumbnail.transformed(
+								trans);
+					}
+					break;
+				}
 			}
 		}
-		k_page[page].img = QImage();
-		k_page[page].status = 0;
-		k_page[page].rotation = 0;
+		for (int i = 0; i < 3; i++) {
+			k_page[page].img[i] = QImage();
+			k_page[page].status[i] = 0;
+			k_page[page].rotation[i] = 0;
+		}
 		k_page[page].mutex.unlock();
 	}
 	garbageMutex.unlock();
@@ -324,7 +363,7 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 		return;
 	}
 	requestMutex.lock();
-	for (map<int,int>::iterator it = requests.begin(); it != requests.end(); ) {
+	for (map<int,pair<int,int> >::iterator it = requests.begin(); it != requests.end(); ) {
 		if (it->first < keep_min || it->first > keep_max) {
 			requestSemaphore.acquire(1);
 			requests.erase(it++);
@@ -352,17 +391,26 @@ void ResourceManager::unlock_page(int page) const {
 	k_page[page].mutex.unlock();
 }
 
-void ResourceManager::enqueue(int page, int width) {
+void ResourceManager::enqueue(int page, int width, int index) {
 	requestMutex.lock();
-	map<int,int>::iterator it = requests.find(page);
+	map<int,pair<int,int> >::iterator it = requests.find(page);
 	if (it == requests.end()) {
-		requests[page] = width;
+		requests[page] = make_pair(index, width);
 		requestSemaphore.release(1);
 	} else {
-		it->second = width;
+		if (index <= it->second.first) {
+			it->second = make_pair(index, width);
+		}
 	}
 	requestMutex.unlock();
 }
+
+//QString ResourceManager::get_page_label(int page) const {
+//	if (page < 0 || page >= get_page_count()) {
+//		return QString();
+//	}
+//	return k_page[page].label;
+//}
 
 float ResourceManager::get_page_width(int page) const {
 	if (page < 0 || page >= get_page_count()) {
@@ -393,6 +441,22 @@ float ResourceManager::get_page_aspect(int page) const {
 		return k_page[page].width / k_page[page].height;
 	}
 	return k_page[page].height / k_page[page].width;
+}
+
+float ResourceManager::get_min_aspect() const {
+	if (rotation == 0 || rotation == 2) {
+		return min_aspect;
+	} else {
+		return 1.0f / max_aspect;
+	}
+}
+
+float ResourceManager::get_max_aspect() const {
+	if (rotation == 0 || rotation == 2) {
+		return max_aspect;
+	} else {
+		return 1.0f / min_aspect;
+	}
 }
 
 int ResourceManager::get_page_count() const {

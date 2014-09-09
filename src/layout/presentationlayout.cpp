@@ -22,7 +22,7 @@ bool PresentationLayout::supports_smooth_scrolling() const {
 	return false;
 }
 
-int PresentationLayout::calculate_fit_width(int page) {
+int PresentationLayout::calculate_fit_width(int page) const {
 	if ((float) width / height > res->get_page_aspect(page)) {
 		return res->get_page_aspect(page) * height;
 	}
@@ -46,11 +46,11 @@ void PresentationLayout::render(QPainter *painter) {
 	if (k_page != NULL) {
 		const QImage *img = k_page->get_image();
 		if (img != NULL) {
-			int rot= (res->get_rotation() - k_page->get_rotation() + 4) % 4;
+			int rot = (res->get_rotation() - k_page->get_rotation() + 4) % 4;
 			QRect rect;
 			painter->rotate(rot* 90);
 			// calculate page position
-			if (rot== 0) {
+			if (rot == 0) {
 				rect = QRect(center_x, center_y, page_width, page_height);
 			} else if (rot == 1) {
 				rect = QRect(center_y, -center_x - page_width,
