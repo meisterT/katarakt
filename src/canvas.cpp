@@ -27,6 +27,8 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 		valid(true) {
 	setFocusPolicy(Qt::StrongFocus);
 
+	clear_jumps();
+
 	// load config options
 	CFG *config = CFG::get_instance();
 
@@ -80,6 +82,8 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	add_action("focus_goto", SLOT(focus_goto()));
 	add_action("rotate_left", SLOT(rotate_left()));
 	add_action("rotate_right", SLOT(rotate_right()));
+	add_action("jump_back", SLOT(jump_back()));
+	add_action("jump_forward", SLOT(jump_forward()));
 
 	// prints the string representation of a key
 //	cerr << QKeySequence(Qt::Key_Equal).toString().toUtf8().constData() << endl;
@@ -114,6 +118,55 @@ void Canvas::add_action(const char *action, const char *slot) {
 		a->setShortcut(QKeySequence(i.next()));
 		addAction(a);
 		connect(a, SIGNAL(triggered()), this, slot);
+	}
+}
+
+void Canvas::store_jump(int page) {
+	map<int,list<int>::iterator>::iterator it = jump_map.find(page);
+	if (it != jump_map.end()) {
+		jumplist.erase(it->second);
+	}
+	jumplist.push_back(page);
+	jump_map[page] = --jumplist.end();
+	cur_jump_pos = jumplist.end();
+
+//	cerr << "jumplist: ";
+//	for (list<int>::iterator it = jumplist.begin(); it != jumplist.end(); ++it) {
+//		if (it == cur_jump_pos) {
+//			cerr << "*";
+//		}
+//		cerr << *it << " ";
+//	}
+//	cerr << endl;
+}
+
+void Canvas::clear_jumps() {
+	jumplist.clear();
+	jump_map.clear();
+	cur_jump_pos = jumplist.end();
+}
+
+void Canvas::jump_back() {
+	if (cur_jump_pos == jumplist.begin()) {
+		return;
+	}
+	if (cur_jump_pos == jumplist.end()) {
+		store_jump(cur_layout->get_page());
+		--cur_jump_pos;
+	}
+	--cur_jump_pos;
+	if (cur_layout->scroll_page(*cur_jump_pos, false)) {
+		update();
+	}
+}
+
+void Canvas::jump_forward() {
+	if (cur_jump_pos == jumplist.end() || cur_jump_pos == --jumplist.end()) {
+		return;
+	}
+	++cur_jump_pos;
+	if (cur_layout->scroll_page(*cur_jump_pos, false)) {
+		update();
 	}
 }
 
@@ -162,7 +215,9 @@ void Canvas::mousePressEvent(QMouseEvent *event) {
 void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 	if (event->button() == Qt::LeftButton) {
 		if (mx_down == event->x() && my_down == event->y()) {
+			int page = cur_layout->get_page();
 			if (cur_layout->click_mouse(mx_down, my_down)) {
+				store_jump(page); // store old position if a clicked link moved the view
 				update();
 			}
 		}
@@ -258,13 +313,17 @@ void Canvas::page_down() {
 }
 
 void Canvas::page_first() {
+	int page = cur_layout->get_page();
 	if (cur_layout->scroll_page(-1, false)) {
+		store_jump(page);
 		update();
 	}
 }
 
 void Canvas::page_last() {
+	int page = cur_layout->get_page();
 	if (cur_layout->scroll_page(viewer->get_res()->get_page_count(), false)) {
+		store_jump(page);
 		update();
 	}
 }
@@ -393,7 +452,9 @@ void Canvas::search() {
 
 void Canvas::next_hit() {
 	if (cur_layout->get_search_visible()) {
+		int page = cur_layout->get_page();
 		if (cur_layout->advance_hit()) {
+			store_jump(page);
 			update();
 		}
 	}
@@ -401,7 +462,9 @@ void Canvas::next_hit() {
 
 void Canvas::previous_hit() {
 	if (cur_layout->get_search_visible()) {
+		int page = cur_layout->get_page();
 		if (cur_layout->advance_hit(false)) {
+			store_jump(page);
 			update();
 		}
 	}
@@ -409,7 +472,9 @@ void Canvas::previous_hit() {
 
 void Canvas::next_invisible_hit() {
 	if (cur_layout->get_search_visible()) {
+		int page = cur_layout->get_page();
 		if (cur_layout->advance_invisible_hit()) {
+			store_jump(page);
 			update();
 		}
 	}
@@ -417,7 +482,9 @@ void Canvas::next_invisible_hit() {
 
 void Canvas::previous_invisible_hit() {
 	if (cur_layout->get_search_visible()) {
+		int page = cur_layout->get_page();
 		if (cur_layout->advance_invisible_hit(false)) {
+			store_jump(page);
 			update();
 		}
 	}
@@ -452,9 +519,11 @@ void Canvas::page_rendered(int page) {
 }
 
 void Canvas::goto_page() {
+	int old_page = cur_layout->get_page();
 	int page = goto_line->text().toInt() - 1;
 	goto_line->hide();
 	if (cur_layout->scroll_page(page, false)) {
+		store_jump(old_page);
 		update();
 	}
 }

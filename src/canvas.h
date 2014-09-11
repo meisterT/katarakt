@@ -28,6 +28,9 @@ public:
 	bool is_valid() const;
 	void reload(bool clamp);
 
+	void store_jump(int page);
+	void clear_jumps();
+
 	const Layout *get_layout() const;
 
 protected:
@@ -78,6 +81,8 @@ private slots:
 	void focus_goto();
 	void rotate_left();
 	void rotate_right();
+	void jump_back();
+	void jump_forward();
 
 private:
 	void add_action(const char *action, const char *slot);
@@ -89,6 +94,10 @@ private:
 	PresenterLayout *presenter_layout;
 
 	GotoLine *goto_line;
+
+	std::list<int> jumplist;
+	std::map<int,std::list<int>::iterator> jump_map;
+	std::list<int>::iterator cur_jump_pos;
 
 	int mx, my;
 	int mx_down, my_down;

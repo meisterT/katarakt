@@ -66,6 +66,8 @@ CFG::CFG() :
 	keys["focus_goto"] = QStringList() << "Ctrl+G";
 	keys["rotate_left"] = QStringList() << "U";
 	keys["rotate_right"] = QStringList() << "I";
+	keys["jump_back"] = QStringList() << "Ctrl+O" << "Alt+Left";
+	keys["jump_forward"] = QStringList() << "Ctrl+I" << "Alt+Right";
 	// viewer keys
 	keys["toggle_fullscreen"] = QStringList() << "F";
 	keys["close_search"] = QStringList() << "Esc";

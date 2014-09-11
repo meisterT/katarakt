@@ -207,6 +207,10 @@ void Viewer::open() {
 			}
 		}
 #endif
+
+		// clear the jumplist - it's not useful in a different file
+		canvas->clear_jumps();
+
 		setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
 		reload();
 	}

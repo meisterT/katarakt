@@ -247,6 +247,7 @@ void SearchBar::set_text() {
 
 	worker->stop = true;
 	search_mutex.unlock();
+	viewer->get_canvas()->store_jump(start_page);
 	viewer->get_canvas()->setFocus(Qt::OtherFocusReason);
 }
 
