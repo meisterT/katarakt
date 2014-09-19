@@ -84,6 +84,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	add_action("rotate_right", SLOT(rotate_right()));
 	add_action("jump_back", SLOT(jump_back()));
 	add_action("jump_forward", SLOT(jump_forward()));
+	add_action("toggle_invert_colors", SLOT(invert_colors()));
 
 	// prints the string representation of a key
 //	cerr << QKeySequence(Qt::Key_Equal).toString().toUtf8().constData() << endl;
@@ -167,6 +168,11 @@ void Canvas::jump_forward() {
 	if (cur_layout->scroll_page(*cur_jump_pos, false)) {
 		update();
 	}
+}
+
+void Canvas::invert_colors() {
+	viewer->get_res()->invert_colors();
+	update();
 }
 
 Layout *Canvas::get_layout() const {

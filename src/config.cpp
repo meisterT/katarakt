@@ -68,6 +68,7 @@ CFG::CFG() :
 	keys["rotate_right"] = QStringList() << ".";
 	keys["jump_back"] = QStringList() << "Ctrl+O" << "Alt+Left";
 	keys["jump_forward"] = QStringList() << "Ctrl+I" << "Alt+Right";
+	keys["toggle_invert_colors"] = QStringList() << "i";
 	// viewer keys
 	keys["toggle_fullscreen"] = QStringList() << "F";
 	keys["close_search"] = QStringList() << "Esc";

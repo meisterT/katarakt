@@ -81,6 +81,7 @@ private slots:
 	void rotate_right();
 	void jump_back();
 	void jump_forward();
+	void invert_colors();
 
 private:
 	void add_action(const char *action, const char *slot);

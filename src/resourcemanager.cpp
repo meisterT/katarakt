@@ -10,7 +10,8 @@ using namespace std;
 
 //==[ Katarakt Page ]==========================================================
 KPage::KPage() :
-		links(NULL) {
+		links(NULL),
+		inverted_colors(false) {
 	for (int i = 0; i < 3; i++) {
 		status[i] = 0;
 		rotation[i] = 0;
@@ -138,10 +139,24 @@ void Worker::run() {
 			continue;
 		}
 
+		// invert to current color setting
+		if (res->inverted_colors) {
+			img.invertPixels();
+		}
+
 		// put page
 		res->k_page[page].mutex.lock();
 		if (!res->k_page[page].img[index].isNull()) {
 			res->k_page[page].img[index] = QImage(); // assign null image
+		}
+
+		// adjust all available images to current color setting
+		if (res->k_page[page].inverted_colors != res->inverted_colors) {
+			res->k_page[page].inverted_colors = res->inverted_colors;
+			for (int i = 0; i < 3; i++) {
+				res->k_page[page].img[i].invertPixels();
+			}
+			res->k_page[page].thumbnail.invertPixels();
 		}
 		res->k_page[page].img[index] = img;
 		res->k_page[page].status[index] = width;
@@ -182,7 +197,8 @@ void Worker::run() {
 ResourceManager::ResourceManager(QString file) :
 		doc(NULL),
 		center_page(0),
-		rotation(0) {
+		rotation(0),
+		inverted_colors(false) {
 	// load config options
 	CFG *config = CFG::get_instance();
 	smooth_downscaling = config->get_value("smooth_downscaling").toBool();
@@ -305,6 +321,13 @@ const KPage *ResourceManager::get_page(int page, int width, int index) {
 			k_page[page].rotation[index] != rotation) {
 		enqueue(page, width, index);
 	}
+	if (inverted_colors != k_page[page].inverted_colors) {
+		k_page[page].inverted_colors = inverted_colors;
+		for (int i = 0; i < 3; i++) {
+			k_page[page].img[i].invertPixels();
+		}
+		k_page[page].thumbnail.invertPixels();
+	}
 	return &k_page[page];
 }
 
@@ -334,6 +357,7 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 			// find the index of the rendered image
 			for (int i = 0; i < 3; i++) {
 				if (!k_page[page].img[i].isNull()) {
+//					k_page[page].inverted_colors = inverted_colors;
 					// scale
 					k_page[page].thumbnail = k_page[page].img[i].scaled(
 							QSize(thumbnail_size, thumbnail_size),
@@ -389,6 +413,10 @@ void ResourceManager::rotate(int value, bool relative) {
 
 void ResourceManager::unlock_page(int page) const {
 	k_page[page].mutex.unlock();
+}
+
+void ResourceManager::invert_colors() {
+	inverted_colors = !inverted_colors;
 }
 
 void ResourceManager::enqueue(int page, int width, int index) {

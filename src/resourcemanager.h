@@ -36,6 +36,7 @@ private:
 	QMutex mutex;
 	int status[3];
 	char rotation[3];
+	bool inverted_colors; // img[]s and thumb must be consistent
 
 	friend class Worker;
 	friend class ResourceManager;
@@ -86,6 +87,7 @@ public:
 	int get_rotation() const;
 	void rotate(int value, bool relative = true);
 	void unlock_page(int page) const;
+	void invert_colors();
 
 	void collect_garbage(int keep_min, int keep_max);
 
@@ -123,6 +125,7 @@ private:
 	// config options
 	bool smooth_downscaling;
 	int thumbnail_size;
+	bool inverted_colors;
 };
 
 #endif

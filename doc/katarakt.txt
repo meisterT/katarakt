@@ -91,6 +91,8 @@ KEY BINDINGS
 	Rotate pages left/right
 *\^o*, *^i*, *Alt-Left*, *Alt-Right* ::
 	Move backward/forward through the jump list. Entries are added automatically when jumping
+*i* ::
+	Toggle between normal and inverted color rendering
 
 VARIABLES
 ---------
