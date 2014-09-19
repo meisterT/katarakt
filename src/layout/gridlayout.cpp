@@ -3,6 +3,7 @@
 #include "gridlayout.h"
 #include "../util.h"
 #include "layout.h"
+#include "../viewer.h"
 #include "../resourcemanager.h"
 #include "../grid.h"
 #include "../search.h"
@@ -12,8 +13,8 @@ using namespace std;
 
 
 //==[ GridLayout ]=============================================================
-GridLayout::GridLayout(ResourceManager *_res, int page, int columns) :
-		Layout(_res, page),
+GridLayout::GridLayout(Viewer *v, int page, int columns) :
+		Layout(v, page),
 		off_x(0), off_y(0),
 		horizontal_page(0),
 		zoom(0) {
@@ -315,8 +316,10 @@ void GridLayout::render(QPainter *painter) {
 				painter->setBrush(QColor(255, 0, 0, 64));
 				float w = res->get_page_width(last_page);
 				float h = res->get_page_height(last_page);
-				map<int,QList<QRectF> *>::iterator it = hits.find(last_page);
-				if (it != hits.end()) {
+
+				const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
+				map<int,QList<QRectF> *>::const_iterator it = hits->find(last_page);
+				if (it != hits->end()) {
 					for (QList<QRectF>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
 						if (i2 == hit_it) {
 							painter->setBrush(QColor(0, 255, 0, 64));
@@ -378,7 +381,9 @@ bool GridLayout::advance_hit(bool forward) {
 }
 
 bool GridLayout::advance_invisible_hit(bool forward) {
-	if (hits.size() == 0) {
+	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
+
+	if (hits->size() == 0) {
 		return false;
 	}
 

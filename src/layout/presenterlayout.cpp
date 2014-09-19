@@ -5,8 +5,8 @@
 
 using namespace std;
 
-PresenterLayout::PresenterLayout(ResourceManager *res, int page) :
-		Layout(res, page),
+PresenterLayout::PresenterLayout(Viewer *v, int page) :
+		Layout(v, page),
 		main_ratio(0.67) {
 	rebuild();
 }

@@ -29,6 +29,11 @@ public:
 	volatile bool stop;
 	volatile bool die;
 
+signals:
+	void update_label_text(const QString &text);
+	void search_done(int page, QList<QRectF> *hits);
+	void clear_hits();
+
 private:
 	SearchBar *bar;
 };
@@ -43,20 +48,22 @@ public:
 
 	void load(QString &file, const QByteArray &password);
 	bool is_valid() const;
-	void connect_canvas(Canvas *c) const;
 	void focus();
+	const std::map<int,QList<QRectF> *> *get_hits() const;
 
 signals:
-	void search_clear();
-	void search_done(int page, QList<QRectF> *hits);
-	void search_visible(bool visible);
-	void update_label_text(const QString &text);
+	void search_updated(int page);
 
 protected:
 	// QT event handling
 	bool event(QEvent *event);
 
+public slots:
+	void reset_search();
+
 private slots:
+	void insert_hits(int page, QList<QRectF> *hits);
+	void clear_hits();
 	void set_text();
 
 private:
@@ -70,6 +77,8 @@ private:
 
 	Poppler::Document *doc;
 	Viewer *viewer;
+
+	std::map<int,QList<QRectF> *> hits;
 
 	QMutex search_mutex;
 	QMutex term_mutex;

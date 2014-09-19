@@ -56,7 +56,6 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 			return;
 		}
 	}
-	search_bar->connect_canvas(canvas);
 
 	// setup signal handling
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sig_fd) == -1) {
@@ -183,6 +182,7 @@ void Viewer::reload(bool clamp) {
 	res->load(file, info_password.text().toLatin1());
 	res->connect_canvas(canvas);
 
+	search_bar->reset_search(); // TODO restart search if loading the same document?
 	search_bar->load(file, info_password.text().toLatin1());
 
 	update_info_widget();
@@ -208,7 +208,9 @@ void Viewer::open() {
 		}
 #endif
 
-		// clear the jumplist - it's not useful in a different file
+		// different file - clear jumplist
+		// e.g. in inotify-caused reload it doesn't hurt to keep the old jumplist
+		// search is always cleared, see reload()
 		canvas->clear_jumps();
 
 		setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
@@ -257,6 +259,10 @@ ResourceManager *Viewer::get_res() const {
 
 Canvas *Viewer::get_canvas() const {
 	return canvas;
+}
+
+SearchBar *Viewer::get_search_bar() const {
+	return search_bar;
 }
 
 void Viewer::signal_slot() {

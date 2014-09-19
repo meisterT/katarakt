@@ -6,13 +6,14 @@
 #include <map>
 
 
+class Viewer;
 class ResourceManager;
 class Grid;
 
 
 class Layout {
 public:
-	Layout(ResourceManager *_res, int _page = 0);
+	Layout(Viewer *v, int _page = 0);
 	virtual ~Layout();
 
 	virtual int get_page() const;
@@ -27,8 +28,7 @@ public:
 	virtual bool scroll_page(int new_page, bool relative = true);
 	virtual void render(QPainter *painter) = 0;
 
-	virtual void clear_hits();
-	virtual void set_hits(int page, QList<QRectF> *l);
+	virtual void update_search(int page);
 	virtual void set_search_visible(bool visible);
 	virtual bool advance_hit(bool forward = true);
 	virtual bool advance_invisible_hit(bool forward = true) = 0;
@@ -42,12 +42,12 @@ public:
 protected:
 	virtual void view_hit() = 0;
 
+	Viewer *viewer;
 	ResourceManager *res;
 	int page;
 	int width, height;
 
 	// search results
-	std::map<int,QList<QRectF> *> hits; // TODO make pointer
 	bool search_visible;
 	int hit_page;
 	QList<QRectF>::const_iterator hit_it;

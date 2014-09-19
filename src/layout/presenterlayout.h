@@ -5,7 +5,7 @@
 
 class PresenterLayout : public Layout {
 public:
-	PresenterLayout(ResourceManager *res, int page = 0);
+	PresenterLayout(Viewer *v, int page = 0);
 	PresenterLayout(Layout &old_layout);
 	virtual ~PresenterLayout();
 

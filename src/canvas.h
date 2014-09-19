@@ -30,8 +30,9 @@ public:
 
 	void store_jump(int page);
 	void clear_jumps();
+	void set_search_visible(bool visible);
 
-	const Layout *get_layout() const;
+	Layout *get_layout() const;
 
 protected:
 	// QT event handling
@@ -44,9 +45,6 @@ protected:
 	void resizeEvent(QResizeEvent *event);
 
 private slots:
-	void search_clear();
-	void search_done(int page, QList<QRectF> *l);
-	void search_visible(bool visible);
 	void page_rendered(int page);
 	void goto_page();
 

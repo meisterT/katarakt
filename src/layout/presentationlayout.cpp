@@ -3,6 +3,7 @@
 #include "presentationlayout.h"
 #include "layout.h"
 #include "../util.h"
+#include "../viewer.h"
 #include "../resourcemanager.h"
 #include "../search.h"
 #include "../config.h"
@@ -10,8 +11,8 @@
 using namespace std;
 
 
-PresentationLayout::PresentationLayout(ResourceManager *_res, int page) :
-		Layout(_res, page) {
+PresentationLayout::PresentationLayout(Viewer *v, int page) :
+		Layout(v, page) {
 }
 
 PresentationLayout::PresentationLayout(Layout& old_layout) :
@@ -80,8 +81,10 @@ void PresentationLayout::render(QPainter *painter) {
 		float w = res->get_page_width(page);
 		float h = res->get_page_height(page);
 		float factor = page_width / w;
-		map<int,QList<QRectF> *>::iterator it = hits.find(page);
-		if (it != hits.end()) {
+
+		const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
+		map<int,QList<QRectF> *>::const_iterator it = hits->find(page);
+		if (it != hits->end()) {
 			for (QList<QRectF>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
 				if (i2 == hit_it) {
 					painter->setBrush(QColor(0, 255, 0, 64));
@@ -135,15 +138,17 @@ bool PresentationLayout::advance_hit(bool forward) {
 }
 
 bool PresentationLayout::advance_invisible_hit(bool forward) {
-	if (hits.size() == 0) {
+	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
+
+	if (hits->size() == 0) {
 		return false;
 	}
 
 	if (forward) {
-		hit_it = hits[hit_page]->end();
+		hit_it = hits->find(hit_page)->second->end();
 		--hit_it;
 	} else {
-		hit_it = hits[hit_page]->begin();
+		hit_it = hits->find(hit_page)->second->begin();
 	}
 	Layout::advance_hit(forward);
 	view_hit();

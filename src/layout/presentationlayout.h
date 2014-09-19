@@ -6,7 +6,7 @@
 
 class PresentationLayout : public Layout {
 public:
-	PresentationLayout(ResourceManager *res, int page = 0);
+	PresentationLayout(Viewer *v, int page = 0);
 	PresentationLayout(Layout& old_layout);
 	~PresentationLayout() {};
 

@@ -4,13 +4,12 @@
 #include "layout.h"
 
 
-class ResourceManager;
 class Grid;
 
 
 class GridLayout : public Layout {
 public:
-	GridLayout(ResourceManager *res, int page = 0, int columns = 1);
+	GridLayout(Viewer *v, int page = 0, int columns = 1);
 	GridLayout(Layout& old_layout, int columns = 1);
 	~GridLayout();
 

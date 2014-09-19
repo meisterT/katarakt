@@ -164,7 +164,7 @@ void Worker::run() {
 				if (l->linkType() == Poppler::Link::Goto) {
 					lg->push_back(static_cast<Poppler::LinkGoto *>(l));
 				} else {
-					delete(l);
+					delete l;
 				}
 			}
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <QImage>
 #include "layout.h"
+#include "../viewer.h"
 #include "../resourcemanager.h"
 #include "../grid.h"
 #include "../search.h"
@@ -10,8 +11,9 @@ using namespace std;
 
 
 //==[ Layout ]=================================================================
-Layout::Layout(ResourceManager *_res, int _page) :
-		res(_res), page(_page), width(0), height(0),
+Layout::Layout(Viewer *v, int _page) :
+		viewer(v), res(v->get_res()),
+		page(_page), width(0), height(0),
 		search_visible(false) {
 	// load config options
 	CFG *config = CFG::get_instance();
@@ -38,7 +40,6 @@ void Layout::activate(const Layout *old_layout) {
 	width = old_layout->width;
 	height = old_layout->height;
 
-	hits = old_layout->hits; // TODO unneccessary copy
 	search_visible = old_layout->search_visible;
 	hit_page = old_layout->hit_page;
 	hit_it = old_layout->hit_it;
@@ -96,44 +97,21 @@ bool Layout::scroll_page(int new_page, bool relative) {
 	return page != old_page;
 }
 
-void Layout::clear_hits() {
-	for (map<int,QList<QRectF> *>::iterator it = hits.begin(); it != hits.end(); ++it) {
-		delete it->second;
-	}
-	hits.clear();
-}
+void Layout::update_search(int page) {
+	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 
-void Layout::set_hits(int page, QList<QRectF> *l) {
-	// no new search, just view hit on the current page or below. wraps.
-	if (l == NULL) {
-		map<int,QList<QRectF> *>::iterator it = hits.lower_bound(page);
-		if (it != hits.end()) {
-			hit_page = it->first;
-			hit_it = hits[hit_page]->begin();
-			view_hit();
-		} else {
-			if (hits.size() != 0) {
-				hit_page = hits.lower_bound(0)->first;
-				hit_it = hits[hit_page]->begin();
-				view_hit();
-			}
-		}
-		return;
-	}
-
-	// new search -> initialize highlight
-	if (hits.size() == 0) {
-		hit_page = page;
-		hit_it = l->begin();
+	map<int,QList<QRectF> *>::const_iterator it = hits->lower_bound(page);
+	if (it != hits->end()) {
+		hit_page = it->first;
+		hit_it = hits->find(hit_page)->second->begin();
 		view_hit();
+	} else {
+		if (hits->size() != 0) {
+			hit_page = hits->lower_bound(0)->first;
+			hit_it = hits->find(hit_page)->second->begin();
+			view_hit();
+		}
 	}
-
-	// just to be safe - prevent memory leaks
-	map<int,QList<QRectF> *>::iterator it = hits.find(page);
-	if (it != hits.end()) {
-		delete it->second;
-	}
-	hits[page] = l;
 }
 
 void Layout::set_search_visible(bool visible) {
@@ -141,26 +119,30 @@ void Layout::set_search_visible(bool visible) {
 }
 
 bool Layout::advance_hit(bool forward) {
-	if (hits.size() == 0) {
+	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
+
+	if (hits->size() == 0) {
 		return false;
 	}
 	// find next hit
 	if (forward) {
 		++hit_it;
-		if (hit_it == hits[hit_page]->end()) { // this was the last hit on that page
-			map<int,QList<QRectF> *>::const_iterator it = hits.upper_bound(hit_page);
-			if (it == hits.end()) { // this was the last page with a hit -> wrap
-				it = hits.begin();
+		if (hit_it == hits->find(hit_page)->second->end()) {
+			// this was the last hit on hit_page
+			map<int,QList<QRectF> *>::const_iterator it = hits->upper_bound(hit_page);
+			if (it == hits->end()) { // this was the last page with a hit -> wrap
+				it = hits->begin();
 			}
 			hit_page = it->first;
 			hit_it = it->second->begin();
 		}
 	// find previous hit
 	} else {
-		if (hit_it == hits[hit_page]->begin()) { // this was the first hit on that page
-			map<int,QList<QRectF> *>::const_reverse_iterator it(hits.lower_bound(hit_page));
-			if (it == hits.rend()) { // this was the first page with a hit -> wrap
-				it = hits.rbegin();
+		if (hit_it == hits->find(hit_page)->second->begin()) {
+			// this was the first hit on hit_page
+			map<int,QList<QRectF> *>::const_reverse_iterator it(hits->lower_bound(hit_page));
+			if (it == hits->rend()) { // this was the first page with a hit -> wrap
+				it = hits->rbegin();
 			}
 			hit_page = it->first;
 			hit_it = --(it->second->end());

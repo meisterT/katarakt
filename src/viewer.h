@@ -26,6 +26,7 @@ public:
 
 	ResourceManager *get_res() const;
 	Canvas *get_canvas() const;
+	SearchBar *get_search_bar() const;
 
 public slots:
 	void signal_slot();

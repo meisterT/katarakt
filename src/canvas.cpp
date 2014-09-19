@@ -34,9 +34,9 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 	background_opacity = config->get_value("background_opacity").toInt();
 
-	presentation_layout = new PresentationLayout(viewer->get_res());
-	grid_layout = new GridLayout(viewer->get_res());
-	presenter_layout = new PresenterLayout(viewer->get_res());
+	presentation_layout = new PresentationLayout(viewer);
+	grid_layout = new GridLayout(viewer);
+	presenter_layout = new PresenterLayout(viewer);
 
 	QString default_layout = config->get_value("default_layout").toString();
 	if (default_layout == "grid") {
@@ -96,7 +96,6 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 Canvas::~Canvas() {
 	delete goto_line;
-	cur_layout->clear_hits();
 	delete presentation_layout;
 	delete grid_layout;
 }
@@ -170,7 +169,7 @@ void Canvas::jump_forward() {
 	}
 }
 
-const Layout *Canvas::get_layout() const {
+Layout *Canvas::get_layout() const {
 	return cur_layout;
 }
 
@@ -497,17 +496,7 @@ void Canvas::focus_goto() {
 	goto_line->show();
 }
 
-void Canvas::search_clear() {
-	cur_layout->clear_hits();
-	update();
-}
-
-void Canvas::search_done(int page, QList<QRectF> *l) {
-	cur_layout->set_hits(page, l);
-	update();
-}
-
-void Canvas::search_visible(bool visible) {
+void Canvas::set_search_visible(bool visible) {
 	cur_layout->set_search_visible(visible);
 	update();
 }

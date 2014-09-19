@@ -24,13 +24,13 @@ void SearchWorker::run() {
 			break;
 		}
 		// always clear results -> empty search == stop search
-		emit bar->search_clear();
+		emit clear_hits();
 
 		// get search string
 		bar->term_mutex.lock();
 		if (bar->term.isEmpty()) {
 			bar->term_mutex.unlock();
-			emit bar->update_label_text("done.");
+			emit update_label_text("done.");
 			continue;
 		}
 		int start = bar->start_page;
@@ -49,7 +49,7 @@ void SearchWorker::run() {
 #ifdef DEBUG
 		cerr << "'" << search_term.toUtf8().constData() << "'" << endl;
 #endif
-		emit bar->update_label_text(QString("[%1] 0\% searched, 0 hits")
+		emit update_label_text(QString("[%1] 0\% searched, 0 hits")
 			.arg(has_upper_case ? "Case" : "no case"));
 
 		// search all pages
@@ -94,7 +94,7 @@ void SearchWorker::run() {
 
 			if (hits->size() > 0) {
 				hit_count += hits->size();
-				emit bar->search_done(page, hits);
+				emit search_done(page, hits);
 			} else {
 				delete hits;
 			}
@@ -106,7 +106,7 @@ void SearchWorker::run() {
 				.arg(has_upper_case ? "Case" : "no case")
 				.arg(percent)
 				.arg(hit_count);
-			emit bar->update_label_text(progress);
+			emit update_label_text(progress);
 
 			if (++page == bar->doc->numPages()) {
 				page = 0;
@@ -115,7 +115,7 @@ void SearchWorker::run() {
 #ifdef DEBUG
 		cerr << "done!" << endl;
 #endif
-		emit bar->update_label_text(QString("[%1] done, %2 hits")
+		emit update_label_text(QString("[%1] done, %2 hits")
 				.arg(has_upper_case ? "Case" : "no case")
 				.arg(hit_count));
 	}
@@ -163,8 +163,12 @@ void SearchBar::initialize(QString &file, const QByteArray &password) {
 
 	connect(line, SIGNAL(returnPressed()), this, SLOT(set_text()),
 			Qt::UniqueConnection);
-	connect(this, SIGNAL(update_label_text(const QString &)),
+	connect(worker, SIGNAL(update_label_text(const QString &)),
 			progress, SLOT(setText(const QString &)), Qt::UniqueConnection);
+	connect(worker, SIGNAL(search_done(int, QList<QRectF> *)),
+			this, SLOT(insert_hits(int, QList<QRectF> *)), Qt::UniqueConnection);
+	connect(worker, SIGNAL(clear_hits()),
+			this, SLOT(clear_hits()), Qt::UniqueConnection);
 }
 
 SearchBar::~SearchBar() {
@@ -188,26 +192,10 @@ void SearchBar::shutdown() {
 void SearchBar::load(QString &file, const QByteArray &password) {
 	shutdown();
 	initialize(file, password);
-
-	// clear old search results if initialisation failed
-	if (!is_valid()) {
-		term = "";
-		emit search_clear();
-	}
 }
 
 bool SearchBar::is_valid() const {
 	return doc != NULL;
-}
-
-void SearchBar::connect_canvas(Canvas *c) const {
-	connect(this, SIGNAL(search_clear()), c, SLOT(search_clear()),
-			Qt::UniqueConnection);
-	connect(this, SIGNAL(search_done(int, QList<QRectF> *)),
-			c, SLOT(search_done(int, QList<QRectF> *)),
-			Qt::UniqueConnection);
-	connect(this, SIGNAL(search_visible(bool)),
-			c, SLOT(search_visible(bool)), Qt::UniqueConnection);
 }
 
 void SearchBar::focus() {
@@ -217,15 +205,52 @@ void SearchBar::focus() {
 	show();
 }
 
+const std::map<int,QList<QRectF> *> *SearchBar::get_hits() const {
+	return &hits;
+}
+
 bool SearchBar::event(QEvent *event) {
 	if (event->type() == QEvent::Hide) {
-		emit search_visible(false);
+		viewer->get_canvas()->set_search_visible(false);
 		return true;
 	} else if (event->type() == QEvent::Show) {
-		emit search_visible(true);
+		viewer->get_canvas()->set_search_visible(true);
 		return true;
 	}
 	return QWidget::event(event);
+}
+
+void SearchBar::reset_search() {
+	clear_hits();
+	term = "";
+	progress->setText("done.");
+	viewer->get_canvas()->set_search_visible(false);
+	viewer->get_canvas()->setFocus(Qt::OtherFocusReason);
+	hide();
+}
+
+void SearchBar::insert_hits(int page, QList<QRectF> *l) {
+	bool empty = hits.empty();
+
+	map<int,QList<QRectF> *>::iterator it = hits.find(page);
+	if (it != hits.end()) {
+		delete it->second;
+	}
+	hits[page] = l;
+
+	// only update the layout if the hits should be viewed
+	if (empty) {
+		viewer->get_canvas()->get_layout()->update_search(page);
+	}
+	viewer->get_canvas()->update();
+}
+
+void SearchBar::clear_hits() {
+	for (map<int,QList<QRectF> *>::iterator it = hits.begin(); it != hits.end(); ++it) {
+		delete it->second;
+	}
+	hits.clear();
+	viewer->get_canvas()->update();
 }
 
 void SearchBar::set_text() {
@@ -233,22 +258,25 @@ void SearchBar::set_text() {
 	if (!is_valid()) {
 		return;
 	}
+
+	Canvas *c = viewer->get_canvas();
 	// do not start the same search again but signal slots
 	if (term == line->text()) {
-		emit search_done(viewer->get_canvas()->get_layout()->get_page(), NULL);
-		viewer->get_canvas()->setFocus(Qt::OtherFocusReason);
+		c->get_layout()->update_search(c->get_layout()->get_page());
+		c->setFocus(Qt::OtherFocusReason);
+		c->update();
 		return;
 	}
 
 	term_mutex.lock();
-	start_page = viewer->get_canvas()->get_layout()->get_page();
+	start_page = c->get_layout()->get_page();
 	term = line->text();
 	term_mutex.unlock();
 
 	worker->stop = true;
 	search_mutex.unlock();
-	viewer->get_canvas()->store_jump(start_page);
-	viewer->get_canvas()->setFocus(Qt::OtherFocusReason);
+	c->store_jump(start_page);
+	c->setFocus(Qt::OtherFocusReason);
 }
 
 void SearchBar::join_threads() {
