@@ -64,8 +64,8 @@ CFG::CFG() :
 	keys["next_invisible_hit"] = QStringList() << "Ctrl+N";
 	keys["previous_invisible_hit"] = QStringList() << "Ctrl+Shift+N";
 	keys["focus_goto"] = QStringList() << "Ctrl+G";
-	keys["rotate_left"] = QStringList() << "U";
-	keys["rotate_right"] = QStringList() << "I";
+	keys["rotate_left"] = QStringList() << ",";
+	keys["rotate_right"] = QStringList() << ".";
 	keys["jump_back"] = QStringList() << "Ctrl+O" << "Alt+Left";
 	keys["jump_forward"] = QStringList() << "Ctrl+I" << "Alt+Right";
 	// viewer keys

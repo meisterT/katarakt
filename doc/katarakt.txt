@@ -87,7 +87,7 @@ KEY BINDINGS
 	Focus next/previous search hit
 *\^n*, *^N* ::
 	Focus next/previous search hit that is currently not visible
-*u*, *i* ::
+*,*, *.* ::
 	Rotate pages left/right
 *\^o*, *^i*, *Alt-Left*, *Alt-Right* ::
 	Move backward/forward through the jump list. Entries are added automatically when jumping
