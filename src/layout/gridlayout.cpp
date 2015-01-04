@@ -8,6 +8,7 @@
 #include "../grid.h"
 #include "../search.h"
 #include "../config.h"
+#include "../kpage.h"
 
 using namespace std;
 
@@ -17,6 +18,7 @@ GridLayout::GridLayout(Viewer *v, int page, int columns) :
 		Layout(v, page),
 		off_x(0), off_y(0),
 		horizontal_page(0),
+		last_visible_page(res->get_page_count() - 1),
 		zoom(0) {
 	initialize(columns);
 }
@@ -24,6 +26,7 @@ GridLayout::GridLayout(Viewer *v, int page, int columns) :
 GridLayout::GridLayout(Layout& old_layout, int columns) :
 		Layout(old_layout),
 		horizontal_page(0),
+		last_visible_page(res->get_page_count() - 1),
 		zoom(0) {
 	initialize(columns);
 }
@@ -383,7 +386,7 @@ bool GridLayout::advance_hit(bool forward) {
 bool GridLayout::advance_invisible_hit(bool forward) {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 
-	if (hits->size() == 0) {
+	if (hits->empty()) {
 		return false;
 	}
 

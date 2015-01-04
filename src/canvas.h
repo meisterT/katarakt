@@ -28,8 +28,6 @@ public:
 	bool is_valid() const;
 	void reload(bool clamp);
 
-	void store_jump(int page);
-	void clear_jumps();
 	void set_search_visible(bool visible);
 
 	Layout *get_layout() const;
@@ -52,37 +50,9 @@ private slots:
 	void set_presentation_layout();
 	void set_grid_layout();
 	void set_presenter_layout();
-	void page_up();
-	void page_down();
-	void page_first();
-	void page_last();
-	void half_screen_up();
-	void half_screen_down();
-	void screen_up();
-	void screen_down();
-	void smooth_up();
-	void smooth_down();
-	void smooth_left();
-	void smooth_right();
-	void zoom_in();
-	void zoom_out();
-	void reset_zoom();
-	void columns_inc();
-	void columns_dec();
-	void toggle_overlay();
-	void quit();
-	void search();
-	void next_hit();
-	void previous_hit();
-	void next_invisible_hit();
-	void previous_invisible_hit();
-	void focus_goto();
-	void rotate_left();
-	void rotate_right();
-	void jump_back();
-	void jump_forward();
-	void invert_colors();
 
+	void toggle_overlay();
+	void focus_goto();
 private:
 	void add_action(const char *action, const char *slot);
 
@@ -94,10 +64,6 @@ private:
 
 	GotoLine *goto_line;
 
-	std::list<int> jumplist;
-	std::map<int,std::list<int>::iterator> jump_map;
-	std::list<int>::iterator cur_jump_pos;
-
 	int mx, my;
 	int mx_down, my_down;
 
@@ -108,8 +74,6 @@ private:
 	// config options
 	int background_opacity;
 	int mouse_wheel_factor;
-	int smooth_scroll_delta;
-	float screen_scroll_factor;
 };
 
 #endif

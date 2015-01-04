@@ -97,7 +97,7 @@ bool Layout::scroll_page(int new_page, bool relative) {
 	return page != old_page;
 }
 
-void Layout::update_search(int page) {
+void Layout::update_search() {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 
 	map<int,QList<QRectF> *>::const_iterator it = hits->lower_bound(page);
@@ -106,7 +106,7 @@ void Layout::update_search(int page) {
 		hit_it = hits->find(hit_page)->second->begin();
 		view_hit();
 	} else {
-		if (hits->size() != 0) {
+		if (hits->size() == 1) {
 			hit_page = hits->lower_bound(0)->first;
 			hit_it = hits->find(hit_page)->second->begin();
 			view_hit();
@@ -121,7 +121,7 @@ void Layout::set_search_visible(bool visible) {
 bool Layout::advance_hit(bool forward) {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 
-	if (hits->size() == 0) {
+	if (hits->empty()) {
 		return false;
 	}
 	// find next hit

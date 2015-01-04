@@ -4,6 +4,7 @@
 #include "viewer.h"
 #include "config.h"
 #include "util.h"
+#include "resourcemanager.h"
 #include "layout/layout.h"
 
 using namespace std;
@@ -39,7 +40,7 @@ void SearchWorker::run() {
 
 		// check if term contains upper case letters; if so, do case sensitive search (smartcase)
 		bool has_upper_case = false;
-		for (QString::const_iterator it = search_term.begin(); it != search_term.end(); it++) {
+		for (QString::const_iterator it = search_term.begin(); it != search_term.end(); ++it) {
 			if (it->isUpper()) {
 				has_upper_case = true;
 				break;
@@ -123,7 +124,7 @@ void SearchWorker::run() {
 
 
 //==[ SearchBar ]==============================================================
-SearchBar::SearchBar(QString file, Viewer *v, QWidget *parent) :
+SearchBar::SearchBar(const QString &file, Viewer *v, QWidget *parent) :
 		QWidget(parent),
 		viewer(v) {
 	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -142,7 +143,7 @@ SearchBar::SearchBar(QString file, Viewer *v, QWidget *parent) :
 	initialize(file, QByteArray());
 }
 
-void SearchBar::initialize(QString &file, const QByteArray &password) {
+void SearchBar::initialize(const QString &file, const QByteArray &password) {
 	worker = NULL;
 
 	doc = Poppler::Document::load(file, QByteArray(), password);
@@ -189,7 +190,7 @@ void SearchBar::shutdown() {
 	delete worker;
 }
 
-void SearchBar::load(QString &file, const QByteArray &password) {
+void SearchBar::load(const QString &file, const QByteArray &password) {
 	shutdown();
 	initialize(file, password);
 }
@@ -240,9 +241,9 @@ void SearchBar::insert_hits(int page, QList<QRectF> *l) {
 
 	// only update the layout if the hits should be viewed
 	if (empty) {
-		viewer->get_canvas()->get_layout()->update_search(page);
+		viewer->get_canvas()->get_layout()->update_search();
 	}
-	viewer->get_canvas()->update();
+	viewer->get_canvas()->update(); // TODO updates too often
 }
 
 void SearchBar::clear_hits() {
@@ -262,7 +263,7 @@ void SearchBar::set_text() {
 	Canvas *c = viewer->get_canvas();
 	// do not start the same search again but signal slots
 	if (term == line->text()) {
-		c->get_layout()->update_search(c->get_layout()->get_page());
+		c->get_layout()->update_search();
 		c->setFocus(Qt::OtherFocusReason);
 		c->update();
 		return;
@@ -275,7 +276,7 @@ void SearchBar::set_text() {
 
 	worker->stop = true;
 	search_mutex.unlock();
-	c->store_jump(start_page);
+	viewer->get_res()->store_jump(start_page);
 	c->setFocus(Qt::OtherFocusReason);
 }
 

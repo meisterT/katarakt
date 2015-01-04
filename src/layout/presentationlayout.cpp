@@ -7,6 +7,7 @@
 #include "../resourcemanager.h"
 #include "../search.h"
 #include "../config.h"
+#include "../kpage.h"
 
 using namespace std;
 
@@ -140,7 +141,7 @@ bool PresentationLayout::advance_hit(bool forward) {
 bool PresentationLayout::advance_invisible_hit(bool forward) {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 
-	if (hits->size() == 0) {
+	if (hits->empty()) {
 		return false;
 	}
 

@@ -18,34 +18,65 @@ class Viewer : public QWidget {
 	Q_OBJECT
 
 public:
-	Viewer(QString _file, QWidget *parent = 0);
+	Viewer(const QString &file, QWidget *parent = 0);
 	~Viewer();
 
 	bool is_valid() const;
-	void focus_search();
 
 	ResourceManager *get_res() const;
 	Canvas *get_canvas() const;
 	SearchBar *get_search_bar() const;
 
 public slots:
-	void signal_slot();
-	void inotify_slot();
+	void signal_slot(); // reloads on SIGUSR1
 
 	void toggle_fullscreen();
 	void close_search();
 	void reload(bool clamp = true);
 	void open();
+	void jump_back();
+	void jump_forward();
+
+private slots:
+	void page_up();
+	void page_down();
+	void page_first();
+	void page_last();
+	void half_screen_up();
+	void half_screen_down();
+	void screen_up();
+	void screen_down();
+	void smooth_up();
+	void smooth_down();
+	void smooth_left();
+	void smooth_right();
+	void zoom_in();
+	void zoom_out();
+	void reset_zoom();
+	void columns_inc();
+	void columns_dec();
+	void quit();
+	void search();
+	void next_hit();
+	void previous_hit();
+	void next_invisible_hit();
+	void previous_invisible_hit();
+	void rotate_left();
+	void rotate_right();
+	void invert_colors();
 
 private:
 	void update_info_widget();
 	void add_action(const char *action, const char *slot);
 
-	QString file;
 	ResourceManager *res;
 	Canvas *canvas;
 	SearchBar *search_bar;
 	QVBoxLayout *layout;
+
+	// config options
+	int smooth_scroll_delta;
+	float screen_scroll_factor;
 
 	// info bar
 	QWidget info_widget;
@@ -58,12 +89,6 @@ private:
 	static void signal_handler(int unused);
 	static int sig_fd[2];
 	QSocketNotifier *sig_notifier;
-
-#ifdef __linux__
-	int inotify_fd;
-	int inotify_wd;
-	QSocketNotifier *i_notifier;
-#endif
 
 	bool valid;
 };

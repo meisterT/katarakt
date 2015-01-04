@@ -1,37 +1,32 @@
 #include <iostream>
+#include <QCoreApplication>
 #include <QFileInfo>
 #include <QAction>
 #include <QFileDialog>
 #include <csignal>
 #include <cerrno>
 #include <unistd.h>
-#ifdef __linux__
-#include <sys/inotify.h>
-#endif
 #include "viewer.h"
 #include "resourcemanager.h"
 #include "canvas.h"
 #include "search.h"
 #include "config.h"
+#include "layout/layout.h"
 
 using namespace std;
 
 
 int Viewer::sig_fd[2];
 
-Viewer::Viewer(QString _file, QWidget *parent) :
+Viewer::Viewer(const QString &file, QWidget *parent) :
 		QWidget(parent),
-		file(_file),
 		res(NULL),
 		canvas(NULL),
 		search_bar(NULL),
 		layout(NULL),
 		sig_notifier(NULL),
-#ifdef __linux__
-		i_notifier(NULL),
-#endif
 		valid(true) {
-	res = new ResourceManager(file);
+	res = new ResourceManager(file, this);
 	if (!res->is_valid()) {
 		// the command line option toggles the value set in the config
 		if (CFG::get_instance()->get_value("quit_on_init_fail").toBool() !=
@@ -40,13 +35,6 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 			return;
 		}
 	}
-
-	canvas = new Canvas(this, this);
-	if (!canvas->is_valid()) {
-		valid = false;
-		return;
-	}
-	res->connect_canvas(canvas);
 
 	search_bar = new SearchBar(file, this, this);
 	if (!search_bar->is_valid()) {
@@ -78,11 +66,52 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 		return;
 	}
 
+	canvas = new Canvas(this, this);
+	if (!canvas->is_valid()) {
+		valid = false;
+		return;
+	}
+	res->connect_canvas();
+
+	// load config options
+	CFG *config = CFG::get_instance();
+	smooth_scroll_delta = config->get_value("smooth_scroll_delta").toInt();
+	screen_scroll_factor = config->get_value("screen_scroll_factor").toFloat();
+
 	// setup keys
 	add_action("toggle_fullscreen", SLOT(toggle_fullscreen()));
 	add_action("close_search", SLOT(close_search()));
 	add_action("reload", SLOT(reload()));
 	add_action("open", SLOT(open()));
+	add_action("jump_back", SLOT(jump_back()));
+	add_action("jump_forward", SLOT(jump_forward()));
+
+	add_action("page_up", SLOT(page_up()));
+	add_action("page_down", SLOT(page_down()));
+	add_action("page_first", SLOT(page_first()));
+	add_action("page_last", SLOT(page_last()));
+	add_action("half_screen_up", SLOT(half_screen_up()));
+	add_action("half_screen_down", SLOT(half_screen_down()));
+	add_action("screen_up", SLOT(screen_up()));
+	add_action("screen_down", SLOT(screen_down()));
+	add_action("smooth_up", SLOT(smooth_up()));
+	add_action("smooth_down", SLOT(smooth_down()));
+	add_action("smooth_left", SLOT(smooth_left()));
+	add_action("smooth_right", SLOT(smooth_right()));
+	add_action("zoom_in", SLOT(zoom_in()));
+	add_action("zoom_out", SLOT(zoom_out()));
+	add_action("reset_zoom", SLOT(reset_zoom()));
+	add_action("columns_inc", SLOT(columns_inc()));
+	add_action("columns_dec", SLOT(columns_dec()));
+	add_action("quit", SLOT(quit()));
+	add_action("search", SLOT(search()));
+	add_action("next_hit", SLOT(next_hit()));
+	add_action("previous_hit", SLOT(previous_hit()));
+	add_action("next_invisible_hit", SLOT(next_invisible_hit()));
+	add_action("previous_invisible_hit", SLOT(previous_invisible_hit()));
+	add_action("rotate_left", SLOT(rotate_left()));
+	add_action("rotate_right", SLOT(rotate_right()));
+	add_action("toggle_invert_colors", SLOT(invert_colors()));
 
 	layout = new QVBoxLayout();
 	layout->setContentsMargins(0, 0, 0, 0);
@@ -110,29 +139,11 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 
 	update_info_widget();
 
-
 	layout->addWidget(canvas);
 	layout->addWidget(search_bar);
 	setLayout(layout);
 
-	QFileInfo info(file);
-	// setup inotify
-#ifdef __linux__
-	inotify_fd = inotify_init();
-	if (inotify_fd == -1) {
-		cerr << "inotify_init: " << strerror(errno) << endl;
-	} else {
-		inotify_wd  = inotify_add_watch(inotify_fd, info.path().toUtf8().constData(), IN_CLOSE_WRITE | IN_MOVED_TO);
-		if (inotify_wd == -1) {
-			cerr << "inotify_add_watch: " << strerror(errno) << endl;
-		} else {
-			i_notifier = new QSocketNotifier(inotify_fd, QSocketNotifier::Read, this);
-			connect(i_notifier, SIGNAL(activated(int)), this, SLOT(inotify_slot()),
-					Qt::UniqueConnection);
-		}
-	}
-#endif
-
+	QFileInfo info(res->get_file());
 	setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
 	setMinimumSize(50, 50);
 	resize(500, 500);
@@ -153,10 +164,6 @@ Viewer::Viewer(QString _file, QWidget *parent) :
 }
 
 Viewer::~Viewer() {
-#ifdef __linux__
-	::close(inotify_fd);
-	delete i_notifier;
-#endif
 	::close(sig_fd[0]);
 	::close(sig_fd[1]);
 	delete sig_notifier;
@@ -170,20 +177,15 @@ bool Viewer::is_valid() const {
 	return valid;
 }
 
-void Viewer::focus_search() {
-	search_bar->focus();
-}
-
 void Viewer::reload(bool clamp) {
 #ifdef DEBUG
-	cerr << "reloading file " << file.toUtf8().constData() << endl;
+	cerr << "reloading file " << res->get_file().toUtf8().constData() << endl;
 #endif
 
-	res->load(file, info_password.text().toLatin1());
-	res->connect_canvas(canvas);
+	res->load(res->get_file(), info_password.text().toLatin1());
 
 	search_bar->reset_search(); // TODO restart search if loading the same document?
-	search_bar->load(file, info_password.text().toLatin1());
+	search_bar->load(res->get_file(), info_password.text().toLatin1());
 
 	update_info_widget();
 
@@ -193,34 +195,245 @@ void Viewer::reload(bool clamp) {
 void Viewer::open() {
 	QString new_file = QFileDialog::getOpenFileName(this, "Open File", "", "PDF Files (*.pdf)");
 	if (!new_file.isNull()) {
-		file = new_file;
-		QFileInfo info(file);
-
-		// re-setup inotify watch
-#ifdef __linux__
-		if (inotify_fd != -1) {
-			inotify_rm_watch(inotify_fd, inotify_wd);
-
-			inotify_wd  = inotify_add_watch(inotify_fd, info.path().toUtf8().constData(), IN_CLOSE_WRITE | IN_MOVED_TO);
-			if (inotify_wd == -1) {
-				cerr << "inotify_add_watch: " << strerror(errno) << endl;
-			}
-		}
-#endif
+		res->set_file(new_file);
+		QFileInfo info(new_file);
 
 		// different file - clear jumplist
 		// e.g. in inotify-caused reload it doesn't hurt to keep the old jumplist
 		// search is always cleared, see reload()
-		canvas->clear_jumps();
-
+		res->clear_jumps();
+		// TODO reset rotation?
 		setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
 		reload();
 	}
 }
 
+void Viewer::jump_back() {
+	int new_page = res->jump_back();
+	if (new_page == -1) {
+		return;
+	}
+	if (canvas->get_layout()->scroll_page(new_page, false)) {
+		update();
+	}
+}
+
+void Viewer::jump_forward() {
+	int new_page = res->jump_forward();
+	if (new_page == -1) {
+		return;
+	}
+	if (canvas->get_layout()->scroll_page(new_page, false)) {
+		update();
+	}
+}
+
+// general movement
+void Viewer::page_up() {
+	if (canvas->get_layout()->scroll_page(-1)) {
+		update();
+	}
+}
+
+void Viewer::page_down() {
+	if (canvas->get_layout()->scroll_page(1)) {
+		update();
+	}
+}
+
+void Viewer::page_first() {
+	int page = canvas->get_layout()->get_page();
+	if (canvas->get_layout()->scroll_page(-1, false)) {
+		res->store_jump(page);
+		update();
+	}
+}
+
+void Viewer::page_last() {
+	int page = canvas->get_layout()->get_page();
+	if (canvas->get_layout()->scroll_page(res->get_page_count(), false)) {
+		res->store_jump(page);
+		update();
+	}
+}
+
+void Viewer::half_screen_up() {
+	if (canvas->get_layout()->supports_smooth_scrolling()) {
+		if (canvas->get_layout()->scroll_smooth(0, height() * 0.5f)) {
+			update();
+		}
+	} else { // fallback
+		page_up();
+	}
+}
+
+void Viewer::half_screen_down() {
+	if (canvas->get_layout()->supports_smooth_scrolling()) {
+		if (canvas->get_layout()->scroll_smooth(0, -height() * 0.5f)) {
+			update();
+		}
+	} else { // fallback
+		page_down();
+	}
+}
+
+void Viewer::screen_up() {
+	if (canvas->get_layout()->supports_smooth_scrolling()) {
+		if (canvas->get_layout()->scroll_smooth(0, height() * screen_scroll_factor)) {
+			update();
+		}
+	} else { // fallback
+		page_up();
+	}
+}
+
+void Viewer::screen_down() {
+	if (canvas->get_layout()->supports_smooth_scrolling()) {
+		if (canvas->get_layout()->scroll_smooth(0, -height() * screen_scroll_factor)) {
+			update();
+		}
+	} else { // fallback
+		page_down();
+	}
+}
+
+void Viewer::smooth_up() {
+	if (canvas->get_layout()->supports_smooth_scrolling()) {
+		if (canvas->get_layout()->scroll_smooth(0, smooth_scroll_delta)) {
+			update();
+		}
+	} else { // fallback
+		page_up();
+	}
+}
+
+void Viewer::smooth_down() {
+	if (canvas->get_layout()->supports_smooth_scrolling()) {
+		if (canvas->get_layout()->scroll_smooth(0, -smooth_scroll_delta)) {
+			update();
+		}
+	} else { // fallback
+		page_down();
+	}
+}
+
+void Viewer::smooth_left() {
+	if (canvas->get_layout()->supports_smooth_scrolling()) {
+		if (canvas->get_layout()->scroll_smooth(smooth_scroll_delta, 0)) {
+			update();
+		}
+	} else { // fallback
+		page_up();
+	}
+}
+
+void Viewer::smooth_right() {
+	if (canvas->get_layout()->supports_smooth_scrolling()) {
+		if (canvas->get_layout()->scroll_smooth(-smooth_scroll_delta, 0)) {
+			update();
+		}
+	} else { // fallback
+		page_down();
+	}
+}
+
+void Viewer::zoom_in() {
+	if (canvas->get_layout()->set_zoom(1)) {
+		update();
+	}
+}
+
+void Viewer::zoom_out() {
+	if (canvas->get_layout()->set_zoom(-1)) {
+		update();
+	}
+}
+
+void Viewer::reset_zoom() {
+	if (canvas->get_layout()->set_zoom(0, false)) {
+		update();
+	}
+}
+
+void Viewer::columns_inc() {
+	canvas->get_layout()->set_columns(1);
+	update();
+}
+
+void Viewer::columns_dec() {
+	canvas->get_layout()->set_columns(-1);
+	update();
+}
+
+void Viewer::quit() {
+	QCoreApplication::exit(0);
+}
+
+void Viewer::search() {
+	search_bar->focus();
+}
+
+void Viewer::next_hit() {
+	if (canvas->get_layout()->get_search_visible()) {
+		int page = canvas->get_layout()->get_page();
+		if (canvas->get_layout()->advance_hit()) {
+			res->store_jump(page);
+			update();
+		}
+	}
+}
+
+void Viewer::previous_hit() {
+	if (canvas->get_layout()->get_search_visible()) {
+		int page = canvas->get_layout()->get_page();
+		if (canvas->get_layout()->advance_hit(false)) {
+			res->store_jump(page);
+			update();
+		}
+	}
+}
+
+void Viewer::next_invisible_hit() {
+	if (canvas->get_layout()->get_search_visible()) {
+		int page = canvas->get_layout()->get_page();
+		if (canvas->get_layout()->advance_invisible_hit()) {
+			res->store_jump(page);
+			update();
+		}
+	}
+}
+
+void Viewer::previous_invisible_hit() {
+	if (canvas->get_layout()->get_search_visible()) {
+		int page = canvas->get_layout()->get_page();
+		if (canvas->get_layout()->advance_invisible_hit(false)) {
+			res->store_jump(page);
+			update();
+		}
+	}
+}
+
+void Viewer::rotate_left() {
+	res->rotate(-1);
+	canvas->get_layout()->rebuild();
+	update();
+}
+
+void Viewer::rotate_right() {
+	res->rotate(1);
+	canvas->get_layout()->rebuild();
+	update();
+}
+
+void Viewer::invert_colors() {
+	res->invert_colors();
+	update();
+}
+
 void Viewer::update_info_widget() {
 	if (!res->is_valid() || !search_bar->is_valid()) {
 		QIcon icon;
+		const QString file = res->get_file();
 
 		if (file == "") {
 			icon = QIcon::fromTheme("dialog-information");
@@ -282,38 +495,6 @@ void Viewer::signal_handler(int /*unused*/) {
 	if (write(sig_fd[0], &tmp, sizeof(char)) < 0) {
 		cerr << "write: " << strerror(errno) << endl;
 	}
-}
-
-void Viewer::inotify_slot() {
-#ifdef __linux__
-	i_notifier->setEnabled(false);
-
-	size_t event_size = sizeof(struct inotify_event) + NAME_MAX + 1;
-	// take care of alignment
-	struct inotify_event i_buf[event_size / sizeof(struct inotify_event) + 1]; // has at least event_size
-	char *buf = reinterpret_cast<char *>(i_buf);
-
-	ssize_t bytes = read(inotify_fd, buf, sizeof(i_buf));
-	if (bytes == -1) {
-		cerr << "read: " << strerror(errno) << endl;
-	} else {
-		ssize_t offset = 0;
-		while (offset < bytes) {
-			struct inotify_event *event = reinterpret_cast<struct inotify_event *>(&buf[offset]);
-
-			QFileInfo info(file);
-			if (info.fileName() == event->name) {
-				reload(false); // don't clamp
-				i_notifier->setEnabled(true);
-				return;
-			}
-
-			offset += sizeof(struct inotify_event) + event->len;
-		}
-	}
-
-	i_notifier->setEnabled(true);
-#endif
 }
 
 void Viewer::toggle_fullscreen() {

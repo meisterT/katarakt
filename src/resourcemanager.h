@@ -2,6 +2,7 @@
 #define RESOURCEMANAGER_H
 
 #include <poppler/qt4/poppler-qt4.h>
+#include <QObject>
 #include <QString>
 #include <QImage>
 #include <QThread>
@@ -13,66 +14,27 @@
 
 class ResourceManager;
 class Canvas;
+class KPage;
+class Worker;
+class Viewer;
+class QSocketNotifier;
 
 
-class KPage {
-private:
-	KPage();
-	~KPage();
-
-public:
-	const QImage *get_image(int index = 0) const;
-	int get_width(int index = 0) const;
-	char get_rotation(int index = 0) const;
-//	QString get_label() const;
-
-private:
-	float width;
-	float height;
-	QImage img[3];
-	QImage thumbnail;
-//	QString label;
-	std::list<Poppler::LinkGoto *> *links;
-	QMutex mutex;
-	int status[3];
-	char rotation[3];
-	bool inverted_colors; // img[]s and thumb must be consistent
-
-	friend class Worker;
-	friend class ResourceManager;
-};
-
-
-class Worker : public QThread {
+class ResourceManager : public QObject {
 	Q_OBJECT
 
 public:
-	Worker();
-	void setResManager(ResourceManager *_res);
-	void connect_signal(Canvas *c);
-	void run();
-
-	volatile bool die;
-
-signals:
-	void page_rendered(int page);
-
-private:
-	ResourceManager *res;
-};
-
-
-class ResourceManager {
-public:
-	ResourceManager(QString file);
+	ResourceManager(const QString &file, Viewer *v);
 	~ResourceManager();
 
-	void load(QString &file, const QByteArray &password);
+	void load(const QString &file, const QByteArray &password);
 
 	// document opened correctly?
 	bool is_valid() const;
 	bool is_locked() const;
 
+	const QString &get_file() const;
+	void set_file(const QString &new_file);
 	// page (meta)data
 	const KPage *get_page(int page, int newWidth, int index = 0);
 //	QString get_page_label(int page) const;
@@ -91,19 +53,29 @@ public:
 
 	void collect_garbage(int keep_min, int keep_max);
 
-	void connect_canvas(Canvas *c) const;
+	void connect_canvas() const;
+
+	void store_jump(int page);
+	void clear_jumps();
+	int jump_back();
+	int jump_forward();
+
+public slots:
+	void inotify_slot();
 
 private:
 	void enqueue(int page, int width, int index = 0);
-	bool render(int offset);
 
-	void initialize(QString &file, const QByteArray &password);
+	void initialize(const QString &file, const QByteArray &password);
 	void join_threads();
 	void shutdown();
 
 	// sadly, poppler's renderToImage only supports one thread per document
 	Worker *worker;
 
+	Viewer *viewer;
+
+	QString file;
 	Poppler::Document *doc;
 	QMutex requestMutex;
 	QMutex garbageMutex;
@@ -122,10 +94,20 @@ private:
 	int page_count;
 	int rotation;
 
+#ifdef __linux__
+	int inotify_fd;
+	int inotify_wd;
+	QSocketNotifier *i_notifier;
+#endif
+
 	// config options
 	bool smooth_downscaling;
 	int thumbnail_size;
 	bool inverted_colors;
+
+	std::list<int> jumplist;
+	std::map<int,std::list<int>::iterator> jump_map;
+	std::list<int>::iterator cur_jump_pos;
 };
 
 #endif

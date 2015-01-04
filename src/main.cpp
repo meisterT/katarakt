@@ -33,10 +33,9 @@ int main(int argc, char *argv[]) {
 		{"help",		no_argument,		NULL,	'h'},
 		{NULL, 0, NULL, 0}
 	};
-	int c;
 	int option_index = 0;
 	while (1) {
-		c = getopt_long(argc, argv, "+p:fqh", long_options, &option_index);
+		int c = getopt_long(argc, argv, "+p:fqh", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}

@@ -1,7 +1,7 @@
 #include "presenterlayout.h"
 #include "../resourcemanager.h"
 #include "../util.h"
-#include <iostream>
+#include "../kpage.h"
 
 using namespace std;
 
@@ -135,11 +135,12 @@ void PresenterLayout::render(QPainter *painter) {
 	}
 
 	for (int i = 0; i < 2; i++) {
-		const KPage *k_page = res->get_page(page + i, page_width[i], i);
+		int index = i + 1;
+		const KPage *k_page = res->get_page(page + i, page_width[i], index);
 		if (k_page != NULL) {
-			const QImage *img = k_page->get_image(i);
+			const QImage *img = k_page->get_image(index);
 			if (img != NULL) {
-				int rot = (res->get_rotation() - k_page->get_rotation(i) + 4) % 4;
+				int rot = (res->get_rotation() - k_page->get_rotation(index) + 4) % 4;
 				QRect rect;
 				painter->rotate(rot* 90);
 				// calculate page position
@@ -169,11 +170,11 @@ void PresenterLayout::render(QPainter *painter) {
 	// prefetch
 	for (int count = 1; count <= prefetch_count; count++) {
 		// after current page
-		if (res->get_page(page + count, calculate_fit_width(page + count), 0) != NULL) {
+		if (res->get_page(page + count, calculate_fit_width(page + count), 1) != NULL) {
 			res->unlock_page(page + count);
 		}
 		// before current page
-		if (res->get_page(page - count, calculate_fit_width(page - count), 0) != NULL) {
+		if (res->get_page(page - count, calculate_fit_width(page - count), 1) != NULL) {
 			res->unlock_page(page - count);
 		}
 	}
@@ -184,8 +185,8 @@ bool PresenterLayout::advance_invisible_hit(bool /*forward*/) {
 	return false;
 }
 
-bool PresenterLayout::page_visible(int /*p*/) const {
-	return true;
+bool PresenterLayout::page_visible(int p) const {
+	return p == page || p == page + 1;
 }
 
 void PresenterLayout::view_hit() {

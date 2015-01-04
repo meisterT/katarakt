@@ -28,7 +28,7 @@ public:
 	virtual bool scroll_page(int new_page, bool relative = true);
 	virtual void render(QPainter *painter) = 0;
 
-	virtual void update_search(int page);
+	virtual void update_search();
 	virtual void set_search_visible(bool visible);
 	virtual bool advance_hit(bool forward = true);
 	virtual bool advance_invisible_hit(bool forward = true) = 0;

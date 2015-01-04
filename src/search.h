@@ -43,10 +43,10 @@ class SearchBar : public QWidget {
 	Q_OBJECT
 
 public:
-	SearchBar(QString file, Viewer *v, QWidget *parent = 0);
+	SearchBar(const QString &file, Viewer *v, QWidget *parent = 0);
 	~SearchBar();
 
-	void load(QString &file, const QByteArray &password);
+	void load(const QString &file, const QByteArray &password);
 	bool is_valid() const;
 	void focus();
 	const std::map<int,QList<QRectF> *> *get_hits() const;
@@ -67,7 +67,7 @@ private slots:
 	void set_text();
 
 private:
-	void initialize(QString &file, const QByteArray &password);
+	void initialize(const QString &file, const QByteArray &password);
 	void join_threads();
 	void shutdown();
 
