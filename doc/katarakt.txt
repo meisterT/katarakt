@@ -6,7 +6,7 @@ katarakt(1)
 
 NAME
 ----
-katarakt - a simple PDF viewer with two layouts
+katarakt - a simple PDF viewer with three layouts
 
 SYNOPSIS
 --------
@@ -16,7 +16,7 @@ DESCRIPTION
 -----------
 It's a PDF viewer. It views PDFs.
 
-There are currently two layouts.  The 'presentation layout' is very simple and
+There are currently three layouts. The 'presentation layout' is very simple and
 only supports scrolling on a per page basis. As the name suggests the current
 page is displayed in the center and zoomed to fit the window. It is active by
 default.
@@ -25,12 +25,16 @@ The 'grid layout' is much more advanced and offers continuous (smooth, per
 pixel) scrolling, zooming and adjusting the column count. Pages keep their
 correct relative size and are shown in a grid.
 
-For every file passed on the command line a process is spawned.
+The 'presenter layout' is for giving a presentation. It opens a second window,
+to be viewed on the beamer, and shows the current and next slide in the main
+window.
+
+For every file passed on the command line a separate process is spawned.
 
 OPTIONS
 -------
 *-p*, *--page* 'NUM' ::
-	Start showing page 'NUM'.
+	Start on page 'NUM'.
 *-f*, *--fullscreen* ::
 	Start in fullscreen mode.
 *-q*, *--quit* ::
@@ -46,92 +50,99 @@ By default it is read from '$XDG_CONFIG_HOME'.
 KEY BINDINGS
 ------------
 *q* ::
-	Quit *katarakt*
+	Quit *katarakt*.
 *1* ::
 	Switch to 'presentation layout'. Views a single page at a time, scaled to
-	fit the screen
+	fit the screen.
 *2* ::
 	Switch to 'grid layout'. Views pages in a continuous fashion, scaled to fit
 	the width. Supports columns.
+*3* ::
+	Switch to 'presenter layout'. Views the current page and a smaller preview
+	of the next page. Also, opens a second window that shows only the current
+	page for displaying on a beamer.
 
 *Up*, *Down*, *Left*, *Right*, *k*, *j*, *h*, *l* ::
-	Move around (up/down/left/right)
+	Move around (up/down/left/right).
 *\^u*, *^d* ::
-	Scroll up/down half the screen
+	Scroll up/down half the screen.
 *BackSpace*, *Space*, *\^b*, *^f* ::
-	Scroll up/down the screen. By default scrolls 90% to create an overlapping region
+	Scroll up/down the screen. By default scrolls 90% to create an overlapping region.
 *PgUp*, *PgDown* ::
-	Scroll up/down one page. Kind of swaps the pages in place
+	Scroll up/down one page. Kind of swaps the pages in place.
 
 *Home*, *End*, *g*, *G* ::
-	Go to the first/last page
+	Go to the first/last page.
 *^g* ::
-	Show 'goto page' bar
+	Show 'goto page' bar.
 *f* ::
-	Toggle fullscreen
+	Toggle fullscreen.
 *t* ::
-	Toggle page number display
+	Toggle the page number display in the bottom right corner.
 *r* ::
-	Reload document
+	Reload the document. This can also be achieved by sending SIGUSR1 to the
+	process. *katarakt* reloads automatically if the opened file has changed.
 *o* ::
-	Open a different document, shows a file dialog
+	Open a different document; shows a file dialog.
 *-*, *+*, *=* ::
-	Adjust zoom level ('grid layout' only)
+	Adjust zoom level ('grid layout' only).
 *z* ::
-	Reset zoom level to default, i.e. fit width ('grid layout' only)
+	Reset zoom level to default, i.e. fit width ('grid layout' only).
 *[*, *]* ::
-	Adjust column count ('grid layout' only)
+	Adjust column count ('grid layout' only).
 */* ::
-	Show search bar
+	Show search bar. Hitting *Esc* will hide the results, searching for an
+	empty string will clear them. If the search term contains an uppercase
+	letter the search is case sensitive ("smartcase").
 *n*, *N* ::
-	Focus next/previous search hit
+	Focus next/previous search hit.
 *\^n*, *^N* ::
-	Focus next/previous search hit that is currently not visible
+	Focus next/previous search hit that is currently not visible.
 *,*, *.* ::
-	Rotate pages left/right
+	Rotate pages left/right.
 *\^o*, *^i*, *Alt-Left*, *Alt-Right* ::
-	Move backward/forward through the jump list. Entries are added automatically when jumping
+	Move backward/forward through the jump list. Entries are added automatically when jumping.
 *i* ::
-	Toggle between normal and inverted color rendering
+	Toggle between normal and inverted color rendering.
 
 VARIABLES
 ---------
 'int' *background_opacity* ::
-	223: opacity of the black background in range [0..255]. Only works when using a compositor.
+	223: Opacity of the black background in range [0..255]. Only works when using a compositor.
 'string' *default_layout* ::
-	presentation: the layout on startup. Possible values: 'presentation', 'grid'
+	presentation: The layout on startup. Possible values: 'presentation', 'grid'.
 'int' *mouse_wheel_factor* ::
-	120: QT delta for turning the mouse wheel 1 click
+	120: QT delta for turning the mouse wheel 1 click.
 'int' *smooth_scroll_delta* ::
-	30: pixel offset when moving around
+	30: Pixel offset when moving around.
 'float' *screen_scroll_factor* ::
-	0.9: factor for scrolling the screen. Should be \<= 1 to create an overlapping region
+	0.9: Factor for scrolling the screen. Should be \<= 1 to create an overlapping region.
 
 'int' *useless_gap* ::
-	2: gap between two pages in pixels
+	2: Gap between two pages in 'grid layout' in pixels.
 'int' *min_page_width* ::
-	150: pages can not be smaller than this
+	150: Pages can not be smaller than this.
 'int' *min_zoom* ::
-	-14: smallest zoom value
+	-14: Smallest zoom value.
 'int' *max_zoom* ::
-	30: biggest zoom value
+	30: Biggest zoom value.
 'float' *zoom_factor* ::
-	0.05: influences the number of steps between min and max
+	0.05: Influences the number of steps between min and max.
 'int' *prefetch_count* ::
-	3: number of pages exceeding the currently visible ones to render, back- and forwards respectively
+	3: Number of pages exceeding the currently visible ones to render, back- and forwards respectively.
 'float' *search_padding* ::
-	0.2: factor of the area on the screen to display search hits in. Moves search hits towards the center
+	0.2: Factor of the area on the screen to display search hits in. Moves search hits towards the center.
 
 'bool' *smooth_downscaling* ::
-	true: enables the higher quality downsampling filter
+	true: Enables the higher quality downsampling filter.
 'int' *thumbnail_size* ::
-	32: one dimension of square thumbnails saved at run-time for every page that was once rendered
+	32: One dimension of square thumbnails saved at run-time for every page that was once rendered.
 
 'int' *rect_expansion* ::
-	2: number of pixels search rects are expanded by
+	2: Number of pixels search rects are expanded by.
 
 'bool' *quit_on_init_fail* ::
-	false: Quit katarakt if the document fails to open
+	false: Quit katarakt if the document fails to open.
 'string' *icon_theme* ::
 	The name of your icon theme. Fill in if auto detection fails.
 
