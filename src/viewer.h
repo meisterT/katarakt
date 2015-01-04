@@ -12,6 +12,7 @@
 class ResourceManager;
 class Canvas;
 class SearchBar;
+class BeamerWindow;
 
 
 class Viewer : public QWidget {
@@ -26,6 +27,7 @@ public:
 	ResourceManager *get_res() const;
 	Canvas *get_canvas() const;
 	SearchBar *get_search_bar() const;
+	BeamerWindow *get_beamer() const;
 
 public slots:
 	void signal_slot(); // reloads on SIGUSR1
@@ -67,7 +69,8 @@ private slots:
 
 private:
 	void update_info_widget();
-	void add_action(const char *action, const char *slot);
+	void setup_keys(QWidget *base);
+	void add_action(QWidget *base, const char *action, const char *slot, bool base_is_target = false);
 
 	ResourceManager *res;
 	Canvas *canvas;
@@ -89,6 +92,8 @@ private:
 	static void signal_handler(int unused);
 	static int sig_fd[2];
 	QSocketNotifier *sig_notifier;
+
+	BeamerWindow *beamer;
 
 	bool valid;
 };

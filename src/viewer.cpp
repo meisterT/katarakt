@@ -12,6 +12,7 @@
 #include "search.h"
 #include "config.h"
 #include "layout/layout.h"
+#include "beamerwindow.h"
 
 using namespace std;
 
@@ -25,6 +26,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 		search_bar(NULL),
 		layout(NULL),
 		sig_notifier(NULL),
+		beamer(NULL),
 		valid(true) {
 	res = new ResourceManager(file, this);
 	if (!res->is_valid()) {
@@ -66,7 +68,11 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 		return;
 	}
 
-	canvas = new Canvas(this, this);
+	setup_keys(this);
+	beamer = new BeamerWindow(this);
+	setup_keys(beamer);
+
+	canvas = new Canvas(this, this); // beamer must already exist
 	if (!canvas->is_valid()) {
 		valid = false;
 		return;
@@ -77,41 +83,6 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 	CFG *config = CFG::get_instance();
 	smooth_scroll_delta = config->get_value("smooth_scroll_delta").toInt();
 	screen_scroll_factor = config->get_value("screen_scroll_factor").toFloat();
-
-	// setup keys
-	add_action("toggle_fullscreen", SLOT(toggle_fullscreen()));
-	add_action("close_search", SLOT(close_search()));
-	add_action("reload", SLOT(reload()));
-	add_action("open", SLOT(open()));
-	add_action("jump_back", SLOT(jump_back()));
-	add_action("jump_forward", SLOT(jump_forward()));
-
-	add_action("page_up", SLOT(page_up()));
-	add_action("page_down", SLOT(page_down()));
-	add_action("page_first", SLOT(page_first()));
-	add_action("page_last", SLOT(page_last()));
-	add_action("half_screen_up", SLOT(half_screen_up()));
-	add_action("half_screen_down", SLOT(half_screen_down()));
-	add_action("screen_up", SLOT(screen_up()));
-	add_action("screen_down", SLOT(screen_down()));
-	add_action("smooth_up", SLOT(smooth_up()));
-	add_action("smooth_down", SLOT(smooth_down()));
-	add_action("smooth_left", SLOT(smooth_left()));
-	add_action("smooth_right", SLOT(smooth_right()));
-	add_action("zoom_in", SLOT(zoom_in()));
-	add_action("zoom_out", SLOT(zoom_out()));
-	add_action("reset_zoom", SLOT(reset_zoom()));
-	add_action("columns_inc", SLOT(columns_inc()));
-	add_action("columns_dec", SLOT(columns_dec()));
-	add_action("quit", SLOT(quit()));
-	add_action("search", SLOT(search()));
-	add_action("next_hit", SLOT(next_hit()));
-	add_action("previous_hit", SLOT(previous_hit()));
-	add_action("next_invisible_hit", SLOT(next_invisible_hit()));
-	add_action("previous_invisible_hit", SLOT(previous_invisible_hit()));
-	add_action("rotate_left", SLOT(rotate_left()));
-	add_action("rotate_right", SLOT(rotate_right()));
-	add_action("toggle_invert_colors", SLOT(invert_colors()));
 
 	layout = new QVBoxLayout();
 	layout->setContentsMargins(0, 0, 0, 0);
@@ -166,6 +137,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 Viewer::~Viewer() {
 	::close(sig_fd[0]);
 	::close(sig_fd[1]);
+	delete beamer;
 	delete sig_notifier;
 	delete layout;
 	delete search_bar;
@@ -428,6 +400,7 @@ void Viewer::rotate_right() {
 void Viewer::invert_colors() {
 	res->invert_colors();
 	update();
+	beamer->update();
 }
 
 void Viewer::update_info_widget() {
@@ -478,6 +451,10 @@ SearchBar *Viewer::get_search_bar() const {
 	return search_bar;
 }
 
+BeamerWindow *Viewer::get_beamer() const {
+	return beamer;
+}
+
 void Viewer::signal_slot() {
 	sig_notifier->setEnabled(false);
 	char tmp;
@@ -506,13 +483,53 @@ void Viewer::close_search() {
 	search_bar->hide();
 }
 
-void Viewer::add_action(const char *action, const char *slot) {
+void Viewer::setup_keys(QWidget *base) {
+	add_action(base, "toggle_fullscreen", SLOT(toggle_fullscreen()), true);
+	add_action(base, "close_search", SLOT(close_search()));
+	add_action(base, "reload", SLOT(reload()));
+	add_action(base, "open", SLOT(open()));
+	add_action(base, "jump_back", SLOT(jump_back()));
+	add_action(base, "jump_forward", SLOT(jump_forward()));
+
+	add_action(base, "page_up", SLOT(page_up()));
+	add_action(base, "page_down", SLOT(page_down()));
+	add_action(base, "page_first", SLOT(page_first()));
+	add_action(base, "page_last", SLOT(page_last()));
+	add_action(base, "half_screen_up", SLOT(half_screen_up()));
+	add_action(base, "half_screen_down", SLOT(half_screen_down()));
+	add_action(base, "screen_up", SLOT(screen_up()));
+	add_action(base, "screen_down", SLOT(screen_down()));
+	add_action(base, "smooth_up", SLOT(smooth_up()));
+	add_action(base, "smooth_down", SLOT(smooth_down()));
+	add_action(base, "smooth_left", SLOT(smooth_left()));
+	add_action(base, "smooth_right", SLOT(smooth_right()));
+	add_action(base, "zoom_in", SLOT(zoom_in()));
+	add_action(base, "zoom_out", SLOT(zoom_out()));
+	add_action(base, "reset_zoom", SLOT(reset_zoom()));
+	add_action(base, "columns_inc", SLOT(columns_inc()));
+	add_action(base, "columns_dec", SLOT(columns_dec()));
+	add_action(base, "quit", SLOT(quit()));
+	add_action(base, "search", SLOT(search()));
+	add_action(base, "next_hit", SLOT(next_hit()));
+	add_action(base, "previous_hit", SLOT(previous_hit()));
+	add_action(base, "next_invisible_hit", SLOT(next_invisible_hit()));
+	add_action(base, "previous_invisible_hit", SLOT(previous_invisible_hit()));
+	add_action(base, "rotate_left", SLOT(rotate_left()));
+	add_action(base, "rotate_right", SLOT(rotate_right()));
+	add_action(base, "toggle_invert_colors", SLOT(invert_colors()));
+}
+
+void Viewer::add_action(QWidget *base, const char *action, const char *slot, bool base_is_target) {
 	QStringListIterator i(CFG::get_instance()->get_keys(action));
 	while (i.hasNext()) {
-		QAction *a = new QAction(this);
+		QAction *a = new QAction(base);
 		a->setShortcut(QKeySequence(i.next()));
-		addAction(a);
-		connect(a, SIGNAL(triggered()), this, slot);
+		base->addAction(a);
+		if (base_is_target) {
+			connect(a, SIGNAL(triggered()), base, slot);
+		} else {
+			connect(a, SIGNAL(triggered()), this, slot);
+		}
 	}
 }
 

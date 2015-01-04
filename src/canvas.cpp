@@ -4,6 +4,7 @@
 #include <QString>
 #include <QPainter>
 #include <QApplication>
+#include <QDesktopWidget>
 #include <iostream>
 #include "canvas.h"
 #include "viewer.h"
@@ -15,6 +16,7 @@
 #include "search.h"
 #include "gotoline.h"
 #include "config.h"
+#include "beamerwindow.h"
 
 using namespace std;
 
@@ -46,12 +48,8 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	cur_layout->scroll_page(config->get_tmp_value("start_page").toInt(), false);
 
 	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
-	// setup keys
-	add_action("set_presentation_layout", SLOT(set_presentation_layout()));
-	add_action("set_grid_layout", SLOT(set_grid_layout()));
-	add_action("set_presenter_layout", SLOT(set_presenter_layout()));
-	add_action("toggle_overlay", SLOT(toggle_overlay()));
-	add_action("focus_goto", SLOT(focus_goto()));
+
+	setup_keys(this);
 
 	// prints the string representation of a key
 //	cerr << QKeySequence(Qt::Key_Equal).toString().toUtf8().constData() << endl;
@@ -60,6 +58,15 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	goto_line->move(0, height() - goto_line->height()); // TODO goto_line->height() reports the wrong size
 	goto_line->hide();
 	connect(goto_line, SIGNAL(returnPressed()), this, SLOT(goto_page()), Qt::UniqueConnection);
+
+	// setup beamer
+	BeamerWindow *beamer = viewer->get_beamer();
+	setup_keys(beamer);
+	if (cur_layout == presenter_layout) {
+		beamer->show();
+	} else {
+		beamer->hide();
+	}
 }
 
 Canvas::~Canvas() {
@@ -79,12 +86,20 @@ void Canvas::reload(bool clamp) {
 	update();
 }
 
-void Canvas::add_action(const char *action, const char *slot) {
+void Canvas::setup_keys(QWidget *base) {
+	add_action(base, "set_presentation_layout", SLOT(set_presentation_layout()));
+	add_action(base, "set_grid_layout", SLOT(set_grid_layout()));
+	add_action(base, "set_presenter_layout", SLOT(set_presenter_layout()));
+	add_action(base, "toggle_overlay", SLOT(toggle_overlay()));
+	add_action(base, "focus_goto", SLOT(focus_goto()));
+}
+
+void Canvas::add_action(QWidget *base, const char *action, const char *slot) {
 	QStringListIterator i(CFG::get_instance()->get_keys(action));
 	while (i.hasNext()) {
-		QAction *a = new QAction(this);
+		QAction *a = new QAction(base);
 		a->setShortcut(QKeySequence(i.next()));
-		addAction(a);
+		base->addAction(a);
 		connect(a, SIGNAL(triggered()), this, slot);
 	}
 }
@@ -202,6 +217,8 @@ void Canvas::set_presentation_layout() {
 	presentation_layout->activate(cur_layout);
 	cur_layout = presentation_layout;
 	update();
+	viewer->get_beamer()->hide();
+	viewer->activateWindow();
 }
 
 void Canvas::set_grid_layout() {
@@ -209,6 +226,8 @@ void Canvas::set_grid_layout() {
 	grid_layout->rebuild();
 	cur_layout = grid_layout;
 	update();
+	viewer->get_beamer()->hide();
+	viewer->activateWindow();
 }
 
 void Canvas::set_presenter_layout() {
@@ -216,8 +235,17 @@ void Canvas::set_presenter_layout() {
 	presenter_layout->rebuild();
 	cur_layout = presenter_layout;
 	update();
-}
 
+	// TODO move beamer to second screen
+//	QDesktopWidget *desktop = QApplication::desktop();
+//	if (desktop->screenCount() > 1) {
+//		int primary_screen = desktop->primaryScreen();
+//		int cur_screen = desktop->screenNumber(viewer);
+//		cout << "primary: " << primary_screen << ", current: " << cur_screen << endl;
+//	}
+	viewer->get_beamer()->set_page(cur_layout->get_page());
+	viewer->get_beamer()->show();
+}
 
 void Canvas::toggle_overlay() {
 	draw_overlay = not draw_overlay;
@@ -225,11 +253,12 @@ void Canvas::toggle_overlay() {
 }
 
 void Canvas::focus_goto() {
+	goto_line->activateWindow();
+	goto_line->show();
 	goto_line->setFocus();
 	goto_line->setText(QString::number(cur_layout->get_page() + 1));
 	goto_line->selectAll();
 	goto_line->move(0, height() - goto_line->height()); // TODO this is only necessary because goto_line->height() is wrong in the beginning
-	goto_line->show();
 }
 
 

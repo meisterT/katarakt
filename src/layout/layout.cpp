@@ -6,6 +6,7 @@
 #include "../grid.h"
 #include "../search.h"
 #include "../config.h"
+#include "../beamerwindow.h"
 
 using namespace std;
 
@@ -94,7 +95,13 @@ bool Layout::scroll_page(int new_page, bool relative) {
 	if (page > res->get_page_count() - 1) {
 		page = res->get_page_count() - 1;
 	}
-	return page != old_page;
+
+	if (page != old_page) {
+		viewer->get_beamer()->set_page(page);
+		return true;
+	} else {
+		return false;
+	}
 }
 
 void Layout::update_search() {

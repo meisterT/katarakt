@@ -200,6 +200,7 @@ bool SearchBar::is_valid() const {
 }
 
 void SearchBar::focus() {
+	line->activateWindow();
 	line->setText(term);
 	line->setFocus(Qt::OtherFocusReason);
 	line->selectAll();

@@ -13,9 +13,9 @@ QMAKE_CXXFLAGS_DEBUG += -DDEBUG
 
 # Input
 HEADERS +=	src/layout/layout.h src/layout/presentationlayout.h src/layout/gridlayout.h src/layout/presenterlayout.h \
-			src/viewer.h src/canvas.h src/resourcemanager.h src/grid.h src/search.h src/gotoline.h src/config.h src/download.h src/util.h src/kpage.h src/worker.h
+			src/viewer.h src/canvas.h src/resourcemanager.h src/grid.h src/search.h src/gotoline.h src/config.h src/download.h src/util.h src/kpage.h src/worker.h src/beamerwindow.h
 
 SOURCES +=	src/main.cpp \
 			src/layout/layout.cpp src/layout/presentationlayout.cpp src/layout/gridlayout.cpp src/layout/presenterlayout.cpp \
-			src/viewer.cpp src/canvas.cpp src/resourcemanager.cpp src/grid.cpp src/search.cpp src/gotoline.cpp src/config.cpp src/download.cpp src/util.cpp src/kpage.cpp src/worker.cpp
+			src/viewer.cpp src/canvas.cpp src/resourcemanager.cpp src/grid.cpp src/search.cpp src/gotoline.cpp src/config.cpp src/download.cpp src/util.cpp src/kpage.cpp src/worker.cpp src/beamerwindow.cpp
 unix:LIBS += -lpoppler-qt4

@@ -14,7 +14,11 @@ public:
 
 	bool supports_smooth_scrolling() const;
 	void render(QPainter *painter);
+
+	bool advance_hit(bool forward = true);
 	bool advance_invisible_hit(bool forward = true);
+
+	bool click_mouse(int mx, int my);
 	bool page_visible(int p) const;
 
 protected:

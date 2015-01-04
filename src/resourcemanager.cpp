@@ -14,6 +14,7 @@
 #include "kpage.h"
 #include "worker.h"
 #include "viewer.h"
+#include "beamerwindow.h"
 #include "layout/layout.h"
 
 using namespace std;
@@ -48,6 +49,7 @@ void ResourceManager::initialize(const QString &file, const QByteArray &password
 	if (viewer->get_canvas() != NULL) {
 		// on first start the canvas has not yet been constructed
 		connect(worker, SIGNAL(page_rendered(int)), viewer->get_canvas(), SLOT(page_rendered(int)), Qt::UniqueConnection);
+		connect(worker, SIGNAL(page_rendered(int)), viewer->get_beamer(), SLOT(page_rendered(int)), Qt::UniqueConnection);
 	}
 	worker->start();
 
@@ -282,6 +284,7 @@ void ResourceManager::collect_garbage(int keep_min, int keep_max) {
 
 void ResourceManager::connect_canvas() const {
 	connect(worker, SIGNAL(page_rendered(int)), viewer->get_canvas(), SLOT(page_rendered(int)), Qt::UniqueConnection);
+	connect(worker, SIGNAL(page_rendered(int)), viewer->get_beamer(), SLOT(page_rendered(int)), Qt::UniqueConnection);
 }
 
 void ResourceManager::store_jump(int page) {

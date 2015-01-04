@@ -75,7 +75,6 @@ void PresentationLayout::render(QPainter *painter) {
 	}
 
 	// draw search rects
-	// TODO rotate correctly
 	if (search_visible) {
 		painter->setPen(QColor(0, 0, 0));
 		painter->setBrush(QColor(255, 0, 0, 64));
