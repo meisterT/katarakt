@@ -200,6 +200,11 @@ void Viewer::jump_forward() {
 	}
 }
 
+void Viewer::mark_jump() {
+	int page = canvas->get_layout()->get_page();
+	res->store_jump(page);
+}
+
 // general movement
 void Viewer::page_up() {
 	if (canvas->get_layout()->scroll_page(-1)) {
@@ -508,6 +513,7 @@ void Viewer::setup_keys(QWidget *base) {
 	add_action(base, "open", SLOT(open()));
 	add_action(base, "jump_back", SLOT(jump_back()));
 	add_action(base, "jump_forward", SLOT(jump_forward()));
+	add_action(base, "mark_jump", SLOT(mark_jump()));
 
 	add_action(base, "page_up", SLOT(page_up()));
 	add_action(base, "page_down", SLOT(page_down()));

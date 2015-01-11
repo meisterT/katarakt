@@ -38,6 +38,7 @@ public slots:
 	void open();
 	void jump_back();
 	void jump_forward();
+    void mark_jump();
 
 private slots:
 	void page_up();
