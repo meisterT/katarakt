@@ -53,6 +53,24 @@ void ResourceManager::initialize(const QString &file, const QByteArray &password
 	}
 	worker->start();
 
+	// setup inotify
+#ifdef __linux__
+	QFileInfo info(file);
+	inotify_fd = inotify_init();
+	if (inotify_fd == -1) {
+		cerr << "inotify_init: " << strerror(errno) << endl;
+	} else {
+		i_notifier = new QSocketNotifier(inotify_fd, QSocketNotifier::Read, this);
+		connect(i_notifier, SIGNAL(activated(int)), this, SLOT(inotify_slot()),
+				Qt::UniqueConnection);
+
+		inotify_wd  = inotify_add_watch(inotify_fd, info.path().toUtf8().constData(), IN_CLOSE_WRITE | IN_MOVED_TO);
+		if (inotify_wd == -1) {
+			cerr << "inotify_add_watch: " << strerror(errno) << endl;
+		}
+	}
+#endif
+
 	if (doc == NULL) {
 		// poppler already prints a debug message
 //		cerr << "failed to open file" << endl;
@@ -105,24 +123,6 @@ void ResourceManager::initialize(const QString &file, const QByteArray &password
 //		}
 		delete p;
 	}
-
-	// setup inotify
-#ifdef __linux__
-	QFileInfo info(file);
-	inotify_fd = inotify_init();
-	if (inotify_fd == -1) {
-		cerr << "inotify_init: " << strerror(errno) << endl;
-	} else {
-		inotify_wd  = inotify_add_watch(inotify_fd, info.path().toUtf8().constData(), IN_CLOSE_WRITE | IN_MOVED_TO);
-		if (inotify_wd == -1) {
-			cerr << "inotify_add_watch: " << strerror(errno) << endl;
-		} else {
-			i_notifier = new QSocketNotifier(inotify_fd, QSocketNotifier::Read, this);
-			connect(i_notifier, SIGNAL(activated(int)), this, SLOT(inotify_slot()),
-					Qt::UniqueConnection);
-		}
-	}
-#endif
 }
 
 ResourceManager::~ResourceManager() {
