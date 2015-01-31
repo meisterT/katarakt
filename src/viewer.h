@@ -59,6 +59,7 @@ private slots:
 	void columns_dec();
 	void quit();
 	void search();
+	void search_backward();
 	void next_hit();
 	void previous_hit();
 	void next_invisible_hit();

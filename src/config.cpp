@@ -59,6 +59,7 @@ CFG::CFG() :
 	keys["toggle_overlay"] = QStringList() << "T";
 	keys["quit"] = QStringList() << "Q" << "W,E,E,E";
 	keys["search"] = QStringList() << "/";
+	keys["search_backward"] = QStringList() << "?";
 	keys["next_hit"] = QStringList() << "N";
 	keys["previous_hit"] = QStringList() << "Shift+N";
 	keys["next_invisible_hit"] = QStringList() << "Ctrl+N";

@@ -36,6 +36,7 @@ signals:
 
 private:
 	SearchBar *bar;
+	bool forward;
 };
 
 
@@ -48,8 +49,9 @@ public:
 
 	void load(const QString &file, const QByteArray &password);
 	bool is_valid() const;
-	void focus();
+	void focus(bool forward = true);
 	const std::map<int,QList<QRectF> *> *get_hits() const;
+	bool is_search_forward() const;
 
 signals:
 	void search_updated(int page);
@@ -85,6 +87,8 @@ private:
 	SearchWorker *worker;
 	QString term;
 	int start_page;
+	bool forward_tmp;
+	bool forward;
 
 	friend class SearchWorker;
 };

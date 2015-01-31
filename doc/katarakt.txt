@@ -91,9 +91,11 @@ KEY BINDINGS
 *[*, *]* ::
 	Adjust column count ('grid layout' only).
 */* ::
-	Show search bar. Hitting *Esc* will hide the results, searching for an
+	Show the search bar. Hitting *Esc* will hide the results, searching for an
 	empty string will clear them. If the search term contains an uppercase
 	letter the search is case sensitive ("smartcase").
+*?* ::
+	Show the search bar. This next search will be backwards.
 *n*, *N* ::
 	Focus next/previous search hit.
 *\^n*, *^N* ::

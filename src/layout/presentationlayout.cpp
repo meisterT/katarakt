@@ -144,7 +144,7 @@ bool PresentationLayout::advance_invisible_hit(bool forward) {
 		return false;
 	}
 
-	if (forward) {
+	if (forward ^ !viewer->get_search_bar()->is_search_forward()) {
 		hit_it = hits->find(hit_page)->second->end();
 		--hit_it;
 	} else {

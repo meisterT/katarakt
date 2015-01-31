@@ -106,19 +106,34 @@ bool Layout::scroll_page(int new_page, bool relative) {
 
 void Layout::update_search() {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
+	if (hits->empty()) {
+		return;
+	}
 
+	// find the right page before/after the current one
 	map<int,QList<QRectF> *>::const_iterator it = hits->lower_bound(page);
-	if (it != hits->end()) {
-		hit_page = it->first;
-		hit_it = hits->find(hit_page)->second->begin();
-		view_hit();
+	bool forward = viewer->get_search_bar()->is_search_forward();
+	if (forward) {
+		if (it == hits->end()) {
+			it = hits->lower_bound(0);
+		}
 	} else {
-		if (hits->size() == 1) {
-			hit_page = hits->lower_bound(0)->first;
-			hit_it = hits->find(hit_page)->second->begin();
-			view_hit();
+		if (it->first != page) {
+			if (it == hits->begin()) {
+				it = hits->end();
+			}
+			--it;
 		}
 	}
+
+	hit_page = it->first;
+	if (forward) {
+		hit_it = it->second->begin();
+	} else {
+		hit_it = it->second->end();
+		--hit_it;
+	}
+	view_hit();
 }
 
 void Layout::set_search_visible(bool visible) {
@@ -132,7 +147,7 @@ bool Layout::advance_hit(bool forward) {
 		return false;
 	}
 	// find next hit
-	if (forward) {
+	if (forward ^ !viewer->get_search_bar()->is_search_forward()) {
 		++hit_it;
 		if (hit_it == hits->find(hit_page)->second->end()) {
 			// this was the last hit on hit_page

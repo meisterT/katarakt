@@ -345,6 +345,10 @@ void Viewer::search() {
 	search_bar->focus();
 }
 
+void Viewer::search_backward() {
+	search_bar->focus(false);
+}
+
 void Viewer::next_hit() {
 	if (canvas->get_layout()->get_search_visible()) {
 		int page = canvas->get_layout()->get_page();
@@ -510,6 +514,7 @@ void Viewer::setup_keys(QWidget *base) {
 	add_action(base, "columns_dec", SLOT(columns_dec()));
 	add_action(base, "quit", SLOT(quit()));
 	add_action(base, "search", SLOT(search()));
+	add_action(base, "search_backward", SLOT(search_backward()));
 	add_action(base, "next_hit", SLOT(next_hit()));
 	add_action(base, "previous_hit", SLOT(previous_hit()));
 	add_action(base, "next_invisible_hit", SLOT(next_invisible_hit()));

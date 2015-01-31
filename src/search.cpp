@@ -14,7 +14,8 @@ using namespace std;
 SearchWorker::SearchWorker(SearchBar *_bar) :
 		stop(false),
 		die(false),
-		bar(_bar) {
+		bar(_bar),
+		forward(true) {
 }
 
 void SearchWorker::run() {
@@ -36,6 +37,7 @@ void SearchWorker::run() {
 		}
 		int start = bar->start_page;
 		QString search_term = bar->term;
+		forward = bar->forward;
 		bar->term_mutex.unlock();
 
 		// check if term contains upper case letters; if so, do case sensitive search (smartcase)
@@ -101,16 +103,27 @@ void SearchWorker::run() {
 			}
 
 			// update progress label next to the search bar
-			int percent = ((page + bar->doc->numPages() - start)
-					% bar->doc->numPages()) * 100 / bar->doc->numPages();
+			int percent;
+			if (forward) {
+				percent = page + bar->doc->numPages() - start;
+			} else {
+				percent = start + bar->doc->numPages() - page;
+			}
+			percent = (percent % bar->doc->numPages()) * 100 / bar->doc->numPages();
 			QString progress = QString("[%1] %2\% searched, %3 hits")
 				.arg(has_upper_case ? "Case" : "no case")
 				.arg(percent)
 				.arg(hit_count);
 			emit update_label_text(progress);
 
-			if (++page == bar->doc->numPages()) {
-				page = 0;
+			if (forward) {
+				if (++page == bar->doc->numPages()) {
+					page = 0;
+				}
+			} else {
+				if (--page == -1) {
+					page = bar->doc->numPages() - 1;
+				}
 			}
 		} while (page != start);
 #ifdef DEBUG
@@ -199,7 +212,8 @@ bool SearchBar::is_valid() const {
 	return doc != NULL;
 }
 
-void SearchBar::focus() {
+void SearchBar::focus(bool forward) {
+	forward_tmp = forward; // only apply when the user presses enter
 	line->activateWindow();
 	line->setText(term);
 	line->setFocus(Qt::OtherFocusReason);
@@ -209,6 +223,10 @@ void SearchBar::focus() {
 
 const std::map<int,QList<QRectF> *> *SearchBar::get_hits() const {
 	return &hits;
+}
+
+bool SearchBar::is_search_forward() const {
+	return forward;
 }
 
 bool SearchBar::event(QEvent *event) {
@@ -261,6 +279,7 @@ void SearchBar::set_text() {
 		return;
 	}
 
+	forward = forward_tmp;
 	Canvas *c = viewer->get_canvas();
 	// do not start the same search again but signal slots
 	if (term == line->text()) {
