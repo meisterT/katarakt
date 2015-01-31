@@ -144,7 +144,7 @@ void PresenterLayout::render(QPainter *painter) {
 			if (img != NULL) {
 				int rot = (res->get_rotation() - k_page->get_rotation(index) + 4) % 4;
 				QRect rect;
-				painter->rotate(rot* 90);
+				painter->rotate(rot * 90);
 				// calculate page position
 				if (rot == 0) {
 					rect = QRect(center_x[i], center_y[i], page_width[i], page_height[i]);

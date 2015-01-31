@@ -11,6 +11,7 @@ public:
 	~PresentationLayout() {};
 
 	bool supports_smooth_scrolling() const;
+	const QRect calculate_placement(int page) const;
 	void render(QPainter *painter);
 
 	bool advance_hit(bool forward = true);

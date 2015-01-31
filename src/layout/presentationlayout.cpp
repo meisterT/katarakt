@@ -31,8 +31,7 @@ int PresentationLayout::calculate_fit_width(int page) const {
 	return width;
 }
 
-void PresentationLayout::render(QPainter *painter) {
-	// TODO duplicate code
+const QRect PresentationLayout::calculate_placement(int page) const {
 	int page_width = width, page_height = height;
 	int center_x = 0, center_y = 0;
 
@@ -44,27 +43,33 @@ void PresentationLayout::render(QPainter *painter) {
 		page_height = ROUND(page_width / res->get_page_aspect(page));
 		center_y = (height - page_height) / 2;
 	}
-	const KPage *k_page = res->get_page(page, page_width);
+	return QRect(center_x, center_y, page_width, page_height);
+}
+
+void PresentationLayout::render(QPainter *painter) {
+	const QRect p = calculate_placement(page);
+	const KPage *k_page = res->get_page(page, p.width());
 	if (k_page != NULL) {
 		const QImage *img = k_page->get_image();
 		if (img != NULL) {
 			int rot = (res->get_rotation() - k_page->get_rotation() + 4) % 4;
 			QRect rect;
-			painter->rotate(rot* 90);
+			painter->rotate(rot * 90);
 			// calculate page position
 			if (rot == 0) {
-				rect = QRect(center_x, center_y, page_width, page_height);
+				rect = p;
+//				rect = QRect(p.x(), p.y(), p.width(), p.height());
 			} else if (rot == 1) {
-				rect = QRect(center_y, -center_x - page_width,
-						page_height, page_width);
+				rect = QRect(p.y(), -p.x() - p.width(),
+						p.height(), p.width());
 			} else if (rot == 2) {
-				rect = QRect(-center_x - page_width, -center_y - page_height,
-						page_width, page_height);
+				rect = QRect(-p.x() - p.width(), -p.y() - p.height(),
+						p.width(), p.height());
 			} else if (rot == 3) {
-				rect = QRect(-center_y - page_height, center_x,
-						page_height, page_width);
+				rect = QRect(-p.y() - p.height(), p.x(),
+						p.height(), p.width());
 			}
-			if (page_width != k_page->get_width() || rot != 0) { // draw scaled
+			if (p.width() != k_page->get_width() || rot != 0) { // draw scaled
 				painter->drawImage(rect, *img);
 			} else { // draw as-is
 				painter->drawImage(rect.topLeft(), *img);
@@ -80,7 +85,7 @@ void PresentationLayout::render(QPainter *painter) {
 		painter->setBrush(QColor(255, 0, 0, 64));
 		float w = res->get_page_width(page);
 		float h = res->get_page_height(page);
-		float factor = page_width / w;
+		float factor = p.width() / w;
 
 		const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 		map<int,QList<QRectF> *>::const_iterator it = hits->find(page);
@@ -90,7 +95,7 @@ void PresentationLayout::render(QPainter *painter) {
 					painter->setBrush(QColor(0, 255, 0, 64));
 				}
 				QRectF rot = rotate_rect(*i2, w, h, res->get_rotation());
-				painter->drawRect(transform_rect(rot, factor, center_x, center_y));
+				painter->drawRect(transform_rect(rot, factor, p.x(), p.y()));
 				if (i2 == hit_it) {
 					painter->setBrush(QColor(255, 0, 0, 64));
 				}
@@ -106,11 +111,11 @@ void PresentationLayout::render(QPainter *painter) {
 		for (list<Poppler::LinkGoto *>::const_iterator it = l->begin();
 				it != l->end(); ++it) {
 			QRectF r = (*it)->linkArea();
-			r.setLeft(r.left() * page_width);
-			r.setTop(r.top() * page_height);
-			r.setRight(r.right() * page_width);
-			r.setBottom(r.bottom() * page_height);
-			r.translate(center_x, center_y);
+			r.setLeft(r.left() * p.width());
+			r.setTop(r.top() * p.height());
+			r.setRight(r.right() * p.width());
+			r.setBottom(r.bottom() * p.height());
+			r.translate(p.x(), p.y());
 			painter->drawRect(r);
 		}
 	} */
@@ -160,22 +165,11 @@ void PresentationLayout::view_hit() {
 }
 
 bool PresentationLayout::click_mouse(int mx, int my) {
-	// TODO duplicate code
-	int page_width = width, page_height = height;
-	int center_x = 0, center_y = 0;
-
-	// calculate perfect fit
-	if ((float) width / height > res->get_page_aspect(page)) {
-		page_width = res->get_page_aspect(page) * page_height;
-		center_x = (width - page_width) / 2;
-	} else {
-		page_height = ROUND(page_width / res->get_page_aspect(page));
-		center_y = (height - page_height) / 2;
-	}
+	const QRect p = calculate_placement(page);
 
 	// transform mouse coordinates
-	float x = (mx - center_x) / (float) page_width;
-	float y = (my - center_y) / (float) page_height;
+	float x = (mx - p.x()) / (float) p.width();
+	float y = (my - p.y()) / (float) p.height();
 
 	// apply rotation
 	int rotation = res->get_rotation();
