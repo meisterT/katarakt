@@ -90,6 +90,9 @@ KEY BINDINGS
 	Reset zoom level to default, i.e. fit width ('grid layout' only).
 *[*, *]* ::
 	Adjust column count ('grid layout' only).
+*{*, *}* ::
+	Adjust the column the first page will be displayed in. Useful for reading
+	in a book layout with a cover page ('grid layout' only).
 */* ::
 	Show the search bar. Hitting *Esc* will hide the results, searching for an
 	empty string will clear them. If the search term contains an uppercase

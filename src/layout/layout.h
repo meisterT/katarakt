@@ -17,11 +17,12 @@ public:
 	virtual ~Layout();
 
 	virtual int get_page() const;
-	void activate(const Layout *old_layout);
+	virtual void activate(const Layout *old_layout);
 	virtual void rebuild(bool clamp = true);
 	virtual void resize(int w, int h);
 	virtual bool set_zoom(int new_zoom, bool relative = true);
-	virtual void set_columns(int new_columns, bool relative = true);
+	virtual bool set_columns(int new_columns, bool relative = true);
+	virtual bool set_offset(int new_offset, bool relative = true);
 
 	virtual bool supports_smooth_scrolling() const;
 	virtual bool scroll_smooth(int dx, int dy);

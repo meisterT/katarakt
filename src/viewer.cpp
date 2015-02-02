@@ -328,13 +328,27 @@ void Viewer::reset_zoom() {
 }
 
 void Viewer::columns_inc() {
-	canvas->get_layout()->set_columns(1);
-	update();
+	if (canvas->get_layout()->set_columns(1)) {
+		update();
+	}
 }
 
 void Viewer::columns_dec() {
-	canvas->get_layout()->set_columns(-1);
-	update();
+	if (canvas->get_layout()->set_columns(-1)) {
+		update();
+	}
+}
+
+void Viewer::offset_inc() {
+	if (canvas->get_layout()->set_offset(1)) {
+		update();
+	}
+}
+
+void Viewer::offset_dec() {
+	if (canvas->get_layout()->set_offset(-1)) {
+		update();
+	}
 }
 
 void Viewer::quit() {
@@ -512,6 +526,8 @@ void Viewer::setup_keys(QWidget *base) {
 	add_action(base, "reset_zoom", SLOT(reset_zoom()));
 	add_action(base, "columns_inc", SLOT(columns_inc()));
 	add_action(base, "columns_dec", SLOT(columns_dec()));
+	add_action(base, "offset_inc", SLOT(offset_inc()));
+	add_action(base, "offset_dec", SLOT(offset_dec()));
 	add_action(base, "quit", SLOT(quit()));
 	add_action(base, "search", SLOT(search()));
 	add_action(base, "search_backward", SLOT(search_backward()));

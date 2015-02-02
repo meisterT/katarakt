@@ -7,15 +7,17 @@ class ResourceManager;
 
 class Grid {
 public:
-	Grid(ResourceManager *_res, int columns);
+	Grid(ResourceManager *_res, int columns, int offset);
 	~Grid();
 
-	void set_columns(int columns);
+	bool set_columns(int columns);
+	bool set_offset(int offset);
 
-	float get_width(int page) const;
-	float get_height(int page) const;
+	float get_width(int col) const;
+	float get_height(int row) const;
 	int get_column_count() const;
 	int get_row_count() const;
+	int get_offset() const;
 
 private:
 	void rebuild_cells();
@@ -26,6 +28,7 @@ private:
 	int row_count;
 	float *width;
 	float *height;
+	int page_offset;
 };
 
 #endif

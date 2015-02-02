@@ -37,7 +37,7 @@ int Layout::get_page() const {
 }
 
 void Layout::activate(const Layout *old_layout) {
-	page = old_layout->page;
+	page = old_layout->get_page();
 	width = old_layout->width;
 	height = old_layout->height;
 
@@ -68,8 +68,14 @@ bool Layout::set_zoom(int /*new_zoom*/, bool /*relative*/) {
 	return false;
 }
 
-void Layout::set_columns(int /*new_columns*/, bool /*relative*/) {
+bool Layout::set_columns(int /*new_columns*/, bool /*relative*/) {
 	// only useful for grid layout
+	return false;
+}
+
+bool Layout::set_offset(int /*new_offset*/, bool /*relative*/) {
+	// only useful for grid layout
+	return false;
 }
 
 bool Layout::supports_smooth_scrolling() const {

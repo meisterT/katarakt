@@ -5,10 +5,11 @@
 using namespace std;
 
 
-Grid::Grid(ResourceManager *_res, int columns) :
+Grid::Grid(ResourceManager *_res, int columns, int offset) :
 		res(_res),
 		column_count(-1),
-		width(NULL), height(NULL) {
+		width(NULL), height(NULL),
+		page_offset(offset) {
 	set_columns(columns);
 }
 
@@ -17,7 +18,8 @@ Grid::~Grid() {
 	delete[] height;
 }
 
-void Grid::set_columns(int columns) {
+bool Grid::set_columns(int columns) {
+	int old_column_count = column_count;
 	column_count = columns;
 	if (column_count > res->get_page_count()) {
 		column_count = res->get_page_count();
@@ -26,26 +28,41 @@ void Grid::set_columns(int columns) {
 		column_count = 1;
 	}
 
+	set_offset(page_offset);
+
+	return old_column_count != column_count;
+}
+
+bool Grid::set_offset(int offset) {
+	int old_page_offset = page_offset;
+	page_offset = offset;
+	if (page_offset < 0) {
+		page_offset = 0;
+	}
+	if (page_offset > column_count - 1) {
+		page_offset = column_count - 1;
+	}
+
 	rebuild_cells();
+	return old_page_offset != page_offset;
 }
 
-float Grid::get_width(int page) const {
-	// TODO implement first page offset
+float Grid::get_width(int col) const {
 	// bounds check
-	if (page < 0 || page >= res->get_page_count()) {
+	if (col < 0 || col >= column_count) {
 		return -1;
 	}
 
-	return width[page % column_count];
+	return width[col];
 }
 
-float Grid::get_height(int page) const {
+float Grid::get_height(int row) const {
 	// bounds check
-	if (page < 0 || page >= res->get_page_count()) {
+	if (row < 0 || row >= row_count) {
 		return -1;
 	}
 
-	return height[page / column_count];
+	return height[row];
 }
 
 int Grid::get_column_count() const {
@@ -56,12 +73,17 @@ int Grid::get_row_count() const {
 	return row_count;
 }
 
+int Grid::get_offset() const {
+	return page_offset;
+}
+
 void Grid::rebuild_cells() {
 	delete[] width;
 	delete[] height;
 
 	// implicit ceil
-	row_count = (res->get_page_count() + column_count - 1) / column_count;
+//	row_count = (res->get_page_count() + column_count - 1) / column_count;
+	row_count = (res->get_page_count() + column_count - 1 + page_offset) / column_count;
 
 	width = new float[column_count];
 	height = new float[row_count];
@@ -78,8 +100,8 @@ void Grid::rebuild_cells() {
 	}
 
 	for (int i = 0; i < res->get_page_count(); i++) {
-		int col = (i % column_count);
-		int row = (i / column_count);
+		int col = ((i + page_offset) % column_count);
+		int row = ((i + page_offset) / column_count);
 
 		// calculate column width
 		float new_width = res->get_page_width(i);

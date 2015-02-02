@@ -13,10 +13,14 @@ public:
 	GridLayout(Layout& old_layout, int columns = 1);
 	~GridLayout();
 
+	int get_page() const;
+
+	void activate(const Layout *old_layout);
 	void rebuild(bool clamp = true);
 	void resize(int w, int h);
 	bool set_zoom(int new_zoom, bool relative = true);
-	void set_columns(int new_columns, bool relative = true);
+	bool set_columns(int new_columns, bool relative = true);
+	bool set_offset(int new_offset, bool relative = true);
 
 	bool scroll_smooth(int dx, int dy);
 	bool scroll_page(int new_page, bool relative = true);
@@ -31,7 +35,7 @@ public:
 	bool page_visible(int p) const;
 
 private:
-	void initialize(int columns, bool clamp = true);
+	void initialize(int columns, int offset, bool clamp = true);
 	void set_constants(bool clamp = true);
 	void view_hit();
 	void view_hit(const QRect &r);

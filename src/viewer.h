@@ -57,6 +57,8 @@ private slots:
 	void reset_zoom();
 	void columns_inc();
 	void columns_dec();
+	void offset_inc();
+	void offset_dec();
 	void quit();
 	void search();
 	void search_backward();

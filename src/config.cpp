@@ -56,6 +56,8 @@ CFG::CFG() :
 	keys["reset_zoom"] = QStringList() << "Z";
 	keys["columns_inc"] = QStringList() << "]";
 	keys["columns_dec"] = QStringList() << "[";
+	keys["offset_inc"] = QStringList() << "}";
+	keys["offset_dec"] = QStringList() << "{";
 	keys["toggle_overlay"] = QStringList() << "T";
 	keys["quit"] = QStringList() << "Q" << "W,E,E,E";
 	keys["search"] = QStringList() << "/";

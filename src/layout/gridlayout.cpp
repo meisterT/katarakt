@@ -20,7 +20,7 @@ GridLayout::GridLayout(Viewer *v, int page, int columns) :
 		horizontal_page(0),
 		last_visible_page(res->get_page_count() - 1),
 		zoom(0) {
-	initialize(columns);
+	initialize(columns, 0);
 }
 
 GridLayout::GridLayout(Layout& old_layout, int columns) :
@@ -28,15 +28,23 @@ GridLayout::GridLayout(Layout& old_layout, int columns) :
 		horizontal_page(0),
 		last_visible_page(res->get_page_count() - 1),
 		zoom(0) {
-	initialize(columns);
+	initialize(columns, 0);
 }
 
 GridLayout::~GridLayout() {
 	delete grid;
 }
 
-void GridLayout::initialize(int columns, bool clamp) {
-	grid = new Grid(res, columns);
+int GridLayout::get_page() const {
+	int tmp = page - grid->get_offset();
+	if (tmp < 0) {
+		tmp = 0;
+	}
+	return tmp;
+}
+
+void GridLayout::initialize(int columns, int offset, bool clamp) {
+	grid = new Grid(res, columns, offset);
 
 //	size = 0.6;
 //	size = 250 / grid->get_width(0);
@@ -69,7 +77,7 @@ void GridLayout::set_constants(bool clamp) {
 
 	total_height = 0;
 	for (int i = 0; i < grid->get_row_count(); i++) {
-		total_height += ROUND(grid->get_height(i * grid->get_column_count()) * size);
+		total_height += ROUND(grid->get_height(i) * size);
 	}
 	total_height += useless_gap * (grid->get_row_count() - 1);
 
@@ -95,7 +103,7 @@ void GridLayout::set_constants(bool clamp) {
 	border_page_h = grid->get_row_count() * grid->get_column_count();
 	int h = 0;
 	for (int i = grid->get_row_count() - 1; i >= 0; i--) {
-		h += ROUND(grid->get_height(i * grid->get_column_count()) * size);
+		h += ROUND(grid->get_height(i) * size);
 		if (h >= height) {
 			border_page_h = i * grid->get_column_count();
 			border_off_h = height - h;
@@ -111,12 +119,18 @@ void GridLayout::set_constants(bool clamp) {
 	}
 }
 
+void GridLayout::activate(const Layout *old_layout) {
+	Layout::activate(old_layout);
+	page += grid->get_offset();
+}
+
 void GridLayout::rebuild(bool clamp) {
 	Layout::rebuild(clamp);
 	// rebuild non-dynamic data
 	int columns = grid->get_column_count();
+	int offset = grid->get_offset();
 	delete grid;
-	initialize(columns, clamp);
+	initialize(columns, offset, clamp);
 }
 
 void GridLayout::resize(int w, int h) {
@@ -155,14 +169,28 @@ bool GridLayout::set_zoom(int new_zoom, bool relative) {
 	return true;
 }
 
-void GridLayout::set_columns(int new_columns, bool relative) {
+bool GridLayout::set_columns(int new_columns, bool relative) {
 	if (relative) {
-		grid->set_columns(grid->get_column_count() + new_columns);
-	} else {
-		grid->set_columns(new_columns);
+		new_columns += grid->get_column_count();
 	}
 
-	set_constants();
+	if (grid->set_columns(new_columns)) {
+		set_constants();
+		return true;
+	}
+	return false;
+}
+
+bool GridLayout::set_offset(int new_offset, bool relative) {
+	if (relative) {
+		new_offset += grid->get_offset();
+	}
+
+	if (grid->set_offset(new_offset)) {
+		set_constants();
+		return true;
+	}
+	return false;
 }
 
 bool GridLayout::scroll_smooth(int dx, int dy) {
@@ -180,12 +208,12 @@ bool GridLayout::scroll_smooth(int dx, int dy) {
 		int h; // implicit rounding
 		// page up
 		while (off_y > 0 &&
-				(h = ROUND(grid->get_height(page - grid->get_column_count()) * size)) > 0) {
+				(h = ROUND(grid->get_height(page / grid->get_column_count() - 1) * size)) > 0) {
 			off_y -= h + useless_gap;
 			page -= grid->get_column_count();
 		}
 		// page down
-		while ((h = ROUND(grid->get_height(page) * size)) > 0 &&
+		while ((h = ROUND(grid->get_height(page / grid->get_column_count()) * size)) > 0 &&
 				page < border_page_h &&
 				off_y <= -h - useless_gap) {
 			off_y += h + useless_gap;
@@ -236,6 +264,12 @@ bool GridLayout::scroll_smooth(int dx, int dy) {
 bool GridLayout::scroll_page(int new_page, bool relative) {
 	int old_page = page;
 	int old_off_y = off_y;
+
+	// negative has to stay negative, absolute movement has to account for grid offset
+	if (!relative && new_page >= 0) {
+		new_page += grid->get_offset();
+	}
+
 	if (total_height > height) {
 		if (!relative) {
 			if (new_page >= 0) { // else int rounding is bad, < 0 has to stay < 0
@@ -263,7 +297,7 @@ void GridLayout::render(QPainter *painter) {
 	int last_page = page + horizontal_page;
 	int grid_height; // implicit rounding
 	int hpos = off_y;
-	while ((grid_height = ROUND(grid->get_height(cur_page) * size)) > 0 && hpos < height) {
+	while ((grid_height = ROUND(grid->get_height(cur_page / grid->get_column_count()) * size)) > 0 && hpos < height) {
 		// horizontal
 		int cur_col = horizontal_page;
 		int grid_width; // implicit rounding
@@ -271,7 +305,7 @@ void GridLayout::render(QPainter *painter) {
 		while ((grid_width = grid->get_width(cur_col) * size) > 0 &&
 				cur_col < grid->get_column_count() &&
 				wpos < width) {
-			last_page = cur_page + cur_col;
+			last_page = cur_page + cur_col - grid->get_offset();
 
 			int page_width = res->get_page_width(last_page) * size;
 			int page_height = ROUND(res->get_page_height(last_page) * size);
@@ -344,33 +378,21 @@ void GridLayout::render(QPainter *painter) {
 	}
 
 	last_visible_page = last_page;
-	res->collect_garbage(page - prefetch_count * 3, last_page + prefetch_count * 3);
+	res->collect_garbage(page + horizontal_page - grid->get_offset() - prefetch_count * 3, last_page + prefetch_count * 3);
 
 	// prefetch
-	int cur_col = last_page % grid->get_column_count();
-	cur_page = last_page - cur_col;
-	int cur_col_first = horizontal_page;
-	int cur_page_first = page;
+	int prefetch_first = page + horizontal_page - grid->get_offset() - 1;
+	int prefetch_last = last_visible_page + 1;
 	for (int count = 0; count < prefetch_count; count++) {
 		// after last visible page
-		cur_col++;
-		if (cur_col >= grid->get_column_count()) {
-			cur_col = 0;
-			cur_page += grid->get_column_count();
-		}
-		int page_width = res->get_page_width(cur_page + cur_col) * size;
-		if (res->get_page(cur_page + cur_col, page_width) != NULL) {
-			res->unlock_page(cur_page + cur_col);
+		int page_width = res->get_page_width(prefetch_last + count) * size;
+		if (res->get_page(prefetch_last + count, page_width) != NULL) {
+			res->unlock_page(prefetch_last + count);
 		}
 		// before first visible page
-		cur_col_first--;
-		if (cur_col_first < 0) {
-			cur_col_first = grid->get_column_count() - 1;
-			cur_page_first -= grid->get_column_count();
-		}
-		page_width = res->get_page_width(cur_page_first + cur_col_first) * size;
-		if (res->get_page(cur_page_first + cur_col_first, page_width) != NULL) {
-			res->unlock_page(cur_page_first + cur_col_first);
+		page_width = res->get_page_width(prefetch_first + count) * size;
+		if (res->get_page(prefetch_first + count, page_width) != NULL) {
+			res->unlock_page(prefetch_first + count);
 		}
 	}
 }
@@ -443,32 +465,33 @@ void GridLayout::view_hit(const QRect &r) {
 
 
 QRect GridLayout::get_hit_rect() {
+	int hit_page_offset = hit_page + grid->get_offset();
 	// calculate offsets
 	int page_width = res->get_page_width(hit_page) * size;
 	int page_height = ROUND(res->get_page_height(hit_page) * size);
 
-	int center_x = (grid->get_width(hit_page) * size - page_width) / 2;
-	int center_y = (grid->get_height(hit_page) * size - page_height) / 2;
+	int center_x = (grid->get_width(hit_page_offset % grid->get_column_count()) * size - page_width) / 2;
+	int center_y = (grid->get_height(hit_page_offset / grid->get_column_count()) * size - page_height) / 2;
 
 	int wpos = off_x;
-	if (hit_page % grid->get_column_count() > horizontal_page) {
-		for (int i = horizontal_page; i < hit_page % grid->get_column_count(); i++) {
+	if (hit_page_offset % grid->get_column_count() > horizontal_page) {
+		for (int i = horizontal_page; i < hit_page_offset % grid->get_column_count(); i++) {
 			wpos += grid->get_width(i) * size + useless_gap;
 		}
 	} else {
-		for (int i = horizontal_page; i > hit_page % grid->get_column_count(); i--) {
+		for (int i = horizontal_page; i > hit_page_offset % grid->get_column_count(); i--) {
 			wpos -= grid->get_width(i) * size + useless_gap;
 		}
 	}
 	int hpos = off_y;
-	if (hit_page > page) {
-		for (int i = page / grid->get_column_count();
-				i < hit_page / grid->get_column_count(); i++) {
+	if (hit_page_offset > page) {
+		for (int i = (page + grid->get_offset()) / grid->get_column_count();
+				i < hit_page_offset / grid->get_column_count(); i++) {
 			hpos += grid->get_height(i) * size + useless_gap;
 		}
 	} else {
-		for (int i = page / grid->get_column_count();
-				i > hit_page / grid->get_column_count(); i--) {
+		for (int i = (page + grid->get_offset()) / grid->get_column_count();
+				i > hit_page_offset / grid->get_column_count(); i--) {
 			hpos -= grid->get_height(i) * size + useless_gap;
 		}
 	}
@@ -484,7 +507,7 @@ pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {
 	int cur_page = page;
 	int grid_height;
 	int hpos = off_y;
-	while ((grid_height = ROUND(grid->get_height(cur_page) * size)) > 0 &&
+	while ((grid_height = ROUND(grid->get_height(cur_page / grid->get_column_count()) * size)) > 0 &&
 			hpos < height) {
 		if (my < hpos + grid_height) {
 			break;
@@ -531,7 +554,7 @@ pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {
 		x = 1 - tmp;
 	}
 
-	int page = cur_page + cur_col;
+	int page = cur_page + cur_col - grid->get_offset();
 
 	return make_pair(page, QPointF(x,y));
 }
@@ -573,7 +596,7 @@ bool GridLayout::goto_page_at(int mx, int my) {
 }
 
 bool GridLayout::page_visible(int p) const {
-	if (p < page || p > last_visible_page) {
+	if (p < page + horizontal_page - grid->get_offset() || p > last_visible_page) {
 		return false;
 	}
 	return true;
