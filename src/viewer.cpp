@@ -188,19 +188,23 @@ void Viewer::reload(bool clamp) {
 	canvas->reload(clamp);
 }
 
+void Viewer::open(QString new_file) {
+	res->set_file(new_file);
+	QFileInfo info(new_file);
+
+	// different file - clear jumplist
+	// e.g. in inotify-caused reload it doesn't hurt to keep the old jumplist
+	// search is always cleared, see reload()
+	res->clear_jumps();
+	// TODO reset rotation?
+	setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
+	reload();
+}
+
 void Viewer::open() {
 	QString new_file = QFileDialog::getOpenFileName(this, "Open File", "", "PDF Files (*.pdf)");
 	if (!new_file.isNull()) {
-		res->set_file(new_file);
-		QFileInfo info(new_file);
-
-		// different file - clear jumplist
-		// e.g. in inotify-caused reload it doesn't hurt to keep the old jumplist
-		// search is always cleared, see reload()
-		res->clear_jumps();
-		// TODO reset rotation?
-		setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
-		reload();
+		open(new_file);
 	}
 }
 

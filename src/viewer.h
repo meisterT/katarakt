@@ -37,7 +37,8 @@ public slots:
 	void toggle_fullscreen();
 	void close_search();
 	void reload(bool clamp = true);
-	void open();
+	void open(); // ask user for filename
+	void open(QString filename);
 	void save();
 	void jump_back();
 	void jump_forward();
