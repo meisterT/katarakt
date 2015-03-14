@@ -41,7 +41,7 @@ public slots:
 	void save();
 	void jump_back();
 	void jump_forward();
-    void mark_jump();
+	void mark_jump();
 
 private slots:
 	void page_up();
