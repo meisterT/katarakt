@@ -30,6 +30,7 @@ public:
 	bool advance_invisible_hit(bool forward = true);
 
 	bool click_mouse(int mx, int my);
+	bool goto_link_destination(Poppler::LinkDestination *link);
 	bool goto_page_at(int mx, int my);
 
 	bool page_visible(int p) const;
@@ -37,9 +38,11 @@ public:
 private:
 	void initialize(int columns, int offset, bool clamp = true);
 	void set_constants(bool clamp = true);
-	void view_hit();
-	void view_hit(const QRect &r);
-	QRect get_hit_rect();
+	bool view_hit();
+	bool view_rect(const QRect &r);
+	bool view_point(const QPoint &p);
+	QRect get_target_rect(int target_page, QRectF target_rect) const;
+	QPoint get_target_page_distance(int target_page) const;
 	std::pair<int,QPointF> get_page_at(int x, int y);
 
 	Grid *grid;

@@ -110,10 +110,10 @@ bool Layout::scroll_page(int new_page, bool relative) {
 	}
 }
 
-void Layout::update_search() {
+bool Layout::update_search() {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 	if (hits->empty()) {
-		return;
+		return false;
 	}
 
 	// find the right page before/after the current one
@@ -140,6 +140,7 @@ void Layout::update_search() {
 		--hit_it;
 	}
 	view_hit();
+	return true;
 }
 
 void Layout::set_search_visible(bool visible) {
@@ -183,6 +184,10 @@ bool Layout::advance_hit(bool forward) {
 
 bool Layout::click_mouse(int /*mx*/, int /*my*/) {
 	return false;
+}
+
+bool Layout::goto_link_destination(Poppler::LinkDestination *link) {
+	return scroll_page(link->pageNumber() - 1, false);
 }
 
 bool Layout::goto_page_at(int /*mx*/, int /*my*/) {

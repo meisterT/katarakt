@@ -13,6 +13,8 @@ class ResourceManager;
 class Canvas;
 class SearchBar;
 class BeamerWindow;
+class QSplitter;
+class Toc;
 
 
 class Viewer : public QWidget {
@@ -70,13 +72,16 @@ private slots:
 	void rotate_left();
 	void rotate_right();
 	void invert_colors();
+	void toggle_toc();
 
 private:
 	void update_info_widget();
 	void setup_keys(QWidget *base);
-	void add_action(QWidget *base, const char *action, const char *slot, bool base_is_target = false);
+//	void add_action(QWidget *base, const char *action, const char *slot, bool base_is_target = false);
 
 	ResourceManager *res;
+	QSplitter *splitter;
+	Toc *toc;
 	Canvas *canvas;
 	SearchBar *search_bar;
 	QVBoxLayout *layout;

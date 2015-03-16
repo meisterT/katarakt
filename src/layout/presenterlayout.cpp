@@ -9,7 +9,7 @@ using namespace std;
 
 PresenterLayout::PresenterLayout(Viewer *v, int page) :
 		Layout(v, page),
-		main_ratio(0.67) {
+		main_ratio(0.67) { // TODO add config option
 	rebuild();
 }
 
@@ -235,8 +235,8 @@ bool PresenterLayout::advance_invisible_hit(bool forward) {
 	return true;
 }
 
-void PresenterLayout::view_hit() {
-	scroll_page(hit_page, false);
+bool PresenterLayout::view_hit() {
+	return scroll_page(hit_page, false);
 }
 
 bool PresenterLayout::click_mouse(int mx, int my) {

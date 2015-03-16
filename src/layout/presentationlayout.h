@@ -23,7 +23,7 @@ public:
 
 private:
 	int calculate_fit_width(int page) const;
-	void view_hit();
+	bool view_hit();
 };
 
 #endif

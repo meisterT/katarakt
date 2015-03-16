@@ -76,10 +76,16 @@ void SearchWorker::run() {
 						has_upper_case ? Poppler::Page::CaseSensitive : Poppler::Page::CaseInsensitive)) {
 				hits->push_back(QRectF(x, y, x2 - x, y2 - y));
 			}
-#else
+#elif POPPLER_VERSION < POPPLER_VERSION_CHECK(0, 31, 0)
 			// new search interface
 			QList<QRectF> tmp = p->search(search_term,
 					has_upper_case ? Poppler::Page::CaseSensitive : Poppler::Page::CaseInsensitive);
+			hits->swap(tmp);
+#else
+			// even newer interface
+			QList<QRectF> tmp = p->search(search_term,
+					has_upper_case ? (Poppler::Page::SearchFlags) 0 : Poppler::Page::IgnoreCase);
+			// TODO support Poppler::Page::WholeWords
 			hits->swap(tmp);
 #endif
 #ifdef DEBUG
@@ -260,9 +266,10 @@ void SearchBar::insert_hits(int page, QList<QRectF> *l) {
 
 	// only update the layout if the hits should be viewed
 	if (empty) {
-		viewer->get_canvas()->get_layout()->update_search();
+		if (viewer->get_canvas()->get_layout()->update_search()) {
+			viewer->get_canvas()->update();
+		}
 	}
-	viewer->get_canvas()->update(); // TODO updates too often
 }
 
 void SearchBar::clear_hits() {
@@ -283,9 +290,10 @@ void SearchBar::set_text() {
 	Canvas *c = viewer->get_canvas();
 	// do not start the same search again but signal slots
 	if (term == line->text()) {
-		c->get_layout()->update_search();
 		c->setFocus(Qt::OtherFocusReason);
-		c->update();
+		if (c->get_layout()->update_search()) {
+			c->update();
+		}
 		return;
 	}
 

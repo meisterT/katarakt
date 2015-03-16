@@ -18,6 +18,7 @@ class KPage;
 class Worker;
 class Viewer;
 class QSocketNotifier;
+class QDomDocument;
 
 
 class ResourceManager : public QObject {
@@ -45,6 +46,7 @@ public:
 	float get_max_aspect() const;
 	int get_page_count() const;
 	const std::list<Poppler::LinkGoto *> *get_links(int page);
+	QDomDocument *get_toc() const;
 
 	int get_rotation() const;
 	void rotate(int value, bool relative = true);
@@ -59,6 +61,8 @@ public:
 	void clear_jumps();
 	int jump_back();
 	int jump_forward();
+
+	Poppler::LinkDestination *resolve_link_destination(const QString &name) const;
 
 public slots:
 	void inotify_slot();

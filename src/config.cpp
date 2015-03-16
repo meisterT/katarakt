@@ -78,6 +78,7 @@ CFG::CFG() :
 	keys["close_search"] = QStringList() << "Esc";
 	keys["reload"] = QStringList() << "R";
 	keys["open"] = QStringList() << "O";
+	keys["toggle_toc"] = QStringList() << "F9";
 	settings.endGroup();
 }
 

@@ -84,6 +84,8 @@ KEY BINDINGS
 	process. *katarakt* reloads automatically if the opened file has changed.
 *o* ::
 	Open a different document; shows a file dialog.
+*F9* ::
+	Toggle the table of contents.
 *-*, *+*, *=* ::
 	Adjust zoom level ('grid layout' only).
 *z* ::

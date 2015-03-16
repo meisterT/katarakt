@@ -17,6 +17,7 @@
 #include "gotoline.h"
 #include "config.h"
 #include "beamerwindow.h"
+#include "util.h"
 
 using namespace std;
 
@@ -35,7 +36,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 	presentation_layout = new PresentationLayout(viewer);
 	grid_layout = new GridLayout(viewer);
-	presenter_layout = new PresenterLayout(viewer);
+	presenter_layout = new PresenterLayout(viewer); // TODO add config string
 
 	QString default_layout = config->get_value("default_layout").toString();
 	if (default_layout == "grid") {
@@ -87,21 +88,11 @@ void Canvas::reload(bool clamp) {
 }
 
 void Canvas::setup_keys(QWidget *base) {
-	add_action(base, "set_presentation_layout", SLOT(set_presentation_layout()));
-	add_action(base, "set_grid_layout", SLOT(set_grid_layout()));
-	add_action(base, "set_presenter_layout", SLOT(set_presenter_layout()));
-	add_action(base, "toggle_overlay", SLOT(toggle_overlay()));
-	add_action(base, "focus_goto", SLOT(focus_goto()));
-}
-
-void Canvas::add_action(QWidget *base, const char *action, const char *slot) {
-	QStringListIterator i(CFG::get_instance()->get_keys(action));
-	while (i.hasNext()) {
-		QAction *a = new QAction(base);
-		a->setShortcut(QKeySequence(i.next()));
-		base->addAction(a);
-		connect(a, SIGNAL(triggered()), this, slot);
-	}
+	add_action(base, "set_presentation_layout", SLOT(set_presentation_layout()), this);
+	add_action(base, "set_grid_layout", SLOT(set_grid_layout()), this);
+	add_action(base, "set_presenter_layout", SLOT(set_presenter_layout()), this);
+	add_action(base, "toggle_overlay", SLOT(toggle_overlay()), this);
+	add_action(base, "focus_goto", SLOT(focus_goto()), this);
 }
 
 Layout *Canvas::get_layout() const {

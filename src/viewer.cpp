@@ -3,6 +3,7 @@
 #include <QFileInfo>
 #include <QAction>
 #include <QFileDialog>
+#include <QSplitter>
 #include <csignal>
 #include <cerrno>
 #include <unistd.h>
@@ -13,6 +14,8 @@
 #include "config.h"
 #include "layout/layout.h"
 #include "beamerwindow.h"
+#include "toc.h"
+#include "util.h"
 
 using namespace std;
 
@@ -22,6 +25,7 @@ int Viewer::sig_fd[2];
 Viewer::Viewer(const QString &file, QWidget *parent) :
 		QWidget(parent),
 		res(NULL),
+		splitter(NULL),
 		canvas(NULL),
 		search_bar(NULL),
 		layout(NULL),
@@ -72,12 +76,22 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 	beamer = new BeamerWindow(this);
 	setup_keys(beamer);
 
-	canvas = new Canvas(this, this); // beamer must already exist
+	splitter = new QSplitter(this);
+	toc = new Toc(this, splitter);
+
+	canvas = new Canvas(this, splitter); // beamer must already exist
 	if (!canvas->is_valid()) {
 		valid = false;
 		return;
 	}
 	res->connect_canvas();
+
+	splitter->setAutoFillBackground(true);
+	splitter->addWidget(toc);
+	splitter->addWidget(canvas);
+	splitter->setSizes(QList<int>() << (width() / 4) << (width() * 3 / 4)); // TODO config option
+
+	toc->hide();
 
 	// load config options
 	CFG *config = CFG::get_instance();
@@ -110,7 +124,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 
 	update_info_widget();
 
-	layout->addWidget(canvas);
+	layout->addWidget(splitter);
 	layout->addWidget(search_bar);
 	setLayout(layout);
 
@@ -132,6 +146,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 	setAttribute(Qt::WA_TranslucentBackground);
 	search_bar->setAutoFillBackground(true);
 	info_widget.setAutoFillBackground(true);
+
 }
 
 Viewer::~Viewer() {
@@ -142,6 +157,8 @@ Viewer::~Viewer() {
 	delete layout;
 	delete search_bar;
 	delete canvas;
+	delete toc;
+	delete splitter;
 	delete res;
 }
 
@@ -186,7 +203,7 @@ void Viewer::jump_back() {
 		return;
 	}
 	if (canvas->get_layout()->scroll_page(new_page, false)) {
-		update();
+		canvas->update();
 	}
 }
 
@@ -196,7 +213,7 @@ void Viewer::jump_forward() {
 		return;
 	}
 	if (canvas->get_layout()->scroll_page(new_page, false)) {
-		update();
+		canvas->update();
 	}
 }
 
@@ -208,13 +225,13 @@ void Viewer::mark_jump() {
 // general movement
 void Viewer::page_up() {
 	if (canvas->get_layout()->scroll_page(-1)) {
-		update();
+		canvas->update();
 	}
 }
 
 void Viewer::page_down() {
 	if (canvas->get_layout()->scroll_page(1)) {
-		update();
+		canvas->update();
 	}
 }
 
@@ -222,7 +239,7 @@ void Viewer::page_first() {
 	int page = canvas->get_layout()->get_page();
 	if (canvas->get_layout()->scroll_page(-1, false)) {
 		res->store_jump(page);
-		update();
+		canvas->update();
 	}
 }
 
@@ -230,14 +247,14 @@ void Viewer::page_last() {
 	int page = canvas->get_layout()->get_page();
 	if (canvas->get_layout()->scroll_page(res->get_page_count(), false)) {
 		res->store_jump(page);
-		update();
+		canvas->update();
 	}
 }
 
 void Viewer::half_screen_up() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
 		if (canvas->get_layout()->scroll_smooth(0, height() * 0.5f)) {
-			update();
+			canvas->update();
 		}
 	} else { // fallback
 		page_up();
@@ -247,7 +264,7 @@ void Viewer::half_screen_up() {
 void Viewer::half_screen_down() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
 		if (canvas->get_layout()->scroll_smooth(0, -height() * 0.5f)) {
-			update();
+			canvas->update();
 		}
 	} else { // fallback
 		page_down();
@@ -257,7 +274,7 @@ void Viewer::half_screen_down() {
 void Viewer::screen_up() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
 		if (canvas->get_layout()->scroll_smooth(0, height() * screen_scroll_factor)) {
-			update();
+			canvas->update();
 		}
 	} else { // fallback
 		page_up();
@@ -267,7 +284,7 @@ void Viewer::screen_up() {
 void Viewer::screen_down() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
 		if (canvas->get_layout()->scroll_smooth(0, -height() * screen_scroll_factor)) {
-			update();
+			canvas->update();
 		}
 	} else { // fallback
 		page_down();
@@ -277,7 +294,7 @@ void Viewer::screen_down() {
 void Viewer::smooth_up() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
 		if (canvas->get_layout()->scroll_smooth(0, smooth_scroll_delta)) {
-			update();
+			canvas->update();
 		}
 	} else { // fallback
 		page_up();
@@ -287,7 +304,7 @@ void Viewer::smooth_up() {
 void Viewer::smooth_down() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
 		if (canvas->get_layout()->scroll_smooth(0, -smooth_scroll_delta)) {
-			update();
+			canvas->update();
 		}
 	} else { // fallback
 		page_down();
@@ -297,7 +314,7 @@ void Viewer::smooth_down() {
 void Viewer::smooth_left() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
 		if (canvas->get_layout()->scroll_smooth(smooth_scroll_delta, 0)) {
-			update();
+			canvas->update();
 		}
 	} else { // fallback
 		page_up();
@@ -307,7 +324,7 @@ void Viewer::smooth_left() {
 void Viewer::smooth_right() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
 		if (canvas->get_layout()->scroll_smooth(-smooth_scroll_delta, 0)) {
-			update();
+			canvas->update();
 		}
 	} else { // fallback
 		page_down();
@@ -316,43 +333,43 @@ void Viewer::smooth_right() {
 
 void Viewer::zoom_in() {
 	if (canvas->get_layout()->set_zoom(1)) {
-		update();
+		canvas->update();
 	}
 }
 
 void Viewer::zoom_out() {
 	if (canvas->get_layout()->set_zoom(-1)) {
-		update();
+		canvas->update();
 	}
 }
 
 void Viewer::reset_zoom() {
 	if (canvas->get_layout()->set_zoom(0, false)) {
-		update();
+		canvas->update();
 	}
 }
 
 void Viewer::columns_inc() {
 	if (canvas->get_layout()->set_columns(1)) {
-		update();
+		canvas->update();
 	}
 }
 
 void Viewer::columns_dec() {
 	if (canvas->get_layout()->set_columns(-1)) {
-		update();
+		canvas->update();
 	}
 }
 
 void Viewer::offset_inc() {
 	if (canvas->get_layout()->set_offset(1)) {
-		update();
+		canvas->update();
 	}
 }
 
 void Viewer::offset_dec() {
 	if (canvas->get_layout()->set_offset(-1)) {
-		update();
+		canvas->update();
 	}
 }
 
@@ -373,7 +390,7 @@ void Viewer::next_hit() {
 		int page = canvas->get_layout()->get_page();
 		if (canvas->get_layout()->advance_hit()) {
 			res->store_jump(page);
-			update();
+			canvas->update();
 		}
 	}
 }
@@ -383,7 +400,7 @@ void Viewer::previous_hit() {
 		int page = canvas->get_layout()->get_page();
 		if (canvas->get_layout()->advance_hit(false)) {
 			res->store_jump(page);
-			update();
+			canvas->update();
 		}
 	}
 }
@@ -393,7 +410,7 @@ void Viewer::next_invisible_hit() {
 		int page = canvas->get_layout()->get_page();
 		if (canvas->get_layout()->advance_invisible_hit()) {
 			res->store_jump(page);
-			update();
+			canvas->update();
 		}
 	}
 }
@@ -403,7 +420,7 @@ void Viewer::previous_invisible_hit() {
 		int page = canvas->get_layout()->get_page();
 		if (canvas->get_layout()->advance_invisible_hit(false)) {
 			res->store_jump(page);
-			update();
+			canvas->update();
 		}
 	}
 }
@@ -411,19 +428,24 @@ void Viewer::previous_invisible_hit() {
 void Viewer::rotate_left() {
 	res->rotate(-1);
 	canvas->get_layout()->rebuild();
-	update();
+	canvas->update();
 }
 
 void Viewer::rotate_right() {
 	res->rotate(1);
 	canvas->get_layout()->rebuild();
-	update();
+	canvas->update();
 }
 
 void Viewer::invert_colors() {
 	res->invert_colors();
-	update();
+	canvas->update();
 	beamer->update();
+}
+
+void Viewer::toggle_toc() {
+	toc->setVisible(!toc->isVisible());
+	toc->setFocus(Qt::OtherFocusReason); // only works if shown
 }
 
 void Viewer::update_info_widget() {
@@ -507,56 +529,44 @@ void Viewer::close_search() {
 }
 
 void Viewer::setup_keys(QWidget *base) {
-	add_action(base, "toggle_fullscreen", SLOT(toggle_fullscreen()), true);
-	add_action(base, "close_search", SLOT(close_search()));
-	add_action(base, "reload", SLOT(reload()));
-	add_action(base, "open", SLOT(open()));
-	add_action(base, "jump_back", SLOT(jump_back()));
-	add_action(base, "jump_forward", SLOT(jump_forward()));
-	add_action(base, "mark_jump", SLOT(mark_jump()));
+	add_action(base, "toggle_fullscreen", SLOT(toggle_fullscreen()), base);
+	add_action(base, "close_search", SLOT(close_search()), this);
+	add_action(base, "reload", SLOT(reload()), this);
+	add_action(base, "open", SLOT(open()), this);
+	add_action(base, "jump_back", SLOT(jump_back()), this);
+	add_action(base, "jump_forward", SLOT(jump_forward()), this);
+	add_action(base, "mark_jump", SLOT(mark_jump()), this);
 
-	add_action(base, "page_up", SLOT(page_up()));
-	add_action(base, "page_down", SLOT(page_down()));
-	add_action(base, "page_first", SLOT(page_first()));
-	add_action(base, "page_last", SLOT(page_last()));
-	add_action(base, "half_screen_up", SLOT(half_screen_up()));
-	add_action(base, "half_screen_down", SLOT(half_screen_down()));
-	add_action(base, "screen_up", SLOT(screen_up()));
-	add_action(base, "screen_down", SLOT(screen_down()));
-	add_action(base, "smooth_up", SLOT(smooth_up()));
-	add_action(base, "smooth_down", SLOT(smooth_down()));
-	add_action(base, "smooth_left", SLOT(smooth_left()));
-	add_action(base, "smooth_right", SLOT(smooth_right()));
-	add_action(base, "zoom_in", SLOT(zoom_in()));
-	add_action(base, "zoom_out", SLOT(zoom_out()));
-	add_action(base, "reset_zoom", SLOT(reset_zoom()));
-	add_action(base, "columns_inc", SLOT(columns_inc()));
-	add_action(base, "columns_dec", SLOT(columns_dec()));
-	add_action(base, "offset_inc", SLOT(offset_inc()));
-	add_action(base, "offset_dec", SLOT(offset_dec()));
-	add_action(base, "quit", SLOT(quit()));
-	add_action(base, "search", SLOT(search()));
-	add_action(base, "search_backward", SLOT(search_backward()));
-	add_action(base, "next_hit", SLOT(next_hit()));
-	add_action(base, "previous_hit", SLOT(previous_hit()));
-	add_action(base, "next_invisible_hit", SLOT(next_invisible_hit()));
-	add_action(base, "previous_invisible_hit", SLOT(previous_invisible_hit()));
-	add_action(base, "rotate_left", SLOT(rotate_left()));
-	add_action(base, "rotate_right", SLOT(rotate_right()));
-	add_action(base, "toggle_invert_colors", SLOT(invert_colors()));
-}
+	add_action(base, "page_up", SLOT(page_up()), this);
+	add_action(base, "page_down", SLOT(page_down()), this);
+	add_action(base, "page_first", SLOT(page_first()), this);
+	add_action(base, "page_last", SLOT(page_last()), this);
+	add_action(base, "half_screen_up", SLOT(half_screen_up()), this);
+	add_action(base, "half_screen_down", SLOT(half_screen_down()), this);
+	add_action(base, "screen_up", SLOT(screen_up()), this);
+	add_action(base, "screen_down", SLOT(screen_down()), this);
+	add_action(base, "smooth_up", SLOT(smooth_up()), this);
+	add_action(base, "smooth_down", SLOT(smooth_down()), this);
+	add_action(base, "smooth_left", SLOT(smooth_left()), this);
+	add_action(base, "smooth_right", SLOT(smooth_right()), this);
+	add_action(base, "zoom_in", SLOT(zoom_in()), this);
+	add_action(base, "zoom_out", SLOT(zoom_out()), this);
+	add_action(base, "reset_zoom", SLOT(reset_zoom()), this);
+	add_action(base, "columns_inc", SLOT(columns_inc()), this);
+	add_action(base, "columns_dec", SLOT(columns_dec()), this);
+	add_action(base, "offset_inc", SLOT(offset_inc()), this);
+	add_action(base, "offset_dec", SLOT(offset_dec()), this);
+	add_action(base, "quit", SLOT(quit()), this);
+	add_action(base, "search", SLOT(search()), this);
+	add_action(base, "search_backward", SLOT(search_backward()), this);
+	add_action(base, "next_hit", SLOT(next_hit()), this);
+	add_action(base, "previous_hit", SLOT(previous_hit()), this);
+	add_action(base, "next_invisible_hit", SLOT(next_invisible_hit()), this);
+	add_action(base, "previous_invisible_hit", SLOT(previous_invisible_hit()), this);
+	add_action(base, "rotate_left", SLOT(rotate_left()), this);
+	add_action(base, "rotate_right", SLOT(rotate_right()), this);
+	add_action(base, "toggle_invert_colors", SLOT(invert_colors()), this);
 
-void Viewer::add_action(QWidget *base, const char *action, const char *slot, bool base_is_target) {
-	QStringListIterator i(CFG::get_instance()->get_keys(action));
-	while (i.hasNext()) {
-		QAction *a = new QAction(base);
-		a->setShortcut(QKeySequence(i.next()));
-		base->addAction(a);
-		if (base_is_target) {
-			connect(a, SIGNAL(triggered()), base, slot);
-		} else {
-			connect(a, SIGNAL(triggered()), this, slot);
-		}
-	}
+	add_action(base, "toggle_toc", SLOT(toggle_toc()), this);
 }
 

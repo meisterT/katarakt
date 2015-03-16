@@ -160,8 +160,8 @@ bool PresentationLayout::advance_invisible_hit(bool forward) {
 	return true;
 }
 
-void PresentationLayout::view_hit() {
-	scroll_page(hit_page, false);
+bool PresentationLayout::view_hit() {
+	return scroll_page(hit_page, false);
 }
 
 bool PresentationLayout::click_mouse(int mx, int my) {

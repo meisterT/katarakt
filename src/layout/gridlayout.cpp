@@ -416,89 +416,100 @@ bool GridLayout::advance_invisible_hit(bool forward) {
 	QList<QRectF>::const_iterator it = hit_it;
 	do {
 		Layout::advance_hit(forward);
-		r = get_hit_rect();
+		r = get_target_rect(hit_page, *hit_it);
 		if (r.x() < 0 || r.y() < 0 ||
 				r.x() + r.width() >= width ||
 				r.y() + r.height() >= height) {
 			break; // TODO always breaks for boxes larger than the viewport
 		}
 	} while (it != hit_it);
-	view_hit(r);
+	view_rect(r);
 	return true;
 }
 
-void GridLayout::view_hit() {
-	QRect r = get_hit_rect();
-	view_hit(r);
+bool GridLayout::view_hit() {
+	QRect r = get_target_rect(hit_page, *hit_it);
+	return view_rect(r);
 }
 
-void GridLayout::view_hit(const QRect &r) {
+bool GridLayout::view_rect(const QRect &r) {
+	bool change = false;
+
 	// move view horizontally
 	if (r.width() <= width * (1 - 2 * search_padding)) {
 		if (r.x() < width * search_padding) {
-			scroll_smooth(width * search_padding - r.x(), 0);
+			change |= scroll_smooth(width * search_padding - r.x(), 0);
 		} else if (r.x() + r.width() > width * (1 - search_padding)) {
-			scroll_smooth(width * (1 - search_padding) - r.x() - r.width(), 0);
+			change |= scroll_smooth(width * (1 - search_padding) - r.x() - r.width(), 0);
 		}
 	} else {
 		int center = (width - r.width()) / 2;
 		if (center < 0) {
 			center = 0;
 		}
-		scroll_smooth(center - r.x(), 0);
+		change |= scroll_smooth(center - r.x(), 0);
 	}
 	// vertically
 	if (r.height() <= height * (1 - 2 * search_padding)) {
 		if (r.y() < height * search_padding) {
-			scroll_smooth(0, height * search_padding - r.y());
+			change |= scroll_smooth(0, height * search_padding - r.y());
 		} else if (r.y() + r.height() > height * (1 - search_padding)) {
-			scroll_smooth(0, height * (1 - search_padding) - r.y() - r.height());
+			change |= scroll_smooth(0, height * (1 - search_padding) - r.y() - r.height());
 		}
 	} else {
 		int center = (height - r.height()) / 2;
 		if (center < 0) {
 			center = 0;
 		}
-		scroll_smooth(0, center - r.y());
+		change |= scroll_smooth(0, center - r.y());
 	}
+	return change;
 }
 
+bool GridLayout::view_point(const QPoint &p) {
+	return scroll_smooth(-p.x(), -p.y());
+}
 
-QRect GridLayout::get_hit_rect() {
-	int hit_page_offset = hit_page + grid->get_offset();
-	// calculate offsets
-	int page_width = res->get_page_width(hit_page) * size;
-	int page_height = ROUND(res->get_page_height(hit_page) * size);
+QRect GridLayout::get_target_rect(int target_page, QRectF target_rect) const {
+	// get rect coordinates relative to the current view
+	QRectF rot = rotate_rect(target_rect, res->get_page_width(target_page),
+			res->get_page_height(target_page), res->get_rotation());
+	QPoint p = get_target_page_distance(target_page);
+	return transform_rect(rot, size, p.x(), p.y());
+}
 
-	int center_x = (grid->get_width(hit_page_offset % grid->get_column_count()) * size - page_width) / 2;
-	int center_y = (grid->get_height(hit_page_offset / grid->get_column_count()) * size - page_height) / 2;
+QPoint GridLayout::get_target_page_distance(int target_page) const {
+	int target_page_offset = target_page + grid->get_offset();
+	// calculate distances
+	int page_width = res->get_page_width(target_page) * size;
+	int page_height = ROUND(res->get_page_height(target_page) * size);
+
+	int center_x = (grid->get_width(target_page_offset % grid->get_column_count()) * size - page_width) / 2;
+	int center_y = (grid->get_height(target_page_offset / grid->get_column_count()) * size - page_height) / 2;
 
 	int wpos = off_x;
-	if (hit_page_offset % grid->get_column_count() > horizontal_page) {
-		for (int i = horizontal_page; i < hit_page_offset % grid->get_column_count(); i++) {
+	if (target_page_offset % grid->get_column_count() > horizontal_page) {
+		for (int i = horizontal_page; i < target_page_offset % grid->get_column_count(); i++) {
 			wpos += grid->get_width(i) * size + useless_gap;
 		}
 	} else {
-		for (int i = horizontal_page; i > hit_page_offset % grid->get_column_count(); i--) {
+		for (int i = horizontal_page; i > target_page_offset % grid->get_column_count(); i--) {
 			wpos -= grid->get_width(i) * size + useless_gap;
 		}
 	}
 	int hpos = off_y;
-	if (hit_page_offset > page) {
+	if (target_page_offset > page) {
 		for (int i = (page + grid->get_offset()) / grid->get_column_count();
-				i < hit_page_offset / grid->get_column_count(); i++) {
+				i < target_page_offset / grid->get_column_count(); i++) {
 			hpos += grid->get_height(i) * size + useless_gap;
 		}
 	} else {
 		for (int i = (page + grid->get_offset()) / grid->get_column_count();
-				i > hit_page_offset / grid->get_column_count(); i--) {
+				i > target_page_offset / grid->get_column_count(); i--) {
 			hpos -= grid->get_height(i) * size + useless_gap;
 		}
 	}
-	// get search rect coordinates relative to the current view
-	QRectF rot = rotate_rect(*hit_it, res->get_page_width(hit_page),
-			res->get_page_height(hit_page), res->get_rotation());
-	return transform_rect(rot, size, wpos + center_x, hpos + center_y);
+	return QPoint(wpos + center_x, hpos + center_y);
 }
 
 pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {
@@ -580,6 +591,25 @@ bool GridLayout::click_mouse(int mx, int my) {
 		}
 	}
 	return false;
+}
+
+bool GridLayout::goto_link_destination(Poppler::LinkDestination *link) {
+	// TODO variable margin?
+	// TODO use this interface for clicked links
+	int link_page = link->pageNumber() - 1;
+	float w = res->get_page_width(link_page);
+	float h = res->get_page_height(link_page);
+
+	const QPointF link_point = rotate_point(QPointF(link->left(), link->top()) * h, w, h, res->get_rotation());
+
+	QPoint p = get_target_page_distance(link_page);
+	if (link->isChangeLeft()) {
+		p.rx() += link_point.x() * size;
+	}
+	if (link->isChangeTop()) {
+		p.ry() += link_point.y() * size;
+	}
+	return view_point(p);
 }
 
 bool GridLayout::goto_page_at(int mx, int my) {

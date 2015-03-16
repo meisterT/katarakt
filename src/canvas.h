@@ -56,7 +56,6 @@ private slots:
 
 private:
 	void setup_keys(QWidget *base);
-	void add_action(QWidget *base, const char *action, const char *slot);
 
 	Viewer *viewer;
 	Layout *cur_layout;

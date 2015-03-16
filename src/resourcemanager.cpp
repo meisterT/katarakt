@@ -332,6 +332,10 @@ int ResourceManager::jump_forward() {
 	return *cur_jump_pos;
 }
 
+Poppler::LinkDestination *ResourceManager::resolve_link_destination(const QString &name) const {
+	return doc->linkDestination(name);
+}
+
 void ResourceManager::inotify_slot() {
 #ifdef __linux__
 	i_notifier->setEnabled(false);
@@ -444,6 +448,10 @@ const list<Poppler::LinkGoto *> *ResourceManager::get_links(int page) {
 	list<Poppler::LinkGoto *> *l = k_page[page].links;
 	link_mutex.unlock();
 	return l;
+}
+
+QDomDocument *ResourceManager::get_toc() const {
+	return doc->toc();
 }
 
 void ResourceManager::join_threads() {
