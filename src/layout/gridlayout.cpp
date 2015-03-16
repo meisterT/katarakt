@@ -347,7 +347,6 @@ void GridLayout::render(QPainter *painter) {
 			}
 
 			// draw search rects
-			// TODO rotate correctly
 			if (search_visible) {
 				painter->setPen(QColor(0, 0, 0));
 				painter->setBrush(QColor(255, 0, 0, 64));
@@ -513,7 +512,6 @@ QPoint GridLayout::get_target_page_distance(int target_page) const {
 }
 
 pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {
-	// TODO ignore gaps?
 	// find vertical page
 	int cur_page = page;
 	int grid_height;

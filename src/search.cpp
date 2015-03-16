@@ -67,7 +67,6 @@ void SearchWorker::run() {
 
 			// collect all occurrences
 			QList<QRectF> *hits = new QList<QRectF>;
-			// TODO option for case sensitive
 #if POPPLER_VERSION < POPPLER_VERSION_CHECK(0, 22, 0)
 			// old search interface, slow for many hits per page
 			double x = 0, y = 0, x2 = 0, y2 = 0;

@@ -82,16 +82,11 @@ void Grid::rebuild_cells() {
 	delete[] height;
 
 	// implicit ceil
-//	row_count = (res->get_page_count() + column_count - 1) / column_count;
 	row_count = (res->get_page_count() + column_count - 1 + page_offset) / column_count;
 
 	width = new float[column_count];
 	height = new float[row_count];
-	// this breaks
-//	memset(width, 0, sizeof(width));
-//	memset(height, 0, sizeof(height));
 
-	// TODO better solution?
 	for (int i = 0; i < column_count; i++) {
 		width[i] = -1.0f;
 	}
