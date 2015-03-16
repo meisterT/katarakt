@@ -19,3 +19,11 @@ SOURCES +=	src/main.cpp \
 			src/layout/layout.cpp src/layout/presentationlayout.cpp src/layout/gridlayout.cpp src/layout/presenterlayout.cpp \
 			src/viewer.cpp src/canvas.cpp src/resourcemanager.cpp src/grid.cpp src/search.cpp src/gotoline.cpp src/config.cpp src/download.cpp src/util.cpp src/kpage.cpp src/worker.cpp src/beamerwindow.cpp src/toc.cpp
 unix:LIBS += -lpoppler-qt4
+
+documentation.target = doc/katarakt.1
+documentation.commands = a2x -f manpage doc/katarakt.txt
+
+website.target = www/index.html
+website.commands = asciidoc www/index.txt
+
+QMAKE_EXTRA_TARGETS += documentation website
