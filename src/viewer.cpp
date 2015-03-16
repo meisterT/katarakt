@@ -146,7 +146,6 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 	setAttribute(Qt::WA_TranslucentBackground);
 	search_bar->setAutoFillBackground(true);
 	info_widget.setAutoFillBackground(true);
-
 }
 
 Viewer::~Viewer() {
@@ -178,6 +177,7 @@ void Viewer::reload(bool clamp) {
 
 	update_info_widget();
 
+	toc->init();
 	canvas->reload(clamp);
 }
 

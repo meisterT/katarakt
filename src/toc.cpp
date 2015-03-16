@@ -26,13 +26,19 @@ Toc::Toc(Viewer *v, QWidget *parent) :
 
 	setAlternatingRowColors(true);
 
+	connect(this, SIGNAL(itemActivated(QTreeWidgetItem *, int)), this, SLOT(goto_link(QTreeWidgetItem *, int)), Qt::UniqueConnection);
+
+	init();
+}
+
+void Toc::init() {
+	clear();
+
 	QDomDocument *contents = viewer->get_res()->get_toc();
 	if (contents != NULL) {
 		build(contents, invisibleRootItem());
 		delete contents;
 	}
-
-	connect(this, SIGNAL(itemActivated(QTreeWidgetItem *, int)), this, SLOT(goto_link(QTreeWidgetItem *, int)), Qt::UniqueConnection);
 }
 
 void Toc::goto_link(QTreeWidgetItem *item, int column) {

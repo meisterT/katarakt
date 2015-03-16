@@ -451,6 +451,9 @@ const list<Poppler::LinkGoto *> *ResourceManager::get_links(int page) {
 }
 
 QDomDocument *ResourceManager::get_toc() const {
+	if (doc == NULL) {
+		return NULL;
+	}
 	return doc->toc();
 }
 

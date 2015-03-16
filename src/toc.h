@@ -15,6 +15,8 @@ class Toc : public QTreeWidget {
 public:
 	Toc(Viewer *v, QWidget *parent = 0);
 
+	void init();
+
 public slots:
 	void goto_link(QTreeWidgetItem *item, int column);
 
