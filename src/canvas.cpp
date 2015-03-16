@@ -193,7 +193,14 @@ void Canvas::mousePressEvent(QMouseEvent *event) {
 }
 
 void Canvas::mouseReleaseEvent(QMouseEvent *event) {
-	if (click_link_button != Qt::NoButton && event->button() == click_link_button) {
+	if (event->button() == Qt::LeftButton && event->modifiers() == Qt::ControlModifier) {
+		// emit synctex signal
+
+		int page = cur_layout->get_page();
+		// FIXME Really get the page that was clicked on
+		// FIXME Get coordinates
+		emit synchronize_editor(page, 0, 0);
+	} else if (click_link_button != Qt::NoButton && event->button() == click_link_button) {
 		if (mx_down == event->x() && my_down == event->y()) {
 			int page = cur_layout->get_page();
 			pair<int, QPointF> location = cur_layout->get_location_at(mx_down, my_down);

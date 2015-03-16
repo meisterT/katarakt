@@ -43,6 +43,13 @@ protected:
 	void mouseDoubleClickEvent(QMouseEvent * event);
 	void resizeEvent(QResizeEvent *event);
 
+signals:
+	/**
+	 * Emitted when the user requests to see the source code of a
+	 * particular point on a particular page.
+	 */
+	void synchronize_editor(int page, int x, int y);
+
 private slots:
 	void page_rendered(int page);
 	void goto_page();

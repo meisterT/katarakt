@@ -7,6 +7,7 @@
 #include "resourcemanager.h"
 #include "viewer.h"
 #include "config.h"
+#include "dbus/dbus.h"
 
 using namespace std;
 
@@ -93,6 +94,9 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	katarakt.show();
+
+	// initialize dbus interfaces
+	dbus_init(&katarakt);
 
 	return app.exec();
 }
