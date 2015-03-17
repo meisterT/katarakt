@@ -45,10 +45,12 @@ void Toc::goto_link(QTreeWidgetItem *item, int column) {
 	if (column == -1) {
 		return;
 	}
+	int old_page = viewer->get_canvas()->get_layout()->get_page();
 	Poppler::LinkDestination *link = item->data(0, Qt::UserRole).value<Poppler::LinkDestination *>();
 	if (viewer->get_canvas()->get_layout()->goto_link_destination(link)) {
 		viewer->get_canvas()->update();
 	}
+	viewer->get_res()->store_jump(old_page);
 	viewer->get_canvas()->setFocus(Qt::OtherFocusReason);
 }
 
