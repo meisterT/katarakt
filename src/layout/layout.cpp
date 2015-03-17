@@ -117,14 +117,14 @@ bool Layout::update_search() {
 	}
 
 	// find the right page before/after the current one
-	map<int,QList<QRectF> *>::const_iterator it = hits->lower_bound(page);
+	map<int,QList<QRectF> *>::const_iterator it = hits->lower_bound(get_page());
 	bool forward = viewer->get_search_bar()->is_search_forward();
 	if (forward) {
 		if (it == hits->end()) {
 			it = hits->lower_bound(0);
 		}
 	} else {
-		if (it->first != page) {
+		if (it->first != get_page()) {
 			if (it == hits->begin()) {
 				it = hits->end();
 			}

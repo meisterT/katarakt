@@ -36,9 +36,11 @@ GridLayout::~GridLayout() {
 }
 
 int GridLayout::get_page() const {
-	int tmp = page - grid->get_offset();
+	int tmp = page + horizontal_page - grid->get_offset();
 	if (tmp < 0) {
 		tmp = 0;
+	} else if (tmp >= res->get_page_count()) {
+		tmp = res->get_page_count() - 1;
 	}
 	return tmp;
 }
@@ -121,7 +123,7 @@ void GridLayout::set_constants(bool clamp) {
 
 void GridLayout::activate(const Layout *old_layout) {
 	Layout::activate(old_layout);
-	page += grid->get_offset();
+	page += grid->get_offset() - horizontal_page;
 }
 
 void GridLayout::rebuild(bool clamp) {
