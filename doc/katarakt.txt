@@ -118,8 +118,10 @@ KEY BINDINGS
 
 VARIABLES
 ---------
-'int' *background_opacity* ::
-	223: Opacity of the black background in range [0..255]. Only works when using a compositor.
+'string' *background_color* ::
+	0xDF000000: Background color in ARGB Format. Alpha only works when using a compositor.
+'string' *background_color_fullscreen* ::
+	0xFF000000: Fullscreen background color in ARGB Format.
 'string' *default_layout* ::
 	presentation: The layout on startup. Possible values: 'presentation', 'grid'.
 'int' *mouse_wheel_factor* ::

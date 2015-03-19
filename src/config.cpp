@@ -8,7 +8,8 @@ CFG::CFG() :
 
 	settings.beginGroup("Settings");
 	// canvas options
-	defaults["background_opacity"] = 223;
+	defaults["background_color"] = "0xDF000000";
+	defaults["background_color_fullscreen"] = "0xFF000000";
 	defaults["default_layout"] = "presentation";
 	defaults["mouse_wheel_factor"] = 120; // (qt-)delta for turning the mouse wheel 1 click
 	defaults["smooth_scroll_delta"] = 30; // pixel scroll offset

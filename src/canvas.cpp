@@ -32,7 +32,24 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	// load config options
 	CFG *config = CFG::get_instance();
 
-	background_opacity = config->get_value("background_opacity").toInt();
+	{
+		bool ok;
+		unsigned int color = config->get_value("background_color").toString().toUInt(&ok, 16);
+		if (ok) {
+			background.setRgba(color);
+		} else {
+			cerr << "failed to parse background_color" << endl;
+		}
+	}
+	{
+		bool ok;
+		unsigned int color = config->get_value("background_color_fullscreen").toString().toUInt(&ok, 16);
+		if (ok) {
+			background_fullscreen.setRgba(color);
+		} else {
+			cerr << "failed to parse background_color_fullscreen" << endl;
+		}
+	}
 
 	presentation_layout = new PresentationLayout(viewer);
 	grid_layout = new GridLayout(viewer);
@@ -105,9 +122,9 @@ void Canvas::paintEvent(QPaintEvent * /*event*/) {
 #endif
 	QPainter painter(this);
 	if (viewer->isFullScreen()) {
-		painter.fillRect(rect(), QColor(0, 0, 0));
+		painter.fillRect(rect(), background_fullscreen);
 	} else {
-		painter.fillRect(rect(), QColor(0, 0, 0, background_opacity));
+		painter.fillRect(rect(), background);
 	}
 	cur_layout->render(&painter);
 

@@ -73,7 +73,8 @@ private:
 	bool valid;
 
 	// config options
-	int background_opacity;
+	QColor background;
+	QColor background_fullscreen;
 	int mouse_wheel_factor;
 };
 
