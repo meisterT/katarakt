@@ -21,9 +21,11 @@ SOURCES +=	src/main.cpp \
 unix:LIBS += -lpoppler-qt4
 
 documentation.target = doc/katarakt.1
+documentation.depends = doc/katarakt.txt
 documentation.commands = a2x -f manpage doc/katarakt.txt
 
 website.target = www/index.html
+website.depends = www/index.txt
 website.commands = asciidoc www/index.txt
 
 QMAKE_EXTRA_TARGETS += documentation website
