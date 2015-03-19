@@ -3,7 +3,6 @@
 #include <QFileInfo>
 #include <QAction>
 #include <QFileDialog>
-#include <QSplitter>
 #include <csignal>
 #include <cerrno>
 #include <unistd.h>
@@ -15,6 +14,7 @@
 #include "layout/layout.h"
 #include "beamerwindow.h"
 #include "toc.h"
+#include "splitter.h"
 #include "util.h"
 
 using namespace std;
@@ -76,7 +76,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 	beamer = new BeamerWindow(this);
 	setup_keys(beamer);
 
-	splitter = new QSplitter(this);
+	splitter = new Splitter(this);
 	toc = new Toc(this, splitter);
 
 	canvas = new Canvas(this, splitter); // beamer must already exist
@@ -86,7 +86,6 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 	}
 	res->connect_canvas();
 
-	splitter->setAutoFillBackground(true);
 	splitter->addWidget(toc);
 	splitter->addWidget(canvas);
 	splitter->setSizes(QList<int>() << (width() / 4) << (width() * 3 / 4)); // TODO config option
@@ -146,6 +145,13 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 	setAttribute(Qt::WA_TranslucentBackground);
 	search_bar->setAutoFillBackground(true);
 	info_widget.setAutoFillBackground(true);
+	toc->setAutoFillBackground(true);
+	// the splitter handle has to be opaque, canvas has to be transparent
+	// problem: either both are transparent or none is
+	// these functions don't help, the splitter handle is still transparent (depending on theme)
+//	splitter->handle(0)->setAttribute(Qt::WA_TranslucentBackground, false);
+//	splitter->handle(0)->setBackgroundRole(QPalette::Window);
+//	splitter->handle(0)->setAutoFillBackground(true);
 }
 
 Viewer::~Viewer() {

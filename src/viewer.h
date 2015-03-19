@@ -13,7 +13,7 @@ class ResourceManager;
 class Canvas;
 class SearchBar;
 class BeamerWindow;
-class QSplitter;
+class Splitter;
 class Toc;
 
 
@@ -77,10 +77,9 @@ private slots:
 private:
 	void update_info_widget();
 	void setup_keys(QWidget *base);
-//	void add_action(QWidget *base, const char *action, const char *slot, bool base_is_target = false);
 
 	ResourceManager *res;
-	QSplitter *splitter;
+	Splitter *splitter;
 	Toc *toc;
 	Canvas *canvas;
 	SearchBar *search_bar;
