@@ -486,7 +486,7 @@ QPoint GridLayout::get_target_page_distance(int target_page) const {
 	int page_height = ROUND(res->get_page_height(target_page) * size);
 
 	int center_x = (grid->get_width(target_page_offset % grid->get_column_count()) * size - page_width) / 2;
-	int center_y = (grid->get_height(target_page_offset / grid->get_column_count()) * size - page_height) / 2;
+	int center_y = (ROUND(grid->get_height(target_page_offset / grid->get_column_count()) * size) - page_height) / 2;
 
 	int wpos = off_x;
 	if (target_page_offset % grid->get_column_count() > horizontal_page) {
@@ -502,12 +502,12 @@ QPoint GridLayout::get_target_page_distance(int target_page) const {
 	if (target_page_offset > page) {
 		for (int i = (page + grid->get_offset()) / grid->get_column_count();
 				i < target_page_offset / grid->get_column_count(); i++) {
-			hpos += grid->get_height(i) * size + useless_gap;
+			hpos += ROUND(grid->get_height(i) * size) + useless_gap;
 		}
 	} else {
 		for (int i = (page + grid->get_offset()) / grid->get_column_count();
 				i > target_page_offset / grid->get_column_count(); i--) {
-			hpos -= grid->get_height(i) * size + useless_gap;
+			hpos -= ROUND(grid->get_height(i) * size) + useless_gap;
 		}
 	}
 	return QPoint(wpos + center_x, hpos + center_y);
@@ -573,40 +573,22 @@ pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {
 bool GridLayout::click_mouse(int mx, int my) {
 	pair<int,QPointF> page = get_page_at(mx, my);
 
-	// find matching box
-	const list<Poppler::LinkGoto *> *l = res->get_links(page.first);
-	if (l == NULL) {
-		return false;
-	}
-	for (list<Poppler::LinkGoto *>::const_iterator it = l->begin();
-			it != l->end(); ++it) {
-		QRectF r = (*it)->linkArea();
-		if (page.second.x() >= r.left() && page.second.x() < r.right()) {
-			if (page.second.y() < r.top() && page.second.y() >= r.bottom()) {
-				int new_page = (*it)->destination().pageNumber();
-				// TODO scroll_smooth() to the link position
-				scroll_page(new_page - 1, false);
-				return true;
-			}
-		}
-	}
-	return false;
+	return activate_link(page.first, page.second.x(), page.second.y());
 }
 
-bool GridLayout::goto_link_destination(Poppler::LinkDestination *link) {
+bool GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
 	// TODO variable margin?
-	// TODO use this interface for clicked links
-	int link_page = link->pageNumber() - 1;
+	int link_page = link.pageNumber() - 1;
 	float w = res->get_page_width(link_page);
 	float h = res->get_page_height(link_page);
 
-	const QPointF link_point = rotate_point(QPointF(link->left(), link->top()) * h, w, h, res->get_rotation());
+	const QPointF link_point = rotate_point(QPointF(link.left(), link.top()) * h, w, h, res->get_rotation());
 
 	QPoint p = get_target_page_distance(link_page);
-	if (link->isChangeLeft()) {
+	if (link.isChangeLeft()) {
 		p.rx() += link_point.x() * size;
 	}
-	if (link->isChangeTop()) {
+	if (link.isChangeTop()) {
 		p.ry() += link_point.y() * size;
 	}
 	return view_point(p);

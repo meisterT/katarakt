@@ -186,23 +186,7 @@ bool PresentationLayout::click_mouse(int mx, int my) {
 		x = 1 - tmp;
 	}
 
-	// find matching box
-	const list<Poppler::LinkGoto *> *l = res->get_links(page);
-	if (l == NULL) {
-		return false;
-	}
-	for (list<Poppler::LinkGoto *>::const_iterator it = l->begin();
-			it != l->end(); ++it) {
-		QRectF r = (*it)->linkArea();
-		if (x >= r.left() && x < r.right()) {
-			if (y < r.top() && y >= r.bottom()) {
-				int new_page = (*it)->destination().pageNumber();
-				scroll_page(new_page - 1, false);
-				return true;
-			}
-		}
-	}
-	return false;
+	return activate_link(page, x, y);
 }
 
 bool PresentationLayout::page_visible(int p) const {

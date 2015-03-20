@@ -13,9 +13,8 @@ KPage::KPage() :
 
 KPage::~KPage() {
 	if (links != NULL) {
-		for (list<Poppler::LinkGoto *>::iterator it = links->begin();
-				it != links->end(); ++it) {
-			delete *it;
+		Q_FOREACH(Poppler::Link *l, *links) {
+			delete l;
 		}
 	}
 	delete links;

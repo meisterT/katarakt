@@ -30,7 +30,7 @@ public:
 	bool advance_invisible_hit(bool forward = true);
 
 	bool click_mouse(int mx, int my);
-	bool goto_link_destination(Poppler::LinkDestination *link);
+	bool goto_link_destination(const Poppler::LinkDestination &link);
 	bool goto_page_at(int mx, int my);
 
 	bool page_visible(int p) const;

@@ -120,17 +120,12 @@ void Worker::run() {
 		if (res->k_page[page].links == NULL) {
 			res->link_mutex.unlock();
 
-			list<Poppler::LinkGoto *> *lg = new list<Poppler::LinkGoto *>;
-			Q_FOREACH(Poppler::Link *l, p->links()) {
-				if (l->linkType() == Poppler::Link::Goto) {
-					lg->push_back(static_cast<Poppler::LinkGoto *>(l));
-				} else {
-					delete l;
-				}
-			}
+			QList<Poppler::Link *> *links = new QList<Poppler::Link *>;
+			QList<Poppler::Link *> l = p->links();
+			links->swap(l);
 
 			res->link_mutex.lock();
-			res->k_page[page].links = lg;
+			res->k_page[page].links = links;
 		}
 		res->link_mutex.unlock();
 

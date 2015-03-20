@@ -1,5 +1,7 @@
 #include <iostream>
 #include <QImage>
+#include <QDesktopServices>
+#include <QUrl>
 #include "layout.h"
 #include "../viewer.h"
 #include "../resourcemanager.h"
@@ -186,8 +188,8 @@ bool Layout::click_mouse(int /*mx*/, int /*my*/) {
 	return false;
 }
 
-bool Layout::goto_link_destination(Poppler::LinkDestination *link) {
-	return scroll_page(link->pageNumber() - 1, false);
+bool Layout::goto_link_destination(const Poppler::LinkDestination &link) {
+	return scroll_page(link.pageNumber() - 1, false);
 }
 
 bool Layout::goto_page_at(int /*mx*/, int /*my*/) {
@@ -197,3 +199,40 @@ bool Layout::goto_page_at(int /*mx*/, int /*my*/) {
 bool Layout::get_search_visible() const {
 	return search_visible;
 }
+
+bool Layout::activate_link(int page, float x, float y) {
+	// find matching box
+	const QList<Poppler::Link *> *links = res->get_links(page);
+	if (links == NULL) {
+		return false;
+	}
+	Q_FOREACH(Poppler::Link *l, *links) {
+		QRectF r = l->linkArea();
+		if (x >= r.left() && x < r.right()) {
+			if (y < r.top() && y >= r.bottom()) {
+				switch (l->linkType()) {
+					case Poppler::Link::Goto: {
+						Poppler::LinkGoto *link = static_cast<Poppler::LinkGoto *>(l);
+						// TODO support links to other files
+						return goto_link_destination(link->destination());
+					}
+					case Poppler::Link::Browse: {
+						Poppler::LinkBrowse *link = static_cast<Poppler::LinkBrowse *>(l);
+						QDesktopServices::openUrl(QUrl(link->url()));
+						break;
+					}
+					case Poppler::Link::Execute:
+					case Poppler::Link::Action:
+					case Poppler::Link::Sound:
+					case Poppler::Link::Movie:
+					case Poppler::Link::Rendition:
+					case Poppler::Link::JavaScript:
+					case Poppler::Link::None:
+						cerr << "link type not implemented (yet?)" << endl;
+				}
+			}
+		}
+	}
+	return false;
+}
+

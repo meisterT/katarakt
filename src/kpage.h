@@ -23,7 +23,7 @@ private:
 	QImage img[3];
 	QImage thumbnail;
 //	QString label;
-	std::list<Poppler::LinkGoto *> *links;
+	QList<Poppler::Link *> *links;
 	QMutex mutex;
 	int status[3];
 	char rotation[3];

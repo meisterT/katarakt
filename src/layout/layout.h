@@ -3,6 +3,7 @@
 
 #include <QPainter>
 #include <QList>
+#include <poppler/qt4/poppler-qt4.h>
 #include <map>
 
 
@@ -38,7 +39,7 @@ public:
 	virtual bool advance_invisible_hit(bool forward = true) = 0;
 
 	virtual bool click_mouse(int mx, int my);
-	virtual bool goto_link_destination(Poppler::LinkDestination *link);
+	virtual bool goto_link_destination(const Poppler::LinkDestination &link);
 	virtual bool goto_page_at(int mx, int my);
 
 	virtual bool get_search_visible() const;
@@ -46,6 +47,7 @@ public:
 
 protected:
 	virtual bool view_hit() = 0;
+	virtual bool activate_link(int page, float x, float y);
 
 	Viewer *viewer;
 	ResourceManager *res;

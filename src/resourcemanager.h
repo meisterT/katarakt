@@ -45,7 +45,7 @@ public:
 	float get_min_aspect() const;
 	float get_max_aspect() const;
 	int get_page_count() const;
-	const std::list<Poppler::LinkGoto *> *get_links(int page);
+	const QList<Poppler::Link *> *get_links(int page);
 	QDomDocument *get_toc() const;
 
 	int get_rotation() const;

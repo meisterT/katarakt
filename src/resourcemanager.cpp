@@ -440,12 +440,12 @@ int ResourceManager::get_page_count() const {
 	return page_count;
 }
 
-const list<Poppler::LinkGoto *> *ResourceManager::get_links(int page) {
+const QList<Poppler::Link *> *ResourceManager::get_links(int page) {
 	if (page < 0 || page >= get_page_count()) {
 		return NULL;
 	}
 	link_mutex.lock();
-	list<Poppler::LinkGoto *> *l = k_page[page].links;
+	QList<Poppler::Link *> *l = k_page[page].links;
 	link_mutex.unlock();
 	return l;
 }
