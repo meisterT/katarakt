@@ -26,6 +26,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 		QWidget(parent),
 		res(NULL),
 		splitter(NULL),
+		toc(NULL),
 		canvas(NULL),
 		search_bar(NULL),
 		layout(NULL),
