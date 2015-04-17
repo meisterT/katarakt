@@ -451,7 +451,7 @@ const QList<Poppler::Link *> *ResourceManager::get_links(int page) {
 }
 
 QDomDocument *ResourceManager::get_toc() const {
-	if (doc == NULL) {
+	if (doc == NULL || doc->isLocked()) {
 		return NULL;
 	}
 	return doc->toc();
