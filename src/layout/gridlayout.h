@@ -29,7 +29,7 @@ public:
 	bool advance_hit(bool forward = true);
 	bool advance_invisible_hit(bool forward = true);
 
-	bool click_mouse(int mx, int my);
+	std::pair<int, QPointF> get_location_at(int pixel_x, int pixel_y);
 	bool goto_link_destination(const Poppler::LinkDestination &link);
 	bool goto_page_at(int mx, int my);
 
@@ -43,7 +43,6 @@ private:
 	bool view_point(const QPoint &p);
 	QRect get_target_rect(int target_page, QRectF target_rect) const;
 	QPoint get_target_page_distance(int target_page) const;
-	std::pair<int,QPointF> get_page_at(int x, int y);
 
 	Grid *grid;
 

@@ -1,5 +1,7 @@
 #include <iostream>
 #include <QImage>
+#include <QApplication>
+#include <set>
 #include "presentationlayout.h"
 #include "layout.h"
 #include "../util.h"
@@ -80,28 +82,13 @@ void PresentationLayout::render(QPainter *painter) {
 	}
 
 	// draw search rects
+	float factor = p.width() / res->get_page_width(page);
 	if (search_visible) {
-		painter->setPen(QColor(0, 0, 0));
-		painter->setBrush(QColor(255, 0, 0, 64));
-		float w = res->get_page_width(page);
-		float h = res->get_page_height(page);
-		float factor = p.width() / w;
-
-		const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
-		map<int,QList<QRectF> *>::const_iterator it = hits->find(page);
-		if (it != hits->end()) {
-			for (QList<QRectF>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
-				if (i2 == hit_it) {
-					painter->setBrush(QColor(0, 255, 0, 64));
-				}
-				QRectF rot = rotate_rect(*i2, w, h, res->get_rotation());
-				painter->drawRect(transform_rect(rot, factor, p.x(), p.y()));
-				if (i2 == hit_it) {
-					painter->setBrush(QColor(255, 0, 0, 64));
-				}
-			}
-		}
+		render_search_rects(painter, page, p.topLeft(), factor);
 	}
+
+	// draw text selection
+	render_selection(painter, page, p.topLeft(), factor);
 
 	// draw goto link rects
 /*	const list<Poppler::LinkGoto *> *l = res->get_links(page);
@@ -164,12 +151,12 @@ bool PresentationLayout::view_hit() {
 	return scroll_page(hit_page, false);
 }
 
-bool PresentationLayout::click_mouse(int mx, int my) {
+pair<int, QPointF> PresentationLayout::get_location_at(int px, int py) {
 	const QRect p = calculate_placement(page);
 
 	// transform mouse coordinates
-	float x = (mx - p.x()) / (float) p.width();
-	float y = (my - p.y()) / (float) p.height();
+	float x = (px - p.x()) / (float) p.width();
+	float y = (py - p.y()) / (float) p.height();
 
 	// apply rotation
 	int rotation = res->get_rotation();
@@ -186,7 +173,7 @@ bool PresentationLayout::click_mouse(int mx, int my) {
 		x = 1 - tmp;
 	}
 
-	return activate_link(page, x, y);
+	return make_pair(page, QPointF(x, y));
 }
 
 bool PresentationLayout::page_visible(int p) const {

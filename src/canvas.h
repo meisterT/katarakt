@@ -7,6 +7,7 @@
 #include <QWheelEvent>
 #include <QResizeEvent>
 #include <QList>
+#include <QTimer>
 #include <sys/socket.h>
 
 
@@ -54,6 +55,8 @@ private slots:
 	void toggle_overlay();
 	void focus_goto();
 
+	void disable_triple_click();
+
 private:
 	void setup_keys(QWidget *base);
 
@@ -67,6 +70,8 @@ private:
 
 	int mx, my;
 	int mx_down, my_down;
+	bool triple_click_possible;
+	QTimer scroll_timer;
 
 	bool draw_overlay;
 

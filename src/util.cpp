@@ -29,6 +29,13 @@ const QPointF rotate_point(const QPointF &point, float w, float h, int rotation)
 }
 
 QRect transform_rect(const QRectF &rect, float scale, int off_x, int off_y) {
+	return QRect(rect.x() * scale + off_x,
+			rect.y() * scale + off_y,
+			rect.width() * scale,
+			rect.height() * scale);
+}
+
+QRect transform_rect_expand(const QRectF &rect, float scale, int off_x, int off_y) {
 	static int rect_expansion = CFG::get_instance()->get_value("rect_expansion").toInt();
 	return QRect(rect.x() * scale + off_x - rect_expansion,
 			rect.y() * scale + off_y - rect_expansion,

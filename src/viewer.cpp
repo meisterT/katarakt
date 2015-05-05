@@ -185,6 +185,7 @@ void Viewer::reload(bool clamp) {
 	update_info_widget();
 
 	toc->init();
+	canvas->get_layout()->clear_selection();
 	canvas->reload(clamp);
 }
 

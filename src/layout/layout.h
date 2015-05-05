@@ -5,6 +5,7 @@
 #include <QList>
 #include <poppler/qt4/poppler-qt4.h>
 #include <map>
+#include "../selection.h"
 
 
 class Viewer;
@@ -38,16 +39,23 @@ public:
 	virtual bool advance_hit(bool forward = true);
 	virtual bool advance_invisible_hit(bool forward = true) = 0;
 
-	virtual bool click_mouse(int mx, int my);
+	virtual std::pair<int, QPointF> get_location_at(int px, int py) = 0;
 	virtual bool goto_link_destination(const Poppler::LinkDestination &link);
 	virtual bool goto_page_at(int mx, int my);
+
+	virtual bool activate_link(int page, float x, float y);
 
 	virtual bool get_search_visible() const;
 	virtual bool page_visible(int p) const = 0;
 
+	bool select(int px, int py, enum Selection::Mode mode);
+	void copy_selection_text();
+	void clear_selection();
+
 protected:
+	void render_search_rects(QPainter *painter, int cur_page, QPoint offset, float size);
+	void render_selection(QPainter *painter, int cur_page, QPoint offset, float size);
 	virtual bool view_hit() = 0;
-	virtual bool activate_link(int page, float x, float y);
 
 	Viewer *viewer;
 	ResourceManager *res;
@@ -67,6 +75,8 @@ protected:
 	float zoom_factor;
 	int prefetch_count;
 	float search_padding;
+
+	MouseSelection selection;
 };
 
 

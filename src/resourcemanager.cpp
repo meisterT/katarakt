@@ -15,6 +15,7 @@
 #include "worker.h"
 #include "viewer.h"
 #include "beamerwindow.h"
+#include "selection.h"
 #include "layout/layout.h"
 
 using namespace std;
@@ -389,47 +390,47 @@ void ResourceManager::enqueue(int page, int width, int index) {
 //	return k_page[page].label;
 //}
 
-float ResourceManager::get_page_width(int page) const {
+float ResourceManager::get_page_width(int page, bool rotated) const {
 	if (page < 0 || page >= get_page_count()) {
 		return -1;
 	}
-	if (rotation == 0 || rotation == 2) {
+	if (!rotated || rotation == 0 || rotation == 2) {
 		return k_page[page].width;
 	}
 	// swap if rotated by 90 or 270 degrees
 	return k_page[page].height;
 }
 
-float ResourceManager::get_page_height(int page) const {
+float ResourceManager::get_page_height(int page, bool rotated) const {
 	if (page < 0 || page >= get_page_count()) {
 		return -1;
 	}
-	if (rotation == 0 || rotation == 2) {
+	if (!rotated || rotation == 0 || rotation == 2) {
 		return k_page[page].height;
 	}
 	return k_page[page].width;
 }
 
-float ResourceManager::get_page_aspect(int page) const {
+float ResourceManager::get_page_aspect(int page, bool rotated) const {
 	if (page < 0 || page >= get_page_count()) {
 		return -1;
 	}
-	if (rotation == 0 || rotation == 2) {
+	if (!rotated || rotation == 0 || rotation == 2) {
 		return k_page[page].width / k_page[page].height;
 	}
 	return k_page[page].height / k_page[page].width;
 }
 
-float ResourceManager::get_min_aspect() const {
-	if (rotation == 0 || rotation == 2) {
+float ResourceManager::get_min_aspect(bool rotated) const {
+	if (!rotated || rotation == 0 || rotation == 2) {
 		return min_aspect;
 	} else {
 		return 1.0f / max_aspect;
 	}
 }
 
-float ResourceManager::get_max_aspect() const {
-	if (rotation == 0 || rotation == 2) {
+float ResourceManager::get_max_aspect(bool rotated) const {
+	if (!rotated || rotation == 0 || rotation == 2) {
 		return max_aspect;
 	} else {
 		return 1.0f / min_aspect;
@@ -448,6 +449,16 @@ const QList<Poppler::Link *> *ResourceManager::get_links(int page) {
 	QList<Poppler::Link *> *l = k_page[page].links;
 	link_mutex.unlock();
 	return l;
+}
+
+const QList<SelectionLine *> *ResourceManager::get_text(int page) {
+	if (page < 0 || page >= get_page_count()) {
+		return NULL;
+	}
+	link_mutex.lock();
+	QList<SelectionLine *> *t = k_page[page].text;
+	link_mutex.unlock();
+	return t;
 }
 
 QDomDocument *ResourceManager::get_toc() const {

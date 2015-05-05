@@ -1,4 +1,5 @@
 #include "presenterlayout.h"
+#include <QApplication>
 #include "../resourcemanager.h"
 #include "../util.h"
 #include "../kpage.h"
@@ -169,30 +170,17 @@ void PresenterLayout::render(QPainter *painter) {
 		}
 	}
 
-	// draw search rects
 	for (int i = 0; i < 2; i++) {
-		if (search_visible) {
-			painter->setPen(QColor(0, 0, 0));
-			painter->setBrush(QColor(255, 0, 0, 64));
-			float w_ = res->get_page_width(page + i);
-			float h_ = res->get_page_height(page + i);
-			float factor = page_width[i] / w_;
 
-			const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
-			map<int,QList<QRectF> *>::const_iterator it = hits->find(page + i);
-			if (it != hits->end()) {
-				for (QList<QRectF>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
-					if (i2 == hit_it) {
-						painter->setBrush(QColor(0, 255, 0, 64));
-					}
-					QRectF rot = rotate_rect(*i2, w_, h_, res->get_rotation());
-					painter->drawRect(transform_rect(rot, factor, center_x[i], center_y[i]));
-					if (i2 == hit_it) {
-						painter->setBrush(QColor(255, 0, 0, 64));
-					}
-				}
-			}
+		// draw search rects
+		QPoint offset(center_x[i], center_y[i]);
+		float factor = page_width[i] / res->get_page_width(page + i);
+		if (search_visible) {
+			render_search_rects(painter, page + i, offset, factor);
 		}
+
+		// draw text selection
+		render_selection(painter, page + i, offset, factor);
 	}
 
 	// prefetch
@@ -239,7 +227,7 @@ bool PresenterLayout::view_hit() {
 	return scroll_page(hit_page, false);
 }
 
-bool PresenterLayout::click_mouse(int mx, int my) {
+pair<int, QPointF> PresenterLayout::get_location_at(int px, int py) {
 	// TODO duplicate code
 	int page_width[2], page_height[2];
 	int center_x[2] = {0, 0};
@@ -278,10 +266,12 @@ bool PresenterLayout::click_mouse(int mx, int my) {
 		center_y[1] = height - page_height[1];
 	}
 
-	for (int i = 0; i < 2; i++) {
+	int i;
+	float x, y;
+	for (i = 0; i < 2; i++) {
 		// transform mouse coordinates
-		float x = (mx - center_x[i]) / (float) page_width[i];
-		float y = (my - center_y[i]) / (float) page_height[i];
+		x = (px - center_x[i]) / (float) page_width[i];
+		y = (py - center_y[i]) / (float) page_height[i];
 
 		// apply rotation
 		int rotation = res->get_rotation();
@@ -299,15 +289,14 @@ bool PresenterLayout::click_mouse(int mx, int my) {
 		}
 
 		// check bounds
-		if (x < 0.0f || x > 1.0f || y < 0.0f || y > 1.0f) {
-			continue;
-		}
-
-		if (activate_link(page + i, x, y)) {
-			return true;
+		if (x >= 0.0f && x <= 1.0f && y >= 0.0f && y <= 1.0f) {
+			break;
 		}
 	}
-	return false;
+	if (i == 2) {
+		i = 1;
+	}
+	return make_pair(page + i, QPointF(x, y));
 }
 
 bool PresenterLayout::page_visible(int p) const {

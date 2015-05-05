@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QTimer>
 #include <iostream>
 #include "canvas.h"
 #include "viewer.h"
@@ -25,6 +26,7 @@ using namespace std;
 Canvas::Canvas(Viewer *v, QWidget *parent) :
 		QWidget(parent),
 		viewer(v),
+		triple_click_possible(false),
 		draw_overlay(true),
 		valid(true) {
 	setFocusPolicy(Qt::StrongFocus);
@@ -146,11 +148,20 @@ void Canvas::paintEvent(QPaintEvent * /*event*/) {
 }
 
 void Canvas::mousePressEvent(QMouseEvent *event) {
+	// TODO make mouse buttons configurable
 	if (event->button() == Qt::LeftButton) {
 		mx = event->x();
 		my = event->y();
 		mx_down = mx;
 		my_down = my;
+	} else if (event->button() == Qt::RightButton) {
+		if (triple_click_possible) {
+			cur_layout->select(event->x(), event->y(), Selection::StartLine);
+			triple_click_possible = false;
+		} else {
+			cur_layout->select(event->x(), event->y(), Selection::Start);
+		}
+		update();
 	}
 }
 
@@ -158,11 +169,14 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 	if (event->button() == Qt::LeftButton) {
 		if (mx_down == event->x() && my_down == event->y()) {
 			int page = cur_layout->get_page();
-			if (cur_layout->click_mouse(mx_down, my_down)) {
+			pair<int, QPointF> location = cur_layout->get_location_at(mx_down, my_down);
+			if (cur_layout->activate_link(location.first, location.second.x(), location.second.y())) {
 				viewer->get_res()->store_jump(page); // store old position if a clicked link moved the view
 				update();
 			}
 		}
+	} else if (event->button() == Qt::RightButton) {
+		cur_layout->copy_selection_text();
 	}
 }
 
@@ -173,6 +187,34 @@ void Canvas::mouseMoveEvent(QMouseEvent *event) {
 		}
 		mx = event->x();
 		my = event->y();
+	} else if (event->buttons() & Qt::RightButton) {
+		if (cur_layout->select(event->x(), event->y(), Selection::End)) {
+			update();
+		}
+
+		// scrolling by dragging the selection
+		// TODO only scrolls when the mouse is moved
+		int margin = min(10, min(width() / 10, height() / 10));
+		if (event->x() < margin) {
+			if (cur_layout->scroll_smooth(min(margin - event->x(), margin) * 2, 0)) {
+				update();
+			}
+		}
+		if (event->x() > width() - margin) {
+			if (cur_layout->scroll_smooth(max(width() - event->x() - margin, -margin) * 2, 0)) {
+				update();
+			}
+		}
+		if (event->y() < margin) {
+			if (cur_layout->scroll_smooth(0, min(margin - event->y(), margin) * 2)) {
+				update();
+			}
+		}
+		if (event->y() > height() - margin) {
+			if (cur_layout->scroll_smooth(0, max(height() - event->y() - margin, -margin) * 2)) {
+				update();
+			}
+		}
 	}
 }
 
@@ -211,6 +253,14 @@ void Canvas::mouseDoubleClickEvent(QMouseEvent * event) {
 	if (event->button() == Qt::LeftButton) {
 		cur_layout->goto_page_at(event->x(), event->y());
 		update();
+	} else if (event->button() == Qt::RightButton) {
+		// enable triple click, disable after timeout
+		triple_click_possible = true;
+		QTimer::singleShot(QApplication::doubleClickInterval(), this, SLOT(disable_triple_click()));
+
+		if (cur_layout->select(event->x(), event->y(), Selection::StartWord)) {
+			update();
+		}
 	}
 }
 
@@ -267,6 +317,10 @@ void Canvas::focus_goto() {
 	goto_line->setText(QString::number(cur_layout->get_page() + 1));
 	goto_line->selectAll();
 	goto_line->move(0, height() - goto_line->height()); // TODO this is only necessary because goto_line->height() is wrong in the beginning
+}
+
+void Canvas::disable_triple_click() {
+	triple_click_possible = false;
 }
 
 

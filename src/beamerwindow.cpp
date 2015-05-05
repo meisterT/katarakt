@@ -68,11 +68,13 @@ void BeamerWindow::mouseReleaseEvent(QMouseEvent *event) {
 	if (event->button() == Qt::LeftButton) {
 		if (mx_down == event->x() && my_down == event->y()) {
 			int page = layout->get_page();
-			if (layout->click_mouse(mx_down, my_down)) {
+			pair<int, QPointF> location = layout->get_location_at(mx_down, my_down);
+			if (layout->activate_link(location.first, location.second.x(), location.second.y())) {
 				if (viewer->get_canvas()->get_layout()->scroll_page(layout->get_page(), false)) {
 					viewer->get_canvas()->update();
 				}
 				viewer->get_res()->store_jump(page); // store old position if a clicked link moved the view
+				update();
 			}
 		}
 	}

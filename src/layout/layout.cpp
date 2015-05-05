@@ -2,6 +2,8 @@
 #include <QImage>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QClipboard>
+#include <QApplication>
 #include "layout.h"
 #include "../viewer.h"
 #include "../resourcemanager.h"
@@ -9,6 +11,7 @@
 #include "../search.h"
 #include "../config.h"
 #include "../beamerwindow.h"
+#include "../util.h"
 
 using namespace std;
 
@@ -46,6 +49,8 @@ void Layout::activate(const Layout *old_layout) {
 	search_visible = old_layout->search_visible;
 	hit_page = old_layout->hit_page;
 	hit_it = old_layout->hit_it;
+
+	selection = old_layout->selection;
 }
 
 void Layout::rebuild(bool clamp) {
@@ -184,10 +189,6 @@ bool Layout::advance_hit(bool forward) {
 	return true;
 }
 
-bool Layout::click_mouse(int /*mx*/, int /*my*/) {
-	return false;
-}
-
 bool Layout::goto_link_destination(const Poppler::LinkDestination &link) {
 	return scroll_page(link.pageNumber() - 1, false);
 }
@@ -198,6 +199,93 @@ bool Layout::goto_page_at(int /*mx*/, int /*my*/) {
 
 bool Layout::get_search_visible() const {
 	return search_visible;
+}
+
+bool Layout::select(int px, int py, enum Selection::Mode mode) {
+	pair<int, QPointF> loc = get_location_at(px, py);
+	loc.second.rx() *= res->get_page_width(loc.first, false);
+	loc.second.ry() *= res->get_page_height(loc.first, false);
+
+	const QList<SelectionLine *> *text = res->get_text(loc.first);
+	selection.set_cursor(text, loc, mode);
+	return true; // TODO visible? change?
+}
+
+void Layout::copy_selection_text() {
+	QString text;
+	if (selection.is_active()) {
+		Cursor from = selection.get_cursor(true);
+		Cursor to = selection.get_cursor(false);
+		for (int i = from.page; i <= to.page; i++) {
+			text += selection.get_selection_text(i, res->get_text(i));
+		}
+	}
+	QClipboard *clipboard = QApplication::clipboard();
+	clipboard->setText(text, QClipboard::Selection);
+	// TODO copy to clipboard on Ctrl+C
+}
+
+void Layout::clear_selection() {
+	selection.deactivate();
+
+	QClipboard *clipboard = QApplication::clipboard();
+	clipboard->setText("", QClipboard::Selection);
+}
+
+void Layout::render_search_rects(QPainter *painter, int cur_page, QPoint offset, float size) {
+	painter->setPen(QColor(0, 0, 0));
+	painter->setBrush(QColor(255, 0, 0, 64));
+	float w = res->get_page_width(cur_page);
+	float h = res->get_page_height(cur_page);
+
+	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
+	map<int,QList<QRectF> *>::const_iterator it = hits->find(cur_page);
+	if (it != hits->end()) {
+		for (QList<QRectF>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
+			if (i2 == hit_it) {
+				painter->setBrush(QColor(0, 255, 0, 64));
+			}
+			QRectF rot = rotate_rect(*i2, w, h, res->get_rotation());
+			painter->drawRect(transform_rect_expand(rot, size, offset.x(), offset.y()));
+			if (i2 == hit_it) {
+				painter->setBrush(QColor(255, 0, 0, 64));
+			}
+		}
+	}
+}
+
+void Layout::render_selection(QPainter *painter, int cur_page, QPoint offset, float size) {
+	float w = res->get_page_width(cur_page);
+	float h = res->get_page_height(cur_page);
+	painter->setPen(QPen(Qt::NoPen));
+	QColor color = QApplication::palette().highlight().color();
+	color.setAlpha(96);
+	painter->setBrush(color);
+
+	const QList<SelectionLine *> *text = res->get_text(cur_page);
+	if (text != NULL && text->size() != 0 && selection.is_active()) {
+		Cursor from = selection.get_cursor(true);
+		Cursor to = selection.get_cursor(false);
+		if (from.page <= cur_page && to.page >= cur_page) {
+			if (from.page < cur_page) {
+				from.line = 0;
+			}
+			if (to.page > cur_page) {
+				to.line = text->size() - 1;
+			}
+			for (int i = from.line; i <= to.line; i++) {
+				QRectF rect = text->at(i)->get_bbox();
+				if (from.page == cur_page && from.line == i) {
+					rect.setLeft(from.x);
+				}
+				if (to.page == cur_page && to.line == i) {
+					rect.setRight(to.x);
+				}
+				QRectF bb = rotate_rect(rect, w, h, res->get_rotation());;
+				painter->drawRect(transform_rect(bb, size, offset.x(), offset.y()));
+			}
+		}
+	}
 }
 
 bool Layout::activate_link(int page, float x, float y) {

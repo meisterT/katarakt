@@ -17,7 +17,7 @@ public:
 	bool advance_hit(bool forward = true);
 	bool advance_invisible_hit(bool forward = true);
 
-	bool click_mouse(int mx, int my);
+	std::pair<int, QPointF> get_location_at(int px, int py);
 
 	bool page_visible(int p) const;
 

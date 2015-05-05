@@ -17,6 +17,7 @@ const QRectF rotate_rect(const QRectF &rect, float w, float h, int rotation);
 const QPointF rotate_point(const QPointF &point, float w, float h, int rotation);
 
 QRect transform_rect(const QRectF &rect, float scale, int off_x, int off_y);
+QRect transform_rect_expand(const QRectF &rect, float scale, int off_x, int off_y);
 
 void add_action(QWidget *base, const char *action, const char *slot, QWidget *receiver);
 

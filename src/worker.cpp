@@ -2,6 +2,7 @@
 #include "resourcemanager.h"
 #include "kpage.h"
 #include "canvas.h"
+#include "selection.h"
 #include <list>
 #include <iostream>
 #include <poppler/qt4/poppler-qt4.h>
@@ -126,6 +127,70 @@ void Worker::run() {
 
 			res->link_mutex.lock();
 			res->k_page[page].links = links;
+		}
+		if (res->k_page[page].text == NULL) {
+			res->link_mutex.unlock();
+
+			QList<Poppler::TextBox *> text = p->textList();
+			// assign boxes to lines
+			// make single parts from chained boxes
+			set<Poppler::TextBox *> used;
+			QList<SelectionPart *> selection_parts;
+			Q_FOREACH(Poppler::TextBox *box, text) {
+				if (used.find(box) != used.end()) {
+					continue;
+				}
+				used.insert(box);
+
+				SelectionPart *p = new SelectionPart(box);
+				selection_parts.push_back(p);
+				Poppler::TextBox *next = box->nextWord();
+				while (next != NULL) {
+					used.insert(next);
+					p->add_word(next);
+					next = next->nextWord();
+				}
+			}
+
+			// sort by y coordinate
+			qStableSort(selection_parts.begin(), selection_parts.end(), selection_less_y);
+
+			QRectF line_box;
+			QList<SelectionLine *> *lines = new QList<SelectionLine *>();
+			Q_FOREACH(SelectionPart *part, selection_parts) {
+				QRectF box = part->get_bbox();
+				// box fits into line_box's line
+				if (!lines->empty() && box.y() <= line_box.center().y() && box.bottom() > line_box.center().y()) {
+					float ratio_w = box.width() / line_box.width();
+					float ratio_h = box.height() / line_box.height();
+					if (ratio_w < 1.0f) {
+						ratio_w = 1.0f / ratio_w;
+					}
+					if (ratio_h < 1.0f) {
+						ratio_h = 1.0f / ratio_h;
+					}
+					if (ratio_w > 1.3f && ratio_h > 1.3f) {
+						lines->back()->sort();
+						lines->push_back(new SelectionLine(part));
+						line_box = part->get_bbox();
+					} else {
+						lines->back()->add_part(part);
+					}
+				// it doesn't fit, create new line
+				} else {
+					if (!lines->empty()) {
+						lines->back()->sort();
+					}
+					lines->push_back(new SelectionLine(part));
+					line_box = part->get_bbox();
+				}
+			}
+			if (!lines->empty()) {
+				lines->back()->sort();
+			}
+
+			res->link_mutex.lock();
+			res->k_page[page].text = lines;
 		}
 		res->link_mutex.unlock();
 

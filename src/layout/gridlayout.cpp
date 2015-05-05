@@ -1,5 +1,6 @@
 #include <iostream>
 #include <QImage>
+#include <QApplication>
 #include "gridlayout.h"
 #include "../util.h"
 #include "layout.h"
@@ -349,27 +350,13 @@ void GridLayout::render(QPainter *painter) {
 			}
 
 			// draw search rects
+			QPoint offset(wpos + center_x, hpos + center_y);
 			if (search_visible) {
-				painter->setPen(QColor(0, 0, 0));
-				painter->setBrush(QColor(255, 0, 0, 64));
-				float w = res->get_page_width(last_page);
-				float h = res->get_page_height(last_page);
-
-				const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
-				map<int,QList<QRectF> *>::const_iterator it = hits->find(last_page);
-				if (it != hits->end()) {
-					for (QList<QRectF>::iterator i2 = it->second->begin(); i2 != it->second->end(); ++i2) {
-						if (i2 == hit_it) {
-							painter->setBrush(QColor(0, 255, 0, 64));
-						}
-						QRectF rot = rotate_rect(*i2, w, h, res->get_rotation());
-						painter->drawRect(transform_rect(rot, size, wpos + center_x, hpos + center_y));
-						if (i2 == hit_it) {
-							painter->setBrush(QColor(255, 0, 0, 64));
-						}
-					}
-				}
+				render_search_rects(painter, last_page, offset, size);
 			}
+
+			// draw text selection
+			render_selection(painter, last_page, offset, size);
 
 			wpos += grid_width + useless_gap;
 			cur_col++;
@@ -513,7 +500,7 @@ QPoint GridLayout::get_target_page_distance(int target_page) const {
 	return QPoint(wpos + center_x, hpos + center_y);
 }
 
-pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {
+pair<int, QPointF> GridLayout::get_location_at(int mx, int my) {
 	// find vertical page
 	int cur_page = page;
 	int grid_height;
@@ -567,13 +554,7 @@ pair<int,QPointF> GridLayout::get_page_at(int mx, int my) {
 
 	int page = cur_page + cur_col - grid->get_offset();
 
-	return make_pair(page, QPointF(x,y));
-}
-
-bool GridLayout::click_mouse(int mx, int my) {
-	pair<int,QPointF> page = get_page_at(mx, my);
-
-	return activate_link(page.first, page.second.x(), page.second.y());
+	return make_pair(page, QPointF(x, y));
 }
 
 bool GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
@@ -595,7 +576,7 @@ bool GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
 }
 
 bool GridLayout::goto_page_at(int mx, int my) {
-	pair<int,QPointF> page = get_page_at(mx, my);
+	pair<int,QPointF> page = get_location_at(mx, my);
 
 	set_columns(1, false);
 	scroll_page(page.first, false);

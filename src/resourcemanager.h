@@ -19,6 +19,7 @@ class Worker;
 class Viewer;
 class QSocketNotifier;
 class QDomDocument;
+class SelectionLine;
 
 
 class ResourceManager : public QObject {
@@ -39,13 +40,14 @@ public:
 	// page (meta)data
 	const KPage *get_page(int page, int newWidth, int index = 0);
 //	QString get_page_label(int page) const;
-	float get_page_width(int page) const;
-	float get_page_height(int page) const;
-	float get_page_aspect(int page) const;
-	float get_min_aspect() const;
-	float get_max_aspect() const;
+	float get_page_width(int page, bool rotated = true) const;
+	float get_page_height(int page, bool rotated = true) const;
+	float get_page_aspect(int page, bool rotated = true) const;
+	float get_min_aspect(bool rotated = true) const;
+	float get_max_aspect(bool rotated = true) const;
 	int get_page_count() const;
 	const QList<Poppler::Link *> *get_links(int page);
+	const QList<SelectionLine *> *get_text(int page);
 	QDomDocument *get_toc() const;
 
 	int get_rotation() const;
