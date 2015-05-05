@@ -257,8 +257,11 @@ void Layout::render_search_rects(QPainter *painter, int cur_page, QPoint offset,
 void Layout::render_selection(QPainter *painter, int cur_page, QPoint offset, float size) {
 	float w = res->get_page_width(cur_page);
 	float h = res->get_page_height(cur_page);
-	painter->setPen(QPen(Qt::NoPen));
+	// what's going on?! If I use Qt::NoPen, I can't draw the overlay rect anymore (Canvas:paintEvent)
+//	painter->setPen(Qt::NoPen);
 	QColor color = QApplication::palette().highlight().color();
+	color.setAlpha(0); // TODO this is a workaround
+	painter->setPen(color);
 	color.setAlpha(96);
 	painter->setBrush(color);
 
