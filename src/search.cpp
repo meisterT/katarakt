@@ -263,6 +263,10 @@ void SearchBar::insert_hits(int page, QList<QRectF> *l) {
 	}
 	hits[page] = l;
 
+	if (viewer->get_canvas()->get_layout()->page_visible(page)) {
+		viewer->get_canvas()->update();
+	}
+
 	// only update the layout if the hits should be viewed
 	if (empty) {
 		if (viewer->get_canvas()->get_layout()->update_search()) {
