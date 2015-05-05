@@ -132,7 +132,6 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 	setWindowTitle(QString::fromUtf8("%1 \u2014 katarakt").arg(info.fileName()));
 	setMinimumSize(50, 50);
 	resize(500, 500);
-	show();
 
 	search_bar->hide();
 	info_password.setFocus(Qt::OtherFocusReason); // only works if shown
