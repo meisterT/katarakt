@@ -52,6 +52,34 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 			cerr << "failed to parse background_color_fullscreen" << endl;
 		}
 	}
+	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
+
+	switch (config->get_value("click_link_button").toInt()) {
+		case 1: click_link_button = Qt::LeftButton; break;
+		case 2: click_link_button = Qt::RightButton; break;
+		case 3: click_link_button = Qt::MidButton; break;
+		case 4: click_link_button = Qt::XButton1; break;
+		case 5: click_link_button = Qt::XButton2; break;
+		default: click_link_button = Qt::NoButton;
+	}
+
+	switch (config->get_value("drag_view_button").toInt()) {
+		case 1: drag_view_button = Qt::LeftButton; break;
+		case 2: drag_view_button = Qt::RightButton; break;
+		case 3: drag_view_button = Qt::MidButton; break;
+		case 4: drag_view_button = Qt::XButton1; break;
+		case 5: drag_view_button = Qt::XButton2; break;
+		default: drag_view_button = Qt::NoButton;
+	}
+
+	switch (config->get_value("select_text_button").toInt()) {
+		case 1: select_text_button = Qt::LeftButton; break;
+		case 2: select_text_button = Qt::RightButton; break;
+		case 3: select_text_button = Qt::MidButton; break;
+		case 4: select_text_button = Qt::XButton1; break;
+		case 5: select_text_button = Qt::XButton2; break;
+		default: select_text_button = Qt::NoButton;
+	}
 
 	presentation_layout = new PresentationLayout(viewer);
 	grid_layout = new GridLayout(viewer);
@@ -66,8 +94,6 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 	// apply start option
 	cur_layout->scroll_page(config->get_tmp_value("start_page").toInt(), false);
-
-	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
 
 	setup_keys(this);
 
@@ -148,13 +174,14 @@ void Canvas::paintEvent(QPaintEvent * /*event*/) {
 }
 
 void Canvas::mousePressEvent(QMouseEvent *event) {
-	// TODO make mouse buttons configurable
-	if (event->button() == Qt::LeftButton) {
+	if ((click_link_button != Qt::NoButton && event->button() == click_link_button)
+			|| (drag_view_button != Qt::NoButton && event->button() == drag_view_button)) {
 		mx = event->x();
 		my = event->y();
 		mx_down = mx;
 		my_down = my;
-	} else if (event->button() == Qt::RightButton) {
+	}
+	if (select_text_button != Qt::NoButton && event->button() == select_text_button) {
 		if (triple_click_possible) {
 			cur_layout->select(event->x(), event->y(), Selection::StartLine);
 			triple_click_possible = false;
@@ -166,7 +193,7 @@ void Canvas::mousePressEvent(QMouseEvent *event) {
 }
 
 void Canvas::mouseReleaseEvent(QMouseEvent *event) {
-	if (event->button() == Qt::LeftButton) {
+	if (click_link_button != Qt::NoButton && event->button() == click_link_button) {
 		if (mx_down == event->x() && my_down == event->y()) {
 			int page = cur_layout->get_page();
 			pair<int, QPointF> location = cur_layout->get_location_at(mx_down, my_down);
@@ -175,19 +202,21 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 				update();
 			}
 		}
-	} else if (event->button() == Qt::RightButton) {
+	}
+	if (select_text_button != Qt::NoButton && event->button() == select_text_button) {
 		cur_layout->copy_selection_text();
 	}
 }
 
 void Canvas::mouseMoveEvent(QMouseEvent *event) {
-	if (event->buttons() & Qt::LeftButton) {
+	if (drag_view_button != Qt::NoButton && event->buttons() & drag_view_button) {
 		if (cur_layout->scroll_smooth(event->x() - mx, event->y() - my)) {
 			update();
 		}
 		mx = event->x();
 		my = event->y();
-	} else if (event->buttons() & Qt::RightButton) {
+	}
+	if (select_text_button != Qt::NoButton && event->buttons() & select_text_button) {
 		if (cur_layout->select(event->x(), event->y(), Selection::End)) {
 			update();
 		}
@@ -250,10 +279,11 @@ void Canvas::wheelEvent(QWheelEvent *event) {
 }
 
 void Canvas::mouseDoubleClickEvent(QMouseEvent * event) {
-	if (event->button() == Qt::LeftButton) {
+	if (click_link_button != Qt::NoButton && event->button() == drag_view_button) {
 		cur_layout->goto_page_at(event->x(), event->y());
 		update();
-	} else if (event->button() == Qt::RightButton) {
+	}
+	if (select_text_button != Qt::NoButton && event->button() == select_text_button) {
 		// enable triple click, disable after timeout
 		triple_click_possible = true;
 		QTimer::singleShot(QApplication::doubleClickInterval(), this, SLOT(disable_triple_click()));

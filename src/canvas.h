@@ -81,6 +81,10 @@ private:
 	QColor background;
 	QColor background_fullscreen;
 	int mouse_wheel_factor;
+
+	Qt::MouseButton click_link_button;
+	Qt::MouseButton drag_view_button;
+	Qt::MouseButton select_text_button;
 };
 
 #endif

@@ -159,6 +159,15 @@ VARIABLES
 'string' *icon_theme* ::
 	The name of your icon theme. Fill in if auto detection fails.
 
+'int' *click_link_button* ::
+	1: The mouse button used for clicking links. Buttons 1-5 are supported.
+'int' *drag_view_button* ::
+	2: The mouse button used for scrolling the view. Double-clicking this
+	button centers the view around the location of the click.
+'int' *select_text_button* ::
+	1: The mouse button used for text selection. Double- and triple-clicking
+	are supported to select with word/line granularity.
+
 COMMUNITY
 ---------
 Feel free to join the IRC channel '#katarakt' on freenode.

@@ -30,6 +30,11 @@ CFG::CFG() :
 	// viewer options
 	defaults["quit_on_init_fail"] = false;
 	defaults["icon_theme"] = "";
+
+	// mouse buttons
+	defaults["click_link_button"] = 1;
+	defaults["drag_view_button"] = 2;
+	defaults["select_text_button"] = 1;
 	settings.endGroup();
 
 	tmp_values["start_page"] = 0;
