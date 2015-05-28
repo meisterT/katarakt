@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
 
 	// parse command line options
 	struct option long_options[] = {
+		{"url",			no_argument,		NULL,	'u'},
 		{"page",		required_argument,	NULL,	'p'},
 		{"fullscreen",	no_argument,		NULL,	'f'},
 		{"quit",		no_argument,		NULL,	'q'},
@@ -34,12 +35,16 @@ int main(int argc, char *argv[]) {
 		{NULL, 0, NULL, 0}
 	};
 	int option_index = 0;
+	bool download_url = false;
 	while (1) {
-		int c = getopt_long(argc, argv, "+p:fqh", long_options, &option_index);
+		int c = getopt_long(argc, argv, "+up:fqh", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
 		switch (c) {
+			case 'u':
+				download_url = true;
+				break;
 			case 'p':
 				// currently no warning message on wrong input
 				CFG::get_instance()->set_tmp_value("start_page", atoi(optarg) - 1);
@@ -71,7 +76,11 @@ int main(int argc, char *argv[]) {
 	QString file;
 	Download download;
 	if (argv[optind] != NULL) {
-		file = download.load(QString::fromUtf8(argv[optind]));
+		if (download_url) {
+			file = download.load(QString::fromUtf8(argv[optind]));
+		} else {
+			file = QString::fromUtf8(argv[optind]);
+		}
 		if (file == NULL) {
 			return 1;
 		}

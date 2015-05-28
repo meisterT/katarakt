@@ -10,7 +10,7 @@ katarakt - a simple PDF viewer with three layouts
 
 SYNOPSIS
 --------
-*katarakt* (['OPTIONS'] 'FILE'|'URL')*
+*katarakt* (['OPTIONS'] 'FILE'|(-u 'URL'))*
 
 DESCRIPTION
 -----------
@@ -33,6 +33,8 @@ For every file passed on the command line a separate process is spawned.
 
 OPTIONS
 -------
+*-u*, *--url* ::
+	Instead of opening a local document, download it from the given URL.
 *-p*, *--page* 'NUM' ::
 	Start on page 'NUM'.
 *-f*, *--fullscreen* ::
