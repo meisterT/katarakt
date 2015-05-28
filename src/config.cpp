@@ -40,7 +40,7 @@ CFG::CFG() :
 	tmp_values["start_page"] = 0;
 	tmp_values["fullscreen"] = false;
 
-	settings.beginGroup("keys");
+	settings.beginGroup("Keys");
 	// canvas keys
 	keys["set_presentation_layout"] = QStringList() << "1";
 	keys["set_grid_layout"] = QStringList() << "2";

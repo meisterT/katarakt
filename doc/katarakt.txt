@@ -47,6 +47,9 @@ CONFIGURATION
 Variables and key bindings can be changed by modifying the katarakt.ini file.
 By default it is read from '$XDG_CONFIG_HOME'.
 
+Variables must be listed under the section "[Settings]", keys under section
+"[Keys]".  For a list of all variables with a short explanation see below.
+
 KEY BINDINGS
 ------------
 *q* ::
