@@ -567,10 +567,10 @@ bool GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
 
 	QPoint p = get_target_page_distance(link_page);
 	if (link.isChangeLeft()) {
-		p.rx() += link_point.x() * size;
+		p.rx() += link_point.x() * size - width * search_padding;
 	}
 	if (link.isChangeTop()) {
-		p.ry() += link_point.y() * size;
+		p.ry() += link_point.y() * size - height * search_padding;
 	}
 	return view_point(p);
 }
