@@ -88,10 +88,10 @@ int main(int argc, char *argv[]) {
 	// else no argument given, "open" empty string
 
 	Viewer katarakt(file);
-	katarakt.show();
 	if (!katarakt.is_valid()) {
 		return 1;
 	}
+	katarakt.show();
 
 	return app.exec();
 }
