@@ -32,13 +32,27 @@ Toc::Toc(Viewer *v, QWidget *parent) :
 }
 
 void Toc::init() {
-	clear();
+	shutdown();
 
 	QDomDocument *contents = viewer->get_res()->get_toc();
 	if (contents != NULL) {
 		build(contents, invisibleRootItem());
 		delete contents;
 	}
+}
+
+Toc::~Toc() {
+	shutdown();
+}
+
+void Toc::shutdown() {
+	QTreeWidgetItemIterator it(this);
+	while (*it) {
+		delete (*it)->data(0, Qt::UserRole).value<Poppler::LinkDestination *>();
+		++it;
+	}
+
+	clear();
 }
 
 void Toc::goto_link(QTreeWidgetItem *item, int column) {
@@ -58,7 +72,8 @@ bool Toc::event(QEvent *e) {
 	if (e->type() == QEvent::ShortcutOverride) {
 		QKeyEvent *ke = static_cast<QKeyEvent *>(e);
 		if (ke->key() < Qt::Key_Escape) {
-			ke->accept();
+			// don't accept -> other keyboard shortcuts take precedence
+//			ke->accept();
 		} else {
 			switch (ke->key()) {
 				case Qt::Key_Return:

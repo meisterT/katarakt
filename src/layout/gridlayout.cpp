@@ -558,7 +558,6 @@ pair<int, QPointF> GridLayout::get_location_at(int mx, int my) {
 }
 
 bool GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
-	// TODO variable margin?
 	int link_page = link.pageNumber() - 1;
 	float w = res->get_page_width(link_page);
 	float h = res->get_page_height(link_page);
