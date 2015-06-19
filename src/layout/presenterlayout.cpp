@@ -59,6 +59,7 @@ void PresenterLayout::resize(int w, int h) {
 		vert_height = width / aspect;
 	}
 
+	// maximize main slide area
 	if (horiz_width * horiz_height > vert_width * vert_height) {
 		horizontal_split = true;
 	} else {
@@ -109,11 +110,11 @@ void PresenterLayout::render(QPainter *painter) {
 		w[0] = optimized_ratio * width;
 		h[0] = height;
 		w[1] = width - w[0] - useless_gap;
-		h[1] = height;
+		h[1] = height / 2;
 	} else {
 		w[0] = width;
 		h[0] = optimized_ratio * height;
-		w[1] = width;
+		w[1] = width / 2;
 		h[1] = height - h[0] - useless_gap;
 	}
 
@@ -130,11 +131,13 @@ void PresenterLayout::render(QPainter *painter) {
 		}
 	}
 
-	center_x[1] = width - page_width[1];
+	// calculate position of next slide
 	if (horizontal_split) {
+		center_x[1] = w[0] + useless_gap;
 		center_y[1] = 0;
 	} else {
-		center_y[1] = height - page_height[1];
+		center_x[1] = width - page_width[1];
+		center_y[1] = h[0] + useless_gap;
 	}
 
 	for (int i = 0; i < 2; i++) {
