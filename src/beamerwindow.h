@@ -42,6 +42,8 @@ private:
 
 	int mouse_wheel_factor;
 
+	Qt::MouseButton click_link_button;
+
 	bool valid;
 };
 

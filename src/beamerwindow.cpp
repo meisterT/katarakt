@@ -22,6 +22,15 @@ BeamerWindow::BeamerWindow(Viewer *v, QWidget *parent) :
 	CFG *config = CFG::get_instance();
 	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
 
+	switch (config->get_value("click_link_button").toInt()) {
+		case 1: click_link_button = Qt::LeftButton; break;
+		case 2: click_link_button = Qt::RightButton; break;
+		case 3: click_link_button = Qt::MidButton; break;
+		case 4: click_link_button = Qt::XButton1; break;
+		case 5: click_link_button = Qt::XButton2; break;
+		default: click_link_button = Qt::NoButton;
+	}
+
 	valid = true;
 }
 
@@ -58,14 +67,14 @@ void BeamerWindow::paintEvent(QPaintEvent * /*event*/) {
 }
 
 void BeamerWindow::mousePressEvent(QMouseEvent *event) {
-	if (event->button() == Qt::LeftButton) {
+	if (click_link_button != Qt::NoButton && event->button() == click_link_button) {
 		mx_down = event->x();
 		my_down = event->y();
 	}
 }
 
 void BeamerWindow::mouseReleaseEvent(QMouseEvent *event) {
-	if (event->button() == Qt::LeftButton) {
+	if (click_link_button != Qt::NoButton && event->button() == click_link_button) {
 		if (mx_down == event->x() && my_down == event->y()) {
 			int page = layout->get_page();
 			pair<int, QPointF> location = layout->get_location_at(mx_down, my_down);
