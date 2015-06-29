@@ -38,6 +38,7 @@ public slots:
 	void close_search();
 	void reload(bool clamp = true);
 	void open();
+	void save();
 	void jump_back();
 	void jump_forward();
     void mark_jump();

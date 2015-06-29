@@ -204,6 +204,37 @@ void Viewer::open() {
 	}
 }
 
+void Viewer::save() {
+	QString new_file = QFileDialog::getSaveFileName(this, "Save File", "", "PDF Files (*.pdf)");
+	if (!new_file.isNull()) {
+		// file exists? Remove it (qt doesn't overwrite)
+		QFile f(new_file);
+		if (f.exists()) {
+			QFileInfo source_file(res->get_file());
+			QFileInfo dest_file(f);
+			// source and destination the same?
+			if (source_file == dest_file) {
+#ifdef DEBUG
+				cerr << "copy: src and dest file are the same" << endl;
+#endif
+				return;
+			}
+
+			if (!f.remove()) {
+#ifdef DEBUG
+				cerr << "failed to remove the file" << endl;
+#endif
+			}
+		}
+		if (!QFile::copy(res->get_file(), new_file)) {
+			// TODO error dialog?
+#ifdef DEBUG
+			cerr << "failed to copy the file" << endl;
+#endif
+		}
+	}
+}
+
 void Viewer::jump_back() {
 	int new_page = res->jump_back();
 	if (new_page == -1) {
@@ -540,6 +571,7 @@ void Viewer::setup_keys(QWidget *base) {
 	add_action(base, "close_search", SLOT(close_search()), this);
 	add_action(base, "reload", SLOT(reload()), this);
 	add_action(base, "open", SLOT(open()), this);
+	add_action(base, "save", SLOT(save()), this);
 	add_action(base, "jump_back", SLOT(jump_back()), this);
 	add_action(base, "jump_forward", SLOT(jump_forward()), this);
 	add_action(base, "mark_jump", SLOT(mark_jump()), this);
