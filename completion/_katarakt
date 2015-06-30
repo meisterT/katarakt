@@ -1,0 +1,9 @@
+#compdef katarakt
+
+_arguments \
+	'(-h --help)'{-u,--url}'[open a URL instead of a local file]::' \
+	'(-h --help)'{-p,--page}+'[specify page to display]:specify page (1-indexed):' \
+	'(-h --help)'{-f,--fullscreen}'[start in fullscreen]' \
+	'(-h --help)'{-q,--quit}'[quit on initialization error]' \
+	'(-p --page -f --fullscreen -q --quit -u --url)'{-h,--help}'[print help and exit]' \
+	'*:pdf documents:_files -g "*.pdf"'
