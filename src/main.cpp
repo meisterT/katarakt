@@ -13,9 +13,10 @@ using namespace std;
 
 static void print_help(char *name) {
 	cout << "Usage:" << endl;
-	cout << "  " << name << " [OPTIONS] FILE" << endl;
+	cout << "  " << name << " ([OPTIONS] FILE|(-u URL))*" << endl;
 	cout << endl;
 	cout << "Options:" << endl;
+	cout << "  -u, --url           Open a URL instead of a local file" << endl;
 	cout << "  -p, --page NUM      Start showing page NUM" << endl;
 	cout << "  -f, --fullscreen    Start in fullscreen mode" << endl;
 	cout << "  -q, --quit          Quit on initialization failure" << endl;
