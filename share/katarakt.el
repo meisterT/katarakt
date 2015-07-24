@@ -10,7 +10,7 @@
 ;;
 ;; To use it in auctex, add the following to your init file:
 ;;
-;; (define-key 'LaTeX-mode-map ("C-c C-v") 'katarakt-view)
+;; (define-key LaTeX-mode-map (kbd "C-c C-v") 'katarakt-view)
 
 ;;; Code:
 
