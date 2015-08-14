@@ -65,7 +65,7 @@ void ResourceManager::initialize(const QString &file, const QByteArray &password
 		connect(i_notifier, SIGNAL(activated(int)), this, SLOT(inotify_slot()),
 				Qt::UniqueConnection);
 
-		inotify_wd  = inotify_add_watch(inotify_fd, info.path().toUtf8().constData(), IN_CLOSE_WRITE | IN_MOVED_TO);
+		inotify_wd = inotify_add_watch(inotify_fd, info.path().toUtf8().constData(), IN_CLOSE_WRITE | IN_MOVED_TO);
 		if (inotify_wd == -1) {
 			cerr << "inotify_add_watch: " << strerror(errno) << endl;
 		}

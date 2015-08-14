@@ -9,8 +9,7 @@
 
 using namespace std;
 
-void dbus_init(Viewer *viewer)
-{
+void dbus_init(Viewer *viewer) {
 	/* Add dbus interfaces to the viewer object.
 	 *
 	 * These are automatically destroyed, if the parent object is.
@@ -19,8 +18,7 @@ void dbus_init(Viewer *viewer)
 	 */
 	new SourceCorrelate(viewer);
 
-	QString bus_name = QString("katarakt.pid%1")
-	                     .arg(QApplication::applicationPid());
+	QString bus_name = QString("katarakt.pid%1").arg(QApplication::applicationPid());
 
 	if (!QDBusConnection::sessionBus().registerService(bus_name)) {
 #ifdef DEBUG
