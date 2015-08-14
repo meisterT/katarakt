@@ -31,6 +31,7 @@ public:
 
 	std::pair<int, QPointF> get_location_at(int pixel_x, int pixel_y);
 	bool goto_link_destination(const Poppler::LinkDestination &link);
+	bool goto_position(int page, QPointF pos);
 	bool goto_page_at(int mx, int my);
 
 	bool page_visible(int p) const;

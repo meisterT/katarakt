@@ -17,7 +17,7 @@ SourceCorrelate::SourceCorrelate(Viewer *viewer)
 	        this, SLOT(emit_edit_signal(int, int, int)));
 }	
 
-void SourceCorrelate::view(QString filename, int page, int x, int y)
+void SourceCorrelate::view(QString filename, int page, double x, double y)
 {
 	if (page < 0)
 		return;
@@ -34,11 +34,10 @@ void SourceCorrelate::view(QString filename, int page, int x, int y)
 	// needed to add an entry to the jump list
 	int current_page = viewer->get_canvas()->get_layout()->get_page();
 
-	viewer->get_canvas()->get_layout()->scroll_page(page, false);
-	// FIXME scroll to offset
+	if (viewer->get_canvas()->get_layout()->goto_position(page, QPointF(x, y))) {
+		viewer->update();
+	}
 	viewer->get_res()->store_jump(current_page);
-	viewer->get_canvas()->repaint();
-	viewer->repaint();
 }
 
 void SourceCorrelate::emit_edit_signal(int page, int x, int y)

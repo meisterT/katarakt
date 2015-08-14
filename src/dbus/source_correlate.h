@@ -19,7 +19,7 @@ public slots:
 	 * The document will not be reloaded if the filename is the same as
 	 * the currently loaded file.
 	 */
-	void view(QString filename, int page, int x, int y);
+	void view(QString filename, int page, double x, double y);
 
 signals:
 	/** Emitted, if the user requests to edit the source code for a
@@ -33,7 +33,7 @@ private slots:
 	void emit_edit_signal(int page, int x, int y);
 
 private:
-        Viewer *viewer;
+	Viewer *viewer;
 };
 
 #endif /* SOURCE_CORRELATE_H */

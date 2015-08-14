@@ -195,11 +195,12 @@ void Canvas::mousePressEvent(QMouseEvent *event) {
 void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 	if (event->button() == Qt::LeftButton && event->modifiers() == Qt::ControlModifier) {
 		// emit synctex signal
+		pair<int, QPointF> location = cur_layout->get_location_at(event->x(), event->y());
+		// scale from [0,1] to points
+		location.second.rx() *= viewer->get_res()->get_page_width(location.first, false);
+		location.second.ry() *= viewer->get_res()->get_page_height(location.first, false);
 
-		int page = cur_layout->get_page();
-		// FIXME Really get the page that was clicked on
-		// FIXME Get coordinates
-		emit synchronize_editor(page, 0, 0);
+		emit synchronize_editor(location.first, (int) ROUND(location.second.x()), (int) ROUND(location.second.y()));
 	} else if (click_link_button != Qt::NoButton && event->button() == click_link_button) {
 		if (mx_down == event->x() && my_down == event->y()) {
 			int page = cur_layout->get_page();

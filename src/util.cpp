@@ -20,11 +20,11 @@ const QPointF rotate_point(const QPointF &point, float w, float h, int rotation)
 	if (rotation == 0) {
 		return point;
 	} else if (rotation == 1) {
-		return QPointF(w - point.y(), point.x());
+		return QPointF(h - point.y(), point.x());
 	} else if (rotation == 2) {
 		return QPointF(w - point.x(), h - point.y());
 	} else {
-		return QPointF(point.y(), h - point.x());
+		return QPointF(point.y(), w - point.x());
 	}
 }
 

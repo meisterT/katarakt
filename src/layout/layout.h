@@ -41,6 +41,7 @@ public:
 
 	virtual std::pair<int, QPointF> get_location_at(int px, int py) = 0;
 	virtual bool goto_link_destination(const Poppler::LinkDestination &link);
+	virtual bool goto_position(int page, QPointF pos);
 	virtual bool goto_page_at(int mx, int my);
 
 	virtual bool activate_link(int page, float x, float y);

@@ -193,6 +193,10 @@ bool Layout::goto_link_destination(const Poppler::LinkDestination &link) {
 	return scroll_page(link.pageNumber() - 1, false);
 }
 
+bool Layout::goto_position(int page, QPointF /*pos*/) {
+	return scroll_page(page, false);
+}
+
 bool Layout::goto_page_at(int /*mx*/, int /*my*/) {
 	return false;
 }

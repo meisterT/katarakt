@@ -559,10 +559,10 @@ pair<int, QPointF> GridLayout::get_location_at(int mx, int my) {
 
 bool GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
 	int link_page = link.pageNumber() - 1;
-	float w = res->get_page_width(link_page);
-	float h = res->get_page_height(link_page);
+	float w = res->get_page_width(link_page, false);
+	float h = res->get_page_height(link_page, false);
 
-	const QPointF link_point = rotate_point(QPointF(link.left(), link.top()) * h, w, h, res->get_rotation());
+	const QPointF link_point = rotate_point(QPointF(link.left() * w, link.top() * h), w, h, res->get_rotation());
 
 	QPoint p = get_target_page_distance(link_page);
 	if (link.isChangeLeft()) {
@@ -571,6 +571,18 @@ bool GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
 	if (link.isChangeTop()) {
 		p.ry() += link_point.y() * size - height * search_padding;
 	}
+	return view_point(p);
+}
+
+bool GridLayout::goto_position(int page, QPointF pos) {
+	float w = res->get_page_width(page, false);
+	float h = res->get_page_height(page, false);
+	pos = rotate_point(pos, w, h, res->get_rotation());
+
+	QPoint p = get_target_page_distance(page);
+	p.rx() += pos.x() * size - width / 2;
+	p.ry() += pos.y() * size - height / 2;
+
 	return view_point(p);
 }
 
