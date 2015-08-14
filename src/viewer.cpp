@@ -485,6 +485,10 @@ void Viewer::invert_colors() {
 	beamer->update();
 }
 
+void Viewer::copy_to_clipboard() {
+	canvas->get_layout()->copy_selection_text(QClipboard::Clipboard);
+}
+
 void Viewer::toggle_toc() {
 	toc->setVisible(!toc->isVisible());
 	toc->setFocus(Qt::OtherFocusReason); // only works if shown
@@ -609,6 +613,7 @@ void Viewer::setup_keys(QWidget *base) {
 	add_action(base, "rotate_left", SLOT(rotate_left()), this);
 	add_action(base, "rotate_right", SLOT(rotate_right()), this);
 	add_action(base, "toggle_invert_colors", SLOT(invert_colors()), this);
+	add_action(base, "copy_to_clipboard", SLOT(copy_to_clipboard()), this);
 
 	add_action(base, "toggle_toc", SLOT(toggle_toc()), this);
 }

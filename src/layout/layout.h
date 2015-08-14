@@ -3,6 +3,7 @@
 
 #include <QPainter>
 #include <QList>
+#include <QClipboard>
 #include <poppler/qt4/poppler-qt4.h>
 #include <map>
 #include "../selection.h"
@@ -50,7 +51,7 @@ public:
 	virtual bool page_visible(int p) const = 0;
 
 	bool select(int px, int py, enum Selection::Mode mode);
-	void copy_selection_text();
+	void copy_selection_text(QClipboard::Mode mode = QClipboard::Selection);
 	void clear_selection();
 
 protected:

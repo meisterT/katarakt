@@ -2,7 +2,6 @@
 #include <QImage>
 #include <QDesktopServices>
 #include <QUrl>
-#include <QClipboard>
 #include <QApplication>
 #include "layout.h"
 #include "../viewer.h"
@@ -215,7 +214,7 @@ bool Layout::select(int px, int py, enum Selection::Mode mode) {
 	return true; // TODO visible? change?
 }
 
-void Layout::copy_selection_text() {
+void Layout::copy_selection_text(QClipboard::Mode mode) {
 	QString text;
 	if (selection.is_active()) {
 		Cursor from = selection.get_cursor(true);
@@ -225,8 +224,7 @@ void Layout::copy_selection_text() {
 		}
 	}
 	QClipboard *clipboard = QApplication::clipboard();
-	clipboard->setText(text, QClipboard::Selection);
-	// TODO copy to clipboard on Ctrl+C
+	clipboard->setText(text, mode);
 }
 
 void Layout::clear_selection() {

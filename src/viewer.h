@@ -74,6 +74,7 @@ private slots:
 	void rotate_left();
 	void rotate_right();
 	void invert_colors();
+	void copy_to_clipboard();
 	void toggle_toc();
 
 private:

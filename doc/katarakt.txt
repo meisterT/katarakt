@@ -116,6 +116,8 @@ KEY BINDINGS
 	Rotate pages left/right.
 *\^o*, *^i*, *Alt-Left*, *Alt-Right* ::
 	Move backward/forward through the jump list. Entries are added automatically when jumping.
+*^c* ::
+	Copy the current selection to the global clipboard.
 
 *m* ::
    Manually add the current page to the jump list.
