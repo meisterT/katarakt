@@ -64,6 +64,8 @@ private slots:
 
 	void disable_triple_click();
 
+	void swap_selection_and_panning_buttons();
+
 private:
 	void setup_keys(QWidget *base);
 

@@ -97,6 +97,12 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 	setup_keys(this);
 
+	if (drag_view_button == Qt::LeftButton) {
+		setCursor(Qt::OpenHandCursor);
+	} else {
+		setCursor(Qt::IBeamCursor);
+	}
+
 	// prints the string representation of a key
 //	cerr << QKeySequence(Qt::Key_Equal).toString().toUtf8().constData() << endl;
 
@@ -138,6 +144,7 @@ void Canvas::setup_keys(QWidget *base) {
 	add_action(base, "set_presenter_layout", SLOT(set_presenter_layout()), this);
 	add_action(base, "toggle_overlay", SLOT(toggle_overlay()), this);
 	add_action(base, "focus_goto", SLOT(focus_goto()), this);
+	add_action(base, "swap_selection_and_panning_buttons", SLOT(swap_selection_and_panning_buttons()), this);
 }
 
 Layout *Canvas::get_layout() const {
@@ -181,12 +188,21 @@ void Canvas::mousePressEvent(QMouseEvent *event) {
 		mx_down = mx;
 		my_down = my;
 	}
+	if (drag_view_button != Qt::NoButton && event->button() == drag_view_button) {
+		if (cursor().shape() != Qt::PointingHandCursor) { // TODO
+			setCursor(Qt::ClosedHandCursor);
+		}
+	}
 	if (select_text_button != Qt::NoButton && event->button() == select_text_button) {
 		if (triple_click_possible) {
 			cur_layout->select(event->x(), event->y(), Selection::StartLine);
 			triple_click_possible = false;
 		} else {
 			cur_layout->select(event->x(), event->y(), Selection::Start);
+		}
+
+		if (cursor().shape() != Qt::PointingHandCursor) { // TODO
+			setCursor(Qt::IBeamCursor);
 		}
 		update();
 	}
@@ -211,6 +227,13 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 			}
 		}
 	}
+
+	if (drag_view_button == Qt::LeftButton) {
+		setCursor(Qt::OpenHandCursor);
+	} else {
+		setCursor(Qt::IBeamCursor);
+	}
+
 	if (select_text_button != Qt::NoButton && event->button() == select_text_button) {
 		cur_layout->copy_selection_text();
 	}
@@ -359,6 +382,18 @@ void Canvas::focus_goto() {
 
 void Canvas::disable_triple_click() {
 	triple_click_possible = false;
+}
+
+void Canvas::swap_selection_and_panning_buttons() {
+	Qt::MouseButton tmp = drag_view_button;
+	drag_view_button = select_text_button;
+	select_text_button = tmp;
+
+	if (drag_view_button == Qt::LeftButton) {
+		setCursor(Qt::OpenHandCursor);
+	} else {
+		setCursor(Qt::IBeamCursor);
+	}
 }
 
 

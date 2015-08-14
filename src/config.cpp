@@ -79,6 +79,7 @@ CFG::CFG() :
 	keys["jump_forward"] = QStringList() << "Ctrl+I" << "Alt+Right";
 	keys["mark_jump"] = QStringList() << "M";
 	keys["toggle_invert_colors"] = QStringList() << "I";
+	keys["swap_selection_and_panning_buttons"] = QStringList() << "V";
 	// viewer keys
 	keys["toggle_fullscreen"] = QStringList() << "F";
 	keys["close_search"] = QStringList() << "Esc";

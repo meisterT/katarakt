@@ -123,6 +123,9 @@ KEY BINDINGS
 *i* ::
 	Toggle between normal and inverted color rendering.
 
+*v* ::
+	Swap the mouse buttons for selection and panning.
+
 VARIABLES
 ---------
 'string' *background_color* ::
