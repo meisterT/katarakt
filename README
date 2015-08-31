@@ -16,5 +16,5 @@ qmake-qt4
 make
 
 To build the manpage/homepage type:
-a2x -f manpage doc/katarakt.txt
+make doc
 asciidoc www/index.txt
