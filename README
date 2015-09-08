@@ -17,4 +17,4 @@ make
 
 To build the manpage/homepage type:
 make doc
-asciidoc www/index.txt
+make web

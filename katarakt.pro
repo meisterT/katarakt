@@ -28,11 +28,14 @@ documentation.target = doc/katarakt.1
 documentation.depends = doc/katarakt.txt
 documentation.commands = a2x -f manpage doc/katarakt.txt
 
-doc.depends = doc/katarakt.1
+doc.depends = $$documentation.target
 doc.CONFIG = phony
 
 website.target = www/index.html
 website.depends = www/index.txt
 website.commands = asciidoc www/index.txt
 
-QMAKE_EXTRA_TARGETS += documentation website doc
+web.depends = $$website.target
+web.CONFIG = phony
+
+QMAKE_EXTRA_TARGETS += documentation website doc web
