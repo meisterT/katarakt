@@ -22,7 +22,9 @@ Toc::Toc(Viewer *v, QWidget *parent) :
 	h->setStretchLastSection(false);
 	h->setResizeMode(0, QHeaderView::Stretch);
 	h->setResizeMode(1, QHeaderView::ResizeToContents);
-	h->hide();
+
+	QStringList list = QStringList() << "Contents" << QString();
+	setHeaderLabels(list);
 
 	setAlternatingRowColors(true);
 
@@ -38,6 +40,12 @@ void Toc::init() {
 	if (contents != NULL) {
 		build(contents, invisibleRootItem());
 		delete contents;
+	}
+
+	// indicate empty toc
+	if (topLevelItemCount() == 0) {
+		QTreeWidgetItem *item = new QTreeWidgetItem(invisibleRootItem(), QStringList("(empty)"));
+		item->setFlags(Qt::NoItemFlags);
 	}
 }
 
@@ -59,6 +67,11 @@ void Toc::goto_link(QTreeWidgetItem *item, int column) {
 	if (column == -1) {
 		return;
 	}
+	// handle empty-indicator
+	if (item->text(1).isEmpty()) {
+		return;
+	}
+
 	int old_page = viewer->get_canvas()->get_layout()->get_page();
 	Poppler::LinkDestination *link = item->data(0, Qt::UserRole).value<Poppler::LinkDestination *>();
 	if (viewer->get_canvas()->get_layout()->goto_link_destination(*link)) {
