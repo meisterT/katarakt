@@ -43,6 +43,8 @@ OPTIONS
 	Quit on initialization failure.
 *-h*, *--help* ::
 	Print help and exit.
+*--single-instance* 'true'|'false'::
+	Sets *single_instance_per_file* for the present katarakt instance only.
 
 CONFIGURATION
 -------------
@@ -168,6 +170,9 @@ VARIABLES
 
 'bool' *quit_on_init_fail* ::
 	false: Quit katarakt if the document fails to open.
+'bool' *single_instance_per_file* ::
+	If set and katarakt is called with a file that is already shown in another
+	katarakt instance, then the other katarakt window is activated instead.
 'string' *icon_theme* ::
 	The name of your icon theme. Fill in if auto detection fails.
 

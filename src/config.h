@@ -32,6 +32,9 @@ public:
 	void set_tmp_value(const char *key, QVariant value);
 	bool has_tmp_value(const char *key) const;
 
+	/** Return tmp_value (if set) but fall back to normal settings */
+	QVariant get_most_current_value(const char *key) const;
+
 	QStringList get_keys(const char *action) const;
 };
 

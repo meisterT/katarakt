@@ -17,11 +17,12 @@ static void print_help(char *name) {
 	cout << "  " << name << " ([OPTIONS] FILE|(-u URL))*" << endl;
 	cout << endl;
 	cout << "Options:" << endl;
-	cout << "  -u, --url           Open a URL instead of a local file" << endl;
-	cout << "  -p, --page NUM      Start showing page NUM" << endl;
-	cout << "  -f, --fullscreen    Start in fullscreen mode" << endl;
-	cout << "  -q, --quit          Quit on initialization failure" << endl;
-	cout << "  -h, --help          Print this help and exit" << endl;
+	cout << "  -u, --url                    Open a URL instead of a local file" << endl;
+	cout << "  -p, --page NUM               Start showing page NUM" << endl;
+	cout << "  -f, --fullscreen             Start in fullscreen mode" << endl;
+	cout << "  -q, --quit                   Quit on initialization failure" << endl;
+	cout << "  -h, --help                   Print this help and exit" << endl;
+	cout << "  --single-instance true|false Whether to have a single instance per file" << endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -34,6 +35,7 @@ int main(int argc, char *argv[]) {
 		{"fullscreen",	no_argument,		NULL,	'f'},
 		{"quit",		no_argument,		NULL,	'q'},
 		{"help",		no_argument,		NULL,	'h'},
+		{"single-instance",	required_argument,	NULL,	0},
 		{NULL, 0, NULL, 0}
 	};
 	int option_index = 0;
@@ -44,6 +46,15 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		switch (c) {
+			case 0: {
+				const char* option_name = long_options[option_index].name;
+				if (!strcmp(option_name, "single-instance")) {
+					// (according to QVariant) any string can be converted to
+					// bool, so no type check needed here
+					CFG::get_instance()->set_tmp_value("single_instance_per_file", optarg);
+				}
+				break;
+			}
 			case 'u':
 				download_url = true;
 				break;
@@ -88,6 +99,12 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	// else no argument given, "open" empty string
+
+	if (CFG::get_instance()->get_most_current_value("single_instance_per_file").toBool()) {
+		if (activate_katarakt_with_file(file)) {
+			return 0;
+		}
+	}
 
 	Viewer katarakt(file);
 	if (!katarakt.is_valid()) {

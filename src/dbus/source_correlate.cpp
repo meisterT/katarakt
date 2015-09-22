@@ -46,3 +46,14 @@ void SourceCorrelate::emit_edit_signal(int page, int x, int y) {
 #endif
 	emit edit(file, page, x, y);
 }
+
+void SourceCorrelate::focus() {
+	viewer->activateWindow();
+}
+
+/** The full filepath of the opened file
+ */
+QString SourceCorrelate::filepath() {
+	QFileInfo file = QFileInfo(viewer->get_res()->get_file());
+	return file.absoluteFilePath();
+}

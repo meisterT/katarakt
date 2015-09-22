@@ -29,6 +29,7 @@ CFG::CFG() :
 	defaults["rect_expansion"] = 2;
 	// viewer options
 	defaults["quit_on_init_fail"] = false;
+	defaults["single_instance_per_file"] = false;
 	defaults["icon_theme"] = "";
 
 	// mouse buttons
@@ -143,6 +144,14 @@ void CFG::set_tmp_value(const char *key, QVariant value) {
 
 bool CFG::has_tmp_value(const char *key) const {
 	return tmp_values.contains(key);
+}
+
+QVariant CFG::get_most_current_value(const char *key) const {
+	if (tmp_values.contains(key)) {
+		return tmp_values[key];
+	} else {
+		return settings.value(QString("Settings/") + key, defaults[key]);
+	}
 }
 
 QStringList CFG::get_keys(const char *action) const {

@@ -100,7 +100,7 @@ except IndexError:
 vim_session = session_name
 vim_view_keybind = "ZE"
 
-pdfprocess = subprocess.Popen(['katarakt', pdf_filename])
+pdfprocess = subprocess.Popen(['katarakt', '--single-instance', 'false', pdf_filename])
 pdf_pid = pdfprocess.pid
 
 view_command = ("qdbus katarakt.pid%d" % pdf_pid +

@@ -21,6 +21,14 @@ public slots:
 	 */
 	void view(QString filename, int page, double x, double y);
 
+	/** Lets the katarakt window ask the window manager for the focus
+	 */
+	void focus();
+
+	/** The full filepath of the opened file
+	 */
+	QString filepath();
+
 signals:
 	/** Emitted, if the user requests to edit the source code for a
 	 *  specific position on a specific page.
