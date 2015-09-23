@@ -43,6 +43,9 @@ OPTIONS
 	Quit on initialization failure.
 *-h*, *--help* ::
 	Print help and exit.
+*--write-defaults* 'FILE'::
+	Write the built-in default configuration to 'FILE' and exit. Hint: on unix
+	systems, you can use '--write-defaults /dev/stdout' to print the defaults.
 *--single-instance* 'true'|'false'::
 	Sets *single_instance_per_file* for the present katarakt instance only.
 

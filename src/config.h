@@ -12,9 +12,11 @@ class CFG {
 private:
 	CFG();
 	CFG(const CFG &other);
+	CFG(const char *file);
 	CFG &operator=(const CFG &other);
 	~CFG();
 
+	void init_defaults();
 	void set_defaults();
 
 	QSettings settings;
@@ -24,6 +26,7 @@ private:
 
 public:
 	static CFG *get_instance();
+	static void write_defaults(const char *file); // write defaults to file
 
 	QVariant get_value(const char *key) const;
 	void set_value(const char *key, QVariant value);

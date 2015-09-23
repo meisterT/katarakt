@@ -5,7 +5,15 @@
 CFG::CFG() :
 		settings(QSettings::IniFormat, QSettings::UserScope, "katarakt") {
 	// TODO warn about invalid user input
+	init_defaults();
+}
 
+CFG::CFG(const char* file) :
+		settings(file, QSettings::IniFormat) {
+	init_defaults();
+}
+
+void CFG::init_defaults() {
 	settings.beginGroup("Settings");
 	// canvas options
 	defaults["background_color"] = "0xDF000000";
@@ -124,6 +132,15 @@ void CFG::set_defaults() {
 CFG *CFG::get_instance() {
 	static CFG instance;
 	return &instance;
+}
+
+void CFG::write_defaults(const char *file) {
+	CFG inst(file);
+	inst.settings.clear();
+	inst.settings.setFallbacksEnabled(false);
+	inst.set_defaults();
+	inst.settings.sync();
+	get_instance();
 }
 
 QVariant CFG::get_value(const char *key) const {

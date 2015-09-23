@@ -22,6 +22,7 @@ static void print_help(char *name) {
 	cout << "  -f, --fullscreen             Start in fullscreen mode" << endl;
 	cout << "  -q, --quit                   Quit on initialization failure" << endl;
 	cout << "  -h, --help                   Print this help and exit" << endl;
+	cout << "  --write-defaults FILE        Write the default configuration to FILE and exit" << endl;
 	cout << "  --single-instance true|false Whether to have a single instance per file" << endl;
 }
 
@@ -36,6 +37,7 @@ int main(int argc, char *argv[]) {
 		{"quit",		no_argument,		NULL,	'q'},
 		{"help",		no_argument,		NULL,	'h'},
 		{"single-instance",	required_argument,	NULL,	0},
+		{"write-defaults",	required_argument,	NULL,	0},
 		{NULL, 0, NULL, 0}
 	};
 	int option_index = 0;
@@ -52,6 +54,9 @@ int main(int argc, char *argv[]) {
 					// (according to QVariant) any string can be converted to
 					// bool, so no type check needed here
 					CFG::get_instance()->set_tmp_value("single_instance_per_file", optarg);
+				} else if (!strcmp(option_name, "write-defaults")) {
+					CFG::write_defaults(optarg);
+					return 0;
 				}
 				break;
 			}
