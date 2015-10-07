@@ -26,7 +26,8 @@ Behaviour:
   file in the current directory).
 
   It registers a keybinding in vim (per default "ZE"), to jump to the
-  corresponding page in katarakt.
+  corresponding page in katarakt. The vim keybinding can be overwritten by the
+  VIM_KEY environment variable.
 
   If Katarakt emits the edit signal (usually on Ctrl+LeftMouse), then it
   opens the corresponding tex file in vim and jumps to the corresponding
@@ -40,7 +41,25 @@ Behaviour:
 Requirements:
 
   You need to compile the latex document using the option -synctex=1 in order to
-  obtain the required .synctex.gz file.""".format(sys.argv[0]))
+  obtain the required .synctex.gz file.
+
+Hint: VIM configuration:
+
+  Add the following line to your vimrc:
+
+  au VimEnter *.tex execute "nmap ZE :! synctex-katarakt-vim " . v:servername . " 2>/dev/null >/dev/null  &<LEFT><LEFT>"
+
+  When typing ZE the first time, it automatically calls this script, overwrites
+  the ZE keybinding, and opens a katarakt instance. After typing ZE the first
+  time, you are prompted such that you can specify an alternate PDF file. If
+  you want an alternate vim keybinding (e.g. <Leader>f), add this line:
+
+  au VimEnter *.tex execute "nmap ZF :! VIM_KEY='ZF' synctex-katarakt-vim " . v:servername . " 2>/dev/null >/dev/null  &<LEFT><LEFT>"
+
+  If your key contains something like <Leader> (or other keys containing "<"),
+  escape it properly in the VIM_KEY= assignment.
+
+""".format(sys.argv[0]))
 
 
 
@@ -98,7 +117,7 @@ except IndexError:
         die("no *.synctex.gz file found in current directory")
 
 vim_session = session_name
-vim_view_keybind = "ZE"
+vim_view_keybind = os.getenv('VIM_KEY', 'ZE')
 
 pdfprocess = subprocess.Popen(['katarakt', '--single-instance', 'false', pdf_filename])
 pdf_pid = pdfprocess.pid
