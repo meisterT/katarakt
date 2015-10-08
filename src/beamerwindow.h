@@ -18,7 +18,6 @@ public:
 	bool is_valid() const;
 
 	Layout *get_layout() const;
-	void set_page(int page);
 
 public slots:
 	void toggle_fullscreen();

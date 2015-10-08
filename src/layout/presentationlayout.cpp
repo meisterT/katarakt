@@ -14,16 +14,8 @@
 using namespace std;
 
 
-PresentationLayout::PresentationLayout(Viewer *v, int page) :
-		Layout(v, page) {
-}
-
-PresentationLayout::PresentationLayout(Layout& old_layout) :
-		Layout(old_layout) {
-}
-
-bool PresentationLayout::supports_smooth_scrolling() const {
-	return false;
+PresentationLayout::PresentationLayout(Viewer *v, int render_index, int page) :
+		Layout(v, render_index, page) {
 }
 
 int PresentationLayout::calculate_fit_width(int page) const {
@@ -50,7 +42,7 @@ const QRect PresentationLayout::calculate_placement(int page) const {
 
 void PresentationLayout::render(QPainter *painter) {
 	const QRect p = calculate_placement(page);
-	const KPage *k_page = res->get_page(page, p.width());
+	const KPage *k_page = res->get_page(page, p.width(), render_index);
 	if (k_page != NULL) {
 		const QImage *img = k_page->get_image();
 		if (img != NULL) {
@@ -110,30 +102,22 @@ void PresentationLayout::render(QPainter *painter) {
 	// prefetch
 	for (int count = 1; count <= prefetch_count; count++) {
 		// after current page
-		if (res->get_page(page + count, calculate_fit_width(page + count)) != NULL) {
+		if (res->get_page(page + count, calculate_fit_width(page + count), render_index) != NULL) {
 			res->unlock_page(page + count);
 		}
 		// before current page
-		if (res->get_page(page - count, calculate_fit_width(page - count)) != NULL) {
+		if (res->get_page(page - count, calculate_fit_width(page - count), render_index) != NULL) {
 			res->unlock_page(page - count);
 		}
 	}
 	res->collect_garbage(page - prefetch_count * 3, page + prefetch_count * 3);
 }
 
-bool PresentationLayout::advance_hit(bool forward) {
-	if (Layout::advance_hit(forward)) {
-		view_hit();
-		return true;
-	}
-	return false;
-}
-
-bool PresentationLayout::advance_invisible_hit(bool forward) {
+void PresentationLayout::advance_invisible_hit(bool forward) {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 
 	if (hits->empty()) {
-		return false;
+		return;
 	}
 
 	if (forward ^ !viewer->get_search_bar()->is_search_forward()) {
@@ -142,16 +126,11 @@ bool PresentationLayout::advance_invisible_hit(bool forward) {
 	} else {
 		hit_it = hits->find(hit_page)->second->begin();
 	}
-	Layout::advance_hit(forward);
+	Layout::advance_hit_noupdate(forward);
 	view_hit();
-	return true;
 }
 
-bool PresentationLayout::view_hit() {
-	return scroll_page(hit_page, false);
-}
-
-pair<int, QPointF> PresentationLayout::get_location_at(int px, int py) {
+pair<int, QPointF> PresentationLayout::get_location_at(int px, int py) const {
 	const QRect p = calculate_placement(page);
 
 	// transform mouse coordinates

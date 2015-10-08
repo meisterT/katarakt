@@ -5,6 +5,7 @@
 #include "../util.h"
 #include "layout.h"
 #include "../viewer.h"
+#include "../canvas.h"
 #include "../resourcemanager.h"
 #include "../grid.h"
 #include "../search.h"
@@ -15,17 +16,9 @@ using namespace std;
 
 
 //==[ GridLayout ]=============================================================
-GridLayout::GridLayout(Viewer *v, int page, int columns) :
-		Layout(v, page),
+GridLayout::GridLayout(Viewer *v, int render_index, int page, int columns) :
+		Layout(v, render_index, page),
 		off_x(0), off_y(0),
-		horizontal_page(0),
-		last_visible_page(res->get_page_count() - 1),
-		zoom(0) {
-	initialize(columns, 0);
-}
-
-GridLayout::GridLayout(Layout& old_layout, int columns) :
-		Layout(old_layout),
 		horizontal_page(0),
 		last_visible_page(res->get_page_count() - 1),
 		zoom(0) {
@@ -118,7 +111,7 @@ void GridLayout::set_constants(bool clamp) {
 	// update view
 	// TODO not updating when not clamping is not the best solution
 	if (clamp) {
-		scroll_smooth(0, 0);
+		scroll_smooth_noupdate(0, 0);
 	}
 }
 
@@ -144,11 +137,12 @@ void GridLayout::resize(int w, int h) {
 	off_x = off_x * size / old_size;
 	off_y = off_y * size / old_size;
 //	off_y = (off_y - height / 2) * size / old_size + height / 2;
-	scroll_smooth(0, 0);
+	scroll_smooth_noupdate(0, 0);
 }
 
-bool GridLayout::set_zoom(int new_zoom, bool relative) {
+void GridLayout::set_zoom(int new_zoom, bool relative) {
 	float old_factor = 1 + zoom * zoom_factor;
+	int old_page = page;
 	if (relative) {
 		zoom += new_zoom;
 	} else {
@@ -162,17 +156,17 @@ bool GridLayout::set_zoom(int new_zoom, bool relative) {
 	float new_factor = 1 + zoom * zoom_factor;
 
 	if (old_factor == new_factor) {
-		return false;
+		return;
 	}
 
 	off_x = (off_x - width / 2) * new_factor / old_factor + width / 2;
 	off_y = (off_y - height / 2) * new_factor / old_factor + height / 2;
 
 	set_constants();
-	return true;
+	viewer->layout_updated(page, page != old_page);
 }
 
-bool GridLayout::set_columns(int new_columns, bool relative) {
+bool GridLayout::set_columns_noupdate(int new_columns, bool relative) {
 	if (relative) {
 		new_columns += grid->get_column_count();
 	}
@@ -184,19 +178,26 @@ bool GridLayout::set_columns(int new_columns, bool relative) {
 	return false;
 }
 
-bool GridLayout::set_offset(int new_offset, bool relative) {
+void GridLayout::set_columns(int new_columns, bool relative) {
+	int old_page = page;
+	if (set_columns_noupdate(new_columns, relative)) {
+		viewer->layout_updated(page, page != old_page);
+	}
+}
+
+void GridLayout::set_offset(int new_offset, bool relative) {
+	int old_page = page;
 	if (relative) {
 		new_offset += grid->get_offset();
 	}
 
 	if (grid->set_offset(new_offset)) {
 		set_constants();
-		return true;
+		viewer->layout_updated(page, page != old_page);
 	}
-	return false;
 }
 
-bool GridLayout::scroll_smooth(int dx, int dy) {
+bool GridLayout::scroll_smooth_noupdate(int dx, int dy) {
 	int old_off_x = off_x;
 	int old_off_y = off_y;
 	int old_page = page;
@@ -264,7 +265,14 @@ bool GridLayout::scroll_smooth(int dx, int dy) {
 	return off_x != old_off_x || off_y != old_off_y || page != old_page;
 }
 
-bool GridLayout::scroll_page(int new_page, bool relative) {
+void GridLayout::scroll_smooth(int dx, int dy) {
+	int old_page = page;
+	if (scroll_smooth_noupdate(dx, dy)) {
+		viewer->layout_updated(page, page != old_page);
+	}
+}
+
+bool GridLayout::scroll_page_noupdate(int new_page, bool relative) {
 	int old_page = page;
 	int old_off_y = off_y;
 
@@ -294,6 +302,13 @@ bool GridLayout::scroll_page(int new_page, bool relative) {
 	return page != old_page || off_y != old_off_y;
 }
 
+void GridLayout::scroll_page(int new_page, bool relative) {
+	int old_page = page;
+	if (scroll_page_noupdate(new_page, relative)) {
+		viewer->layout_updated(page, page != old_page);
+	}
+}
+
 void GridLayout::render(QPainter *painter) {
 	// vertical
 	int cur_page = page;
@@ -316,7 +331,7 @@ void GridLayout::render(QPainter *painter) {
 			int center_x = (grid_width - page_width) / 2;
 			int center_y = (grid_height - page_height) / 2;
 
-			const KPage *k_page = res->get_page(last_page, page_width);
+			const KPage *k_page = res->get_page(last_page, page_width, render_index);
 			if (k_page != NULL) {
 				const QImage *img = k_page->get_image();
 				if (img != NULL) {
@@ -374,36 +389,28 @@ void GridLayout::render(QPainter *painter) {
 	for (int count = 0; count < prefetch_count; count++) {
 		// after last visible page
 		int page_width = res->get_page_width(prefetch_last + count) * size;
-		if (res->get_page(prefetch_last + count, page_width) != NULL) {
+		if (res->get_page(prefetch_last + count, page_width, render_index) != NULL) {
 			res->unlock_page(prefetch_last + count);
 		}
 		// before first visible page
 		page_width = res->get_page_width(prefetch_first + count) * size;
-		if (res->get_page(prefetch_first + count, page_width) != NULL) {
+		if (res->get_page(prefetch_first + count, page_width, render_index) != NULL) {
 			res->unlock_page(prefetch_first + count);
 		}
 	}
 }
 
-bool GridLayout::advance_hit(bool forward) {
-	if (Layout::advance_hit(forward)) {
-		view_hit();
-		return true;
-	}
-	return false;
-}
-
-bool GridLayout::advance_invisible_hit(bool forward) {
+void GridLayout::advance_invisible_hit(bool forward) {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 
 	if (hits->empty()) {
-		return false;
+		return;
 	}
 
 	QRect r;
 	QList<QRectF>::const_iterator it = hit_it;
 	do {
-		Layout::advance_hit(forward);
+		Layout::advance_hit_noupdate(forward);
 		r = get_target_rect(hit_page, *hit_it);
 		if (r.x() < 0 || r.y() < 0 ||
 				r.x() + r.width() >= width ||
@@ -412,50 +419,50 @@ bool GridLayout::advance_invisible_hit(bool forward) {
 		}
 	} while (it != hit_it);
 	view_rect(r);
-	return true;
 }
 
-bool GridLayout::view_hit() {
+void GridLayout::view_hit() {
 	QRect r = get_target_rect(hit_page, *hit_it);
-	return view_rect(r);
+	view_rect(r);
 }
 
-bool GridLayout::view_rect(const QRect &r) {
-	bool change = false;
+void GridLayout::view_rect(const QRect &r) {
+	int old_page = page;
 
 	// move view horizontally
 	if (r.width() <= width * (1 - 2 * search_padding)) {
 		if (r.x() < width * search_padding) {
-			change |= scroll_smooth(width * search_padding - r.x(), 0);
+			scroll_smooth_noupdate(width * search_padding - r.x(), 0);
 		} else if (r.x() + r.width() > width * (1 - search_padding)) {
-			change |= scroll_smooth(width * (1 - search_padding) - r.x() - r.width(), 0);
+			scroll_smooth_noupdate(width * (1 - search_padding) - r.x() - r.width(), 0);
 		}
 	} else {
 		int center = (width - r.width()) / 2;
 		if (center < 0) {
 			center = 0;
 		}
-		change |= scroll_smooth(center - r.x(), 0);
+		scroll_smooth_noupdate(center - r.x(), 0);
 	}
 	// vertically
 	if (r.height() <= height * (1 - 2 * search_padding)) {
 		if (r.y() < height * search_padding) {
-			change |= scroll_smooth(0, height * search_padding - r.y());
+			scroll_smooth_noupdate(0, height * search_padding - r.y());
 		} else if (r.y() + r.height() > height * (1 - search_padding)) {
-			change |= scroll_smooth(0, height * (1 - search_padding) - r.y() - r.height());
+			scroll_smooth_noupdate(0, height * (1 - search_padding) - r.y() - r.height());
 		}
 	} else {
 		int center = (height - r.height()) / 2;
 		if (center < 0) {
 			center = 0;
 		}
-		change |= scroll_smooth(0, center - r.y());
+		scroll_smooth_noupdate(0, center - r.y());
 	}
-	return change;
+	// needs to redraw regardless of change
+	viewer->layout_updated(page, page != old_page);
 }
 
-bool GridLayout::view_point(const QPoint &p) {
-	return scroll_smooth(-p.x(), -p.y());
+void GridLayout::view_point(const QPoint &p) {
+	scroll_smooth(-p.x(), -p.y());
 }
 
 QRect GridLayout::get_target_rect(int target_page, QRectF target_rect) const {
@@ -500,7 +507,7 @@ QPoint GridLayout::get_target_page_distance(int target_page) const {
 	return QPoint(wpos + center_x, hpos + center_y);
 }
 
-pair<int, QPointF> GridLayout::get_location_at(int mx, int my) {
+pair<int, QPointF> GridLayout::get_location_at(int mx, int my) const {
 	// find vertical page
 	int cur_page = page;
 	int grid_height;
@@ -557,7 +564,7 @@ pair<int, QPointF> GridLayout::get_location_at(int mx, int my) {
 	return make_pair(page, QPointF(x, y));
 }
 
-bool GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
+void GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
 	int link_page = link.pageNumber() - 1;
 	float w = res->get_page_width(link_page, false);
 	float h = res->get_page_height(link_page, false);
@@ -571,10 +578,10 @@ bool GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
 	if (link.isChangeTop()) {
 		p.ry() += link_point.y() * size - height * search_padding;
 	}
-	return view_point(p);
+	view_point(p);
 }
 
-bool GridLayout::goto_position(int page, QPointF pos) {
+void GridLayout::goto_position(int page, QPointF pos) {
 	float w = res->get_page_width(page, false);
 	float h = res->get_page_height(page, false);
 	pos = rotate_point(pos, w, h, res->get_rotation());
@@ -583,26 +590,29 @@ bool GridLayout::goto_position(int page, QPointF pos) {
 	p.rx() += pos.x() * size - width / 2;
 	p.ry() += pos.y() * size - height / 2;
 
-	return view_point(p);
+	view_point(p);
 }
 
-bool GridLayout::goto_page_at(int mx, int my) {
+void GridLayout::goto_page_at(int mx, int my) {
 	pair<int,QPointF> page = get_location_at(mx, my);
 
-	set_columns(1, false);
-	scroll_page(page.first, false);
+	set_columns_noupdate(1, false);
+	scroll_page_noupdate(page.first, false);
 
 	int new_page_height = ROUND(res->get_page_height(page.first) * size);
 	int new_y = page.second.y() * new_page_height;
 
 	scroll_smooth(0, -new_y + height/2 - off_y);
-	return true;
 }
 
 bool GridLayout::page_visible(int p) const {
 	if (p < page + horizontal_page - grid->get_offset() || p > last_visible_page) {
 		return false;
 	}
+	return true;
+}
+
+bool GridLayout::supports_smooth_scrolling() const {
 	return true;
 }
 

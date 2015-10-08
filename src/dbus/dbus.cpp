@@ -41,19 +41,19 @@ void dbus_init(Viewer *viewer) {
 }
 
 bool activate_katarakt_with_file(QString file) {
-    QString filepath = QFileInfo(file).absoluteFilePath();
-    QDBusConnection bus = QDBusConnection::sessionBus();
-    QStringList services = bus.interface()->registeredServiceNames().value();
-    QStringList katarakts = services.filter(QRegExp("^katarakt\\.pid"));
-    foreach (const QString& katarakt_service, katarakts) {
-        QDBusInterface dbus_iface(katarakt_service, "/", "katarakt.SourceCorrelate", bus);
-        QDBusReply<QString> reply = dbus_iface.call("filepath");
-        if (reply.isValid()) {
-            if (reply.value() == filepath) {
-                dbus_iface.call("focus");
-                return true;
-            }
-        }
-    }
-    return false;
+	QString filepath = QFileInfo(file).absoluteFilePath();
+	QDBusConnection bus = QDBusConnection::sessionBus();
+	QStringList services = bus.interface()->registeredServiceNames().value();
+	QStringList katarakts = services.filter(QRegExp("^katarakt\\.pid"));
+	foreach (const QString& katarakt_service, katarakts) {
+		QDBusInterface dbus_iface(katarakt_service, "/", "katarakt.SourceCorrelate", bus);
+		QDBusReply<QString> reply = dbus_iface.call("filepath");
+		if (reply.isValid()) {
+			if (reply.value() == filepath) {
+				dbus_iface.call("focus");
+				return true;
+			}
+		}
+	}
+	return false;
 }

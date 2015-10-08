@@ -31,6 +31,8 @@ public:
 	SearchBar *get_search_bar() const;
 	BeamerWindow *get_beamer() const;
 
+	void layout_updated(int new_page, bool page_changed);
+
 public slots:
 	void signal_slot(); // reloads on SIGUSR1
 

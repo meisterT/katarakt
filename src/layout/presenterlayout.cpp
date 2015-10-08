@@ -8,17 +8,17 @@
 
 using namespace std;
 
-PresenterLayout::PresenterLayout(Viewer *v, int page) :
-		Layout(v, page),
+PresenterLayout::PresenterLayout(Viewer *v, int render_index, int page) :
+		Layout(v, render_index, page),
 		main_ratio(0.67) { // TODO add config option
 	rebuild();
 }
 
-PresenterLayout::PresenterLayout(Layout &old_layout) :
-		Layout(old_layout),
-		main_ratio(0.67) {
-	rebuild();
-}
+//PresenterLayout::PresenterLayout(Layout &old_layout) :
+//		Layout(old_layout),
+//		main_ratio(0.67) {
+//	rebuild();
+//}
 
 PresenterLayout::~PresenterLayout() {
 }
@@ -76,10 +76,6 @@ void PresenterLayout::resize(int w, int h) {
 			optimized_ratio = width / res->get_min_aspect() / height;
 		}
 	}
-}
-
-bool PresenterLayout::supports_smooth_scrolling() const {
-	return false;
 }
 
 int PresenterLayout::calculate_fit_width(int page) const {
@@ -141,7 +137,7 @@ void PresenterLayout::render(QPainter *painter) {
 	}
 
 	for (int i = 0; i < 2; i++) {
-		int index = i + 1;
+		int index = render_index + i;
 		const KPage *k_page = res->get_page(page + i, page_width[i], index);
 		if (k_page != NULL) {
 			const QImage *img = k_page->get_image(index);
@@ -189,30 +185,22 @@ void PresenterLayout::render(QPainter *painter) {
 	// prefetch
 	for (int count = 1; count <= prefetch_count; count++) {
 		// after current page
-		if (res->get_page(page + count, calculate_fit_width(page + count), 1) != NULL) {
+		if (res->get_page(page + count, calculate_fit_width(page + count), render_index) != NULL) {
 			res->unlock_page(page + count);
 		}
 		// before current page
-		if (res->get_page(page - count, calculate_fit_width(page - count), 1) != NULL) {
+		if (res->get_page(page - count, calculate_fit_width(page - count), render_index) != NULL) {
 			res->unlock_page(page - count);
 		}
 	}
 	res->collect_garbage(page - prefetch_count * 3, page + 1 + prefetch_count * 3);
 }
 
-bool PresenterLayout::advance_hit(bool forward) {
-	if (Layout::advance_hit(forward)) {
-		view_hit();
-		return true;
-	}
-	return false;
-}
-
-bool PresenterLayout::advance_invisible_hit(bool forward) {
+void PresenterLayout::advance_invisible_hit(bool forward) {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 
 	if (hits->empty()) {
-		return false;
+		return;
 	}
 
 	if (forward ^ !viewer->get_search_bar()->is_search_forward()) {
@@ -221,16 +209,11 @@ bool PresenterLayout::advance_invisible_hit(bool forward) {
 	} else {
 		hit_it = hits->find(hit_page)->second->begin();
 	}
-	Layout::advance_hit(forward);
+	Layout::advance_hit_noupdate(forward);
 	view_hit();
-	return true;
 }
 
-bool PresenterLayout::view_hit() {
-	return scroll_page(hit_page, false);
-}
-
-pair<int, QPointF> PresenterLayout::get_location_at(int px, int py) {
+pair<int, QPointF> PresenterLayout::get_location_at(int px, int py) const {
 	// TODO duplicate code
 	int page_width[2], page_height[2];
 	int center_x[2] = {0, 0};

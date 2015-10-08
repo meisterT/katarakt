@@ -17,7 +17,7 @@ BeamerWindow::BeamerWindow(Viewer *v, QWidget *parent) :
 		valid(false) {
 	setFocusPolicy(Qt::StrongFocus);
 
-	layout = new PresentationLayout(viewer);
+	layout = new PresentationLayout(viewer, 0);
 
 	CFG *config = CFG::get_instance();
 	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
@@ -46,13 +46,6 @@ Layout *BeamerWindow::get_layout() const {
 	return layout;
 }
 
-void BeamerWindow::set_page(int page) {
-	// TODO calls itself if page != layout->get_page(), so once too often
-	if (layout->scroll_page(page, false)) {
-		update();
-	}
-}
-
 void BeamerWindow::toggle_fullscreen() {
 	setWindowState(windowState() ^ Qt::WindowFullScreen);
 }
@@ -76,15 +69,8 @@ void BeamerWindow::mousePressEvent(QMouseEvent *event) {
 void BeamerWindow::mouseReleaseEvent(QMouseEvent *event) {
 	if (click_link_button != Qt::NoButton && event->button() == click_link_button) {
 		if (mx_down == event->x() && my_down == event->y()) {
-			int page = layout->get_page();
 			pair<int, QPointF> location = layout->get_location_at(mx_down, my_down);
-			if (layout->activate_link(location.first, location.second.x(), location.second.y())) {
-				if (viewer->get_canvas()->get_layout()->scroll_page(layout->get_page(), false)) {
-					viewer->get_canvas()->update();
-				}
-				viewer->get_res()->store_jump(page); // store old position if a clicked link moved the view
-				update();
-			}
+			layout->activate_link(location.first, location.second.x(), location.second.y());
 		}
 	}
 }
@@ -93,9 +79,7 @@ void BeamerWindow::wheelEvent(QWheelEvent *event) {
 	int d = event->delta();
 	if (QApplication::keyboardModifiers() == Qt::NoModifier) {
 		if (event->orientation() == Qt::Vertical) {
-			if (viewer->get_canvas()->get_layout()->scroll_page(-d / mouse_wheel_factor)) {
-				viewer->get_canvas()->update();
-			}
+			viewer->get_canvas()->get_layout()->scroll_page(-d / mouse_wheel_factor);
 		}
 	}
 }

@@ -38,7 +38,7 @@ public:
 	const QString &get_file() const;
 	void set_file(const QString &new_file);
 	// page (meta)data
-	const KPage *get_page(int page, int newWidth, int index = 0);
+	const KPage *get_page(int page, int newWidth, int index);
 //	QString get_page_label(int page) const;
 	float get_page_width(int page, bool rotated = true) const;
 	float get_page_height(int page, bool rotated = true) const;

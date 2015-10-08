@@ -269,9 +269,7 @@ void SearchBar::insert_hits(int page, QList<QRectF> *l) {
 
 	// only update the layout if the hits should be viewed
 	if (empty) {
-		if (viewer->get_canvas()->get_layout()->update_search()) {
-			viewer->get_canvas()->update();
-		}
+		viewer->get_canvas()->get_layout()->update_search();
 	}
 }
 
@@ -294,9 +292,7 @@ void SearchBar::set_text() {
 	// do not start the same search again but signal slots
 	if (term == line->text()) {
 		c->setFocus(Qt::OtherFocusReason);
-		if (c->get_layout()->update_search()) {
-			c->update();
-		}
+		c->get_layout()->update_search();
 		return;
 	}
 
@@ -307,7 +303,6 @@ void SearchBar::set_text() {
 
 	worker->stop = true;
 	search_mutex.unlock();
-	viewer->get_res()->store_jump(start_page);
 	c->setFocus(Qt::OtherFocusReason);
 }
 

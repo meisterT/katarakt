@@ -81,9 +81,9 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 		default: select_text_button = Qt::NoButton;
 	}
 
-	presentation_layout = new PresentationLayout(viewer);
-	grid_layout = new GridLayout(viewer);
-	presenter_layout = new PresenterLayout(viewer); // TODO add config string
+	presentation_layout = new PresentationLayout(viewer, 0);
+	grid_layout = new GridLayout(viewer, 0);
+	presenter_layout = new PresenterLayout(viewer, 1); // TODO add config string
 
 	QString default_layout = config->get_value("default_layout").toString();
 	if (default_layout == "grid") {
@@ -204,7 +204,6 @@ void Canvas::mousePressEvent(QMouseEvent *event) {
 		if (cursor().shape() != Qt::PointingHandCursor) { // TODO
 			setCursor(Qt::IBeamCursor);
 		}
-		update();
 	}
 }
 
@@ -219,12 +218,8 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 		emit synchronize_editor(location.first, (int) ROUND(location.second.x()), (int) ROUND(location.second.y()));
 	} else if (click_link_button != Qt::NoButton && event->button() == click_link_button) {
 		if (mx_down == event->x() && my_down == event->y()) {
-			int page = cur_layout->get_page();
 			pair<int, QPointF> location = cur_layout->get_location_at(mx_down, my_down);
-			if (cur_layout->activate_link(location.first, location.second.x(), location.second.y())) {
-				viewer->get_res()->store_jump(page); // store old position if a clicked link moved the view
-				update();
-			}
+			cur_layout->activate_link(location.first, location.second.x(), location.second.y());
 		}
 	}
 
@@ -241,39 +236,27 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 
 void Canvas::mouseMoveEvent(QMouseEvent *event) {
 	if (drag_view_button != Qt::NoButton && event->buttons() & drag_view_button) {
-		if (cur_layout->scroll_smooth(event->x() - mx, event->y() - my)) {
-			update();
-		}
+		cur_layout->scroll_smooth(event->x() - mx, event->y() - my);
 		mx = event->x();
 		my = event->y();
 	}
 	if (select_text_button != Qt::NoButton && event->buttons() & select_text_button) {
-		if (cur_layout->select(event->x(), event->y(), Selection::End)) {
-			update();
-		}
+		cur_layout->select(event->x(), event->y(), Selection::End);
 
 		// scrolling by dragging the selection
 		// TODO only scrolls when the mouse is moved
 		int margin = min(10, min(width() / 10, height() / 10));
 		if (event->x() < margin) {
-			if (cur_layout->scroll_smooth(min(margin - event->x(), margin) * 2, 0)) {
-				update();
-			}
+			cur_layout->scroll_smooth(min(margin - event->x(), margin) * 2, 0);
 		}
 		if (event->x() > width() - margin) {
-			if (cur_layout->scroll_smooth(max(width() - event->x() - margin, -margin) * 2, 0)) {
-				update();
-			}
+			cur_layout->scroll_smooth(max(width() - event->x() - margin, -margin) * 2, 0);
 		}
 		if (event->y() < margin) {
-			if (cur_layout->scroll_smooth(0, min(margin - event->y(), margin) * 2)) {
-				update();
-			}
+			cur_layout->scroll_smooth(0, min(margin - event->y(), margin) * 2);
 		}
 		if (event->y() > height() - margin) {
-			if (cur_layout->scroll_smooth(0, max(height() - event->y() - margin, -margin) * 2)) {
-				update();
-			}
+			cur_layout->scroll_smooth(0, max(height() - event->y() - margin, -margin) * 2);
 		}
 	}
 }
@@ -285,26 +268,18 @@ void Canvas::wheelEvent(QWheelEvent *event) {
 		case Qt::NoModifier:
 			if (event->orientation() == Qt::Vertical) {
 				if (cur_layout->supports_smooth_scrolling()) {
-					if (cur_layout->scroll_smooth(0, d)) {
-						update();
-					}
+					cur_layout->scroll_smooth(0, d);
 				} else {
-					if (cur_layout->scroll_page(-d / mouse_wheel_factor)) {
-						update();
-					}
+					cur_layout->scroll_page(-d / mouse_wheel_factor);
 				}
 			} else {
-				if (cur_layout->scroll_smooth(d, 0)) {
-					update();
-				}
+				cur_layout->scroll_smooth(d, 0);
 			}
 			break;
 
 		// zoom
 		case Qt::ControlModifier:
-			if (cur_layout->set_zoom(d / mouse_wheel_factor)) {
-				update();
-			}
+			cur_layout->set_zoom(d / mouse_wheel_factor);
 			break;
 	}
 }
@@ -312,16 +287,13 @@ void Canvas::wheelEvent(QWheelEvent *event) {
 void Canvas::mouseDoubleClickEvent(QMouseEvent * event) {
 	if (click_link_button != Qt::NoButton && event->button() == drag_view_button) {
 		cur_layout->goto_page_at(event->x(), event->y());
-		update();
 	}
 	if (select_text_button != Qt::NoButton && event->button() == select_text_button) {
 		// enable triple click, disable after timeout
 		triple_click_possible = true;
 		QTimer::singleShot(QApplication::doubleClickInterval(), this, SLOT(disable_triple_click()));
 
-		if (cur_layout->select(event->x(), event->y(), Selection::StartWord)) {
-			update();
-		}
+		cur_layout->select(event->x(), event->y(), Selection::StartWord);
 	}
 }
 
@@ -362,7 +334,7 @@ void Canvas::set_presenter_layout() {
 //		int cur_screen = desktop->screenNumber(viewer);
 //		cout << "primary: " << primary_screen << ", current: " << cur_screen << endl;
 //	}
-	viewer->get_beamer()->set_page(cur_layout->get_page());
+	viewer->get_beamer()->get_layout()->scroll_page(cur_layout->get_page(), false);
 	viewer->get_beamer()->show();
 }
 
@@ -409,12 +381,8 @@ void Canvas::page_rendered(int page) {
 }
 
 void Canvas::goto_page() {
-	int old_page = cur_layout->get_page();
 	int page = goto_line->text().toInt() - 1;
 	goto_line->hide();
-	if (cur_layout->scroll_page(page, false)) {
-		viewer->get_res()->store_jump(old_page);
-		update();
-	}
+	cur_layout->scroll_page_jump(page, false);
 }
 

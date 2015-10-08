@@ -244,9 +244,7 @@ void Viewer::jump_back() {
 	if (new_page == -1) {
 		return;
 	}
-	if (canvas->get_layout()->scroll_page(new_page, false)) {
-		canvas->update();
-	}
+	canvas->get_layout()->scroll_page(new_page, false);
 }
 
 void Viewer::jump_forward() {
@@ -254,9 +252,7 @@ void Viewer::jump_forward() {
 	if (new_page == -1) {
 		return;
 	}
-	if (canvas->get_layout()->scroll_page(new_page, false)) {
-		canvas->update();
-	}
+	canvas->get_layout()->scroll_page(new_page, false);
 }
 
 void Viewer::mark_jump() {
@@ -266,38 +262,24 @@ void Viewer::mark_jump() {
 
 // general movement
 void Viewer::page_up() {
-	if (canvas->get_layout()->scroll_page(-1)) {
-		canvas->update();
-	}
+	canvas->get_layout()->scroll_page(-1);
 }
 
 void Viewer::page_down() {
-	if (canvas->get_layout()->scroll_page(1)) {
-		canvas->update();
-	}
+	canvas->get_layout()->scroll_page(1);
 }
 
 void Viewer::page_first() {
-	int page = canvas->get_layout()->get_page();
-	if (canvas->get_layout()->scroll_page(-1, false)) {
-		res->store_jump(page);
-		canvas->update();
-	}
+	canvas->get_layout()->scroll_page_jump(-1, false);
 }
 
 void Viewer::page_last() {
-	int page = canvas->get_layout()->get_page();
-	if (canvas->get_layout()->scroll_page(res->get_page_count(), false)) {
-		res->store_jump(page);
-		canvas->update();
-	}
+	canvas->get_layout()->scroll_page_jump(res->get_page_count(), false);
 }
 
 void Viewer::half_screen_up() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
-		if (canvas->get_layout()->scroll_smooth(0, height() * 0.5f)) {
-			canvas->update();
-		}
+		canvas->get_layout()->scroll_smooth(0, height() * 0.5f);
 	} else { // fallback
 		page_up();
 	}
@@ -305,9 +287,7 @@ void Viewer::half_screen_up() {
 
 void Viewer::half_screen_down() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
-		if (canvas->get_layout()->scroll_smooth(0, -height() * 0.5f)) {
-			canvas->update();
-		}
+		canvas->get_layout()->scroll_smooth(0, -height() * 0.5f);
 	} else { // fallback
 		page_down();
 	}
@@ -315,9 +295,7 @@ void Viewer::half_screen_down() {
 
 void Viewer::screen_up() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
-		if (canvas->get_layout()->scroll_smooth(0, height() * screen_scroll_factor)) {
-			canvas->update();
-		}
+		canvas->get_layout()->scroll_smooth(0, height() * screen_scroll_factor);
 	} else { // fallback
 		page_up();
 	}
@@ -325,9 +303,7 @@ void Viewer::screen_up() {
 
 void Viewer::screen_down() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
-		if (canvas->get_layout()->scroll_smooth(0, -height() * screen_scroll_factor)) {
-			canvas->update();
-		}
+		canvas->get_layout()->scroll_smooth(0, -height() * screen_scroll_factor);
 	} else { // fallback
 		page_down();
 	}
@@ -335,9 +311,7 @@ void Viewer::screen_down() {
 
 void Viewer::smooth_up() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
-		if (canvas->get_layout()->scroll_smooth(0, smooth_scroll_delta)) {
-			canvas->update();
-		}
+		canvas->get_layout()->scroll_smooth(0, smooth_scroll_delta);
 	} else { // fallback
 		page_up();
 	}
@@ -345,9 +319,7 @@ void Viewer::smooth_up() {
 
 void Viewer::smooth_down() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
-		if (canvas->get_layout()->scroll_smooth(0, -smooth_scroll_delta)) {
-			canvas->update();
-		}
+		canvas->get_layout()->scroll_smooth(0, -smooth_scroll_delta);
 	} else { // fallback
 		page_down();
 	}
@@ -355,9 +327,7 @@ void Viewer::smooth_down() {
 
 void Viewer::smooth_left() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
-		if (canvas->get_layout()->scroll_smooth(smooth_scroll_delta, 0)) {
-			canvas->update();
-		}
+		canvas->get_layout()->scroll_smooth(smooth_scroll_delta, 0);
 	} else { // fallback
 		page_up();
 	}
@@ -365,54 +335,38 @@ void Viewer::smooth_left() {
 
 void Viewer::smooth_right() {
 	if (canvas->get_layout()->supports_smooth_scrolling()) {
-		if (canvas->get_layout()->scroll_smooth(-smooth_scroll_delta, 0)) {
-			canvas->update();
-		}
+		canvas->get_layout()->scroll_smooth(-smooth_scroll_delta, 0);
 	} else { // fallback
 		page_down();
 	}
 }
 
 void Viewer::zoom_in() {
-	if (canvas->get_layout()->set_zoom(1)) {
-		canvas->update();
-	}
+	canvas->get_layout()->set_zoom(1);
 }
 
 void Viewer::zoom_out() {
-	if (canvas->get_layout()->set_zoom(-1)) {
-		canvas->update();
-	}
+	canvas->get_layout()->set_zoom(-1);
 }
 
 void Viewer::reset_zoom() {
-	if (canvas->get_layout()->set_zoom(0, false)) {
-		canvas->update();
-	}
+	canvas->get_layout()->set_zoom(0, false);
 }
 
 void Viewer::columns_inc() {
-	if (canvas->get_layout()->set_columns(1)) {
-		canvas->update();
-	}
+	canvas->get_layout()->set_columns(1);
 }
 
 void Viewer::columns_dec() {
-	if (canvas->get_layout()->set_columns(-1)) {
-		canvas->update();
-	}
+	canvas->get_layout()->set_columns(-1);
 }
 
 void Viewer::offset_inc() {
-	if (canvas->get_layout()->set_offset(1)) {
-		canvas->update();
-	}
+	canvas->get_layout()->set_offset(1);
 }
 
 void Viewer::offset_dec() {
-	if (canvas->get_layout()->set_offset(-1)) {
-		canvas->update();
-	}
+	canvas->get_layout()->set_offset(-1);
 }
 
 void Viewer::quit() {
@@ -429,41 +383,25 @@ void Viewer::search_backward() {
 
 void Viewer::next_hit() {
 	if (canvas->get_layout()->get_search_visible()) {
-		int page = canvas->get_layout()->get_page();
-		if (canvas->get_layout()->advance_hit()) {
-			res->store_jump(page);
-			canvas->update();
-		}
+		canvas->get_layout()->advance_hit();
 	}
 }
 
 void Viewer::previous_hit() {
 	if (canvas->get_layout()->get_search_visible()) {
-		int page = canvas->get_layout()->get_page();
-		if (canvas->get_layout()->advance_hit(false)) {
-			res->store_jump(page);
-			canvas->update();
-		}
+		canvas->get_layout()->advance_hit(false);
 	}
 }
 
 void Viewer::next_invisible_hit() {
 	if (canvas->get_layout()->get_search_visible()) {
-		int page = canvas->get_layout()->get_page();
-		if (canvas->get_layout()->advance_invisible_hit()) {
-			res->store_jump(page);
-			canvas->update();
-		}
+		canvas->get_layout()->advance_invisible_hit();
 	}
 }
 
 void Viewer::previous_invisible_hit() {
 	if (canvas->get_layout()->get_search_visible()) {
-		int page = canvas->get_layout()->get_page();
-		if (canvas->get_layout()->advance_invisible_hit(false)) {
-			res->store_jump(page);
-			canvas->update();
-		}
+		canvas->get_layout()->advance_invisible_hit(false);
 	}
 }
 
@@ -544,6 +482,18 @@ SearchBar *Viewer::get_search_bar() const {
 
 BeamerWindow *Viewer::get_beamer() const {
 	return beamer;
+}
+
+void Viewer::layout_updated(int new_page, bool page_changed) {
+	if (page_changed) {
+		canvas->get_layout()->scroll_page(new_page, false);
+		if (beamer->isVisible()) {
+			beamer->get_layout()->scroll_page(new_page, false);
+		}
+		// TODO unfold toc tree to show current entry?
+	}
+	canvas->update();
+	beamer->update();
 }
 
 void Viewer::signal_slot() {

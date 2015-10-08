@@ -16,8 +16,9 @@ using namespace std;
 
 
 //==[ Layout ]=================================================================
-Layout::Layout(Viewer *v, int _page) :
+Layout::Layout(Viewer *v, int render_index, int _page) :
 		viewer(v), res(v->get_res()),
+		render_index(render_index),
 		page(_page), width(0), height(0),
 		search_visible(false) {
 	// load config options
@@ -69,57 +70,42 @@ void Layout::resize(int w, int h) {
 	height = h;
 }
 
-bool Layout::set_zoom(int /*new_zoom*/, bool /*relative*/) {
+void Layout::set_zoom(int /*new_zoom*/, bool /*relative*/) {
 	// implement in child classes where necessary
-	return false;
 }
 
-bool Layout::set_columns(int /*new_columns*/, bool /*relative*/) {
+void Layout::set_columns(int /*new_columns*/, bool /*relative*/) {
 	// only useful for grid layout
-	return false;
 }
 
-bool Layout::set_offset(int /*new_offset*/, bool /*relative*/) {
+void Layout::set_offset(int /*new_offset*/, bool /*relative*/) {
 	// only useful for grid layout
-	return false;
 }
 
 bool Layout::supports_smooth_scrolling() const {
-	// normally a layout supports smooth scrolling
-	return true;
-}
-
-bool Layout::scroll_smooth(int /*dx*/, int /*dy*/) {
-	// implement in child classes where necessary
+	// override if layout supports smooth scrolling
 	return false;
 }
 
-bool Layout::scroll_page(int new_page, bool relative) {
-	int old_page = page;
-	if (relative) {
-		page += new_page;
-	} else {
-		page = new_page;
-	}
-	if (page < 0) {
-		page = 0;
-	}
-	if (page > res->get_page_count() - 1) {
-		page = res->get_page_count() - 1;
-	}
+void Layout::scroll_smooth(int /*dx*/, int /*dy*/) {
+	// implement in child classes where necessary
+}
 
-	if (page != old_page) {
-		viewer->get_beamer()->set_page(page);
-		return true;
-	} else {
-		return false;
+void Layout::scroll_page(int new_page, bool relative) {
+	if (scroll_page_noupdate(new_page, relative)) {
+		viewer->layout_updated(page, true);
 	}
 }
 
-bool Layout::update_search() {
+void Layout::scroll_page_jump(int new_page, bool relative) {
+	res->store_jump(get_page());
+	scroll_page(new_page, relative);
+}
+
+void Layout::update_search() {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 	if (hits->empty()) {
-		return false;
+		return;
 	}
 
 	// find the right page before/after the current one
@@ -145,15 +131,31 @@ bool Layout::update_search() {
 		hit_it = it->second->end();
 		--hit_it;
 	}
+	res->store_jump(get_page());
 	view_hit();
-	return true;
 }
 
 void Layout::set_search_visible(bool visible) {
 	search_visible = visible;
 }
 
-bool Layout::advance_hit(bool forward) {
+bool Layout::scroll_page_noupdate(int new_page, bool relative) {
+	int old_page = page;
+	if (relative) {
+		page += new_page;
+	} else {
+		page = new_page;
+	}
+	if (page < 0) {
+		page = 0;
+	}
+	if (page > res->get_page_count() - 1) {
+		page = res->get_page_count() - 1;
+	}
+	return page != old_page;
+}
+
+bool Layout::advance_hit_noupdate(bool forward) {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 
 	if (hits->empty()) {
@@ -185,36 +187,45 @@ bool Layout::advance_hit(bool forward) {
 			--hit_it;
 		}
 	}
+	res->store_jump(get_page());
 	return true;
 }
 
-bool Layout::goto_link_destination(const Poppler::LinkDestination &link) {
-	return scroll_page(link.pageNumber() - 1, false);
+void Layout::advance_hit(bool forward) {
+	if (advance_hit_noupdate(forward)) {
+		view_hit();
+	}
 }
 
-bool Layout::goto_position(int page, QPointF /*pos*/) {
-	return scroll_page(page, false);
+void Layout::goto_link_destination(const Poppler::LinkDestination &link) {
+	res->store_jump(get_page());
+	scroll_page(link.pageNumber() - 1, false);
 }
 
-bool Layout::goto_page_at(int /*mx*/, int /*my*/) {
-	return false;
+void Layout::goto_position(int page, QPointF /*pos*/) {
+	res->store_jump(get_page());
+	scroll_page(page, false);
+}
+
+void Layout::goto_page_at(int /*mx*/, int /*my*/) {
+	// implement in child classes where necessary
 }
 
 bool Layout::get_search_visible() const {
 	return search_visible;
 }
 
-bool Layout::select(int px, int py, enum Selection::Mode mode) {
+void Layout::select(int px, int py, enum Selection::Mode mode) {
 	pair<int, QPointF> loc = get_location_at(px, py);
 	loc.second.rx() *= res->get_page_width(loc.first, false);
 	loc.second.ry() *= res->get_page_height(loc.first, false);
 
 	const QList<SelectionLine *> *text = res->get_text(loc.first);
 	selection.set_cursor(text, loc, mode);
-	return true; // TODO visible? change?
+	viewer->layout_updated(page, false); // TODO visible? change?
 }
 
-void Layout::copy_selection_text(QClipboard::Mode mode) {
+void Layout::copy_selection_text(QClipboard::Mode mode) const {
 	QString text;
 	if (selection.is_active()) {
 		Cursor from = selection.get_cursor(true);
@@ -293,11 +304,16 @@ void Layout::render_selection(QPainter *painter, int cur_page, QPoint offset, fl
 	}
 }
 
-bool Layout::activate_link(int page, float x, float y) {
+void Layout::view_hit() {
+	bool page_changed = scroll_page_noupdate(hit_page, false);
+	viewer->layout_updated(hit_page, page_changed);
+}
+
+void Layout::activate_link(int page, float x, float y) {
 	// find matching box
 	const QList<Poppler::Link *> *links = res->get_links(page);
 	if (links == NULL) {
-		return false;
+		return;
 	}
 	Q_FOREACH(Poppler::Link *l, *links) {
 		QRectF r = l->linkArea();
@@ -307,7 +323,8 @@ bool Layout::activate_link(int page, float x, float y) {
 					case Poppler::Link::Goto: {
 						Poppler::LinkGoto *link = static_cast<Poppler::LinkGoto *>(l);
 						// TODO support links to other files
-						return goto_link_destination(link->destination());
+						goto_link_destination(link->destination());
+						return;
 					}
 					case Poppler::Link::Browse: {
 						Poppler::LinkBrowse *link = static_cast<Poppler::LinkBrowse *>(l);
@@ -326,6 +343,5 @@ bool Layout::activate_link(int page, float x, float y) {
 			}
 		}
 	}
-	return false;
 }
 

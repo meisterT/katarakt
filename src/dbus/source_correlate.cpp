@@ -30,13 +30,7 @@ void SourceCorrelate::view(QString filename, int page, double x, double y) {
 		viewer->open(filename);
 	}
 
-	// needed to add an entry to the jump list
-	int current_page = viewer->get_canvas()->get_layout()->get_page();
-
-	if (viewer->get_canvas()->get_layout()->goto_position(page, QPointF(x, y))) {
-		viewer->update();
-	}
-	viewer->get_res()->store_jump(current_page);
+	viewer->get_canvas()->get_layout()->goto_position(page, QPointF(x, y));
 }
 
 void SourceCorrelate::emit_edit_signal(int page, int x, int y) {
