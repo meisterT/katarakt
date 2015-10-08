@@ -124,7 +124,14 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 
 	update_info_widget();
 
+	presenter_progress.setMinimum(1);
+ 	presenter_progress.setMaximum(res->get_page_count());
+ 	presenter_progress.setValue(canvas->get_layout()->get_page() + 1);
+//	presenter_progress.setFormat("%v/%m");
+ 	presenter_progress.setTextVisible(true);
+
 	layout->addWidget(splitter);
+	layout->addWidget(&presenter_progress);
 	layout->addWidget(search_bar);
 	setLayout(layout);
 
@@ -143,6 +150,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 
 	// enable transparency, but only in the right places
 	setAttribute(Qt::WA_TranslucentBackground);
+	presenter_progress.setAutoFillBackground(true);
 	search_bar->setAutoFillBackground(true);
 	info_widget.setAutoFillBackground(true);
 	toc->setAutoFillBackground(true);
@@ -177,6 +185,8 @@ void Viewer::reload(bool clamp) {
 #endif
 
 	res->load(res->get_file(), info_password.text().toLatin1());
+
+ 	presenter_progress.setMaximum(res->get_page_count());
 
 	search_bar->reset_search(); // TODO restart search if loading the same document?
 	search_bar->load(res->get_file(), info_password.text().toLatin1());
@@ -491,9 +501,14 @@ void Viewer::layout_updated(int new_page, bool page_changed) {
 			beamer->get_layout()->scroll_page(new_page, false);
 		}
 		// TODO unfold toc tree to show current entry?
+		presenter_progress.setValue(new_page + 1);
 	}
 	canvas->update();
 	beamer->update();
+}
+
+void Viewer::show_progress(bool show) {
+	presenter_progress.setVisible(show);
 }
 
 void Viewer::signal_slot() {

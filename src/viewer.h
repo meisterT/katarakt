@@ -7,6 +7,7 @@
 #include <QSocketNotifier>
 #include <QLabel>
 #include <QLineEdit>
+#include <QProgressBar>
 
 
 class ResourceManager;
@@ -32,6 +33,7 @@ public:
 	BeamerWindow *get_beamer() const;
 
 	void layout_updated(int new_page, bool page_changed);
+	void show_progress(bool show);
 
 public slots:
 	void signal_slot(); // reloads on SIGUSR1
@@ -87,6 +89,7 @@ private:
 	Splitter *splitter;
 	Toc *toc;
 	Canvas *canvas;
+	QProgressBar presenter_progress;
 	SearchBar *search_bar;
 	QVBoxLayout *layout;
 

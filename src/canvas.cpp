@@ -116,8 +116,10 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	setup_keys(beamer);
 	if (cur_layout == presenter_layout) {
 		beamer->show();
+		viewer->show_progress(true);
 	} else {
 		beamer->hide();
+		viewer->show_progress(false);
 	}
 }
 
@@ -309,6 +311,7 @@ void Canvas::set_presentation_layout() {
 	cur_layout = presentation_layout;
 	update();
 	viewer->get_beamer()->hide();
+	viewer->show_progress(false);
 	viewer->activateWindow();
 }
 
@@ -318,6 +321,7 @@ void Canvas::set_grid_layout() {
 	cur_layout = grid_layout;
 	update();
 	viewer->get_beamer()->hide();
+	viewer->show_progress(false);
 	viewer->activateWindow();
 }
 
@@ -336,6 +340,7 @@ void Canvas::set_presenter_layout() {
 //	}
 	viewer->get_beamer()->get_layout()->scroll_page(cur_layout->get_page(), false);
 	viewer->get_beamer()->show();
+	viewer->show_progress(true);
 }
 
 void Canvas::toggle_overlay() {
