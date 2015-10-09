@@ -86,6 +86,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 		return;
 	}
 	res->connect_canvas();
+	canvas->update_page_overlay(); // set initial position
 
 	splitter->addWidget(toc);
 	splitter->addWidget(canvas);
@@ -501,6 +502,7 @@ void Viewer::layout_updated(int new_page, bool page_changed) {
 			beamer->get_layout()->scroll_page(new_page, false);
 		}
 		// TODO unfold toc tree to show current entry?
+		canvas->update_page_overlay();
 		presenter_progress.setValue(new_page + 1);
 	}
 	canvas->update();

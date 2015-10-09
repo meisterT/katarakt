@@ -17,6 +17,7 @@ class PresentationLayout;
 class GridLayout;
 class PresenterLayout;
 class GotoLine;
+class QLabel;
 
 
 class Canvas : public QWidget {
@@ -32,6 +33,8 @@ public:
 	void set_search_visible(bool visible);
 
 	Layout *get_layout() const;
+
+	void update_page_overlay();
 
 protected:
 	// QT event handling
@@ -76,13 +79,12 @@ private:
 	PresenterLayout *presenter_layout;
 
 	GotoLine *goto_line;
+	QLabel *page_overlay;
 
 	int mx, my;
 	int mx_down, my_down;
 	bool triple_click_possible;
 	QTimer scroll_timer;
-
-	bool draw_overlay;
 
 	bool valid;
 

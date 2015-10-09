@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QTimer>
+#include <QLabel>
 #include <iostream>
 #include "canvas.h"
 #include "viewer.h"
@@ -27,7 +28,6 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 		QWidget(parent),
 		viewer(v),
 		triple_click_possible(false),
-		draw_overlay(true),
 		valid(true) {
 	setFocusPolicy(Qt::StrongFocus);
 
@@ -113,6 +113,10 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	goto_line->hide();
 	connect(goto_line, SIGNAL(returnPressed()), this, SLOT(goto_page()), Qt::UniqueConnection);
 
+	page_overlay = new QLabel(this);
+	page_overlay->setAutoFillBackground(true);
+	page_overlay->show();
+
 	// setup beamer
 	BeamerWindow *beamer = viewer->get_beamer();
 	setup_keys(beamer);
@@ -126,6 +130,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 }
 
 Canvas::~Canvas() {
+	delete page_overlay;
 	delete goto_line;
 	delete presentation_layout;
 	delete grid_layout;
@@ -155,6 +160,15 @@ Layout *Canvas::get_layout() const {
 	return cur_layout;
 }
 
+void Canvas::update_page_overlay() {
+	QString overlay_text = QString("page %1/%2")
+		.arg(cur_layout->get_page() + 1)
+		.arg(viewer->get_res()->get_page_count());
+	page_overlay->setText(overlay_text);
+	page_overlay->adjustSize();
+	page_overlay->move(width() - page_overlay->width(), height() - page_overlay->height());
+}
+
 void Canvas::paintEvent(QPaintEvent * /*event*/) {
 #ifdef DEBUG
 	cerr << "redraw" << endl;
@@ -166,22 +180,6 @@ void Canvas::paintEvent(QPaintEvent * /*event*/) {
 		painter.fillRect(rect(), background);
 	}
 	cur_layout->render(&painter);
-
-	QString title = QString("page %1/%2")
-		.arg(cur_layout->get_page() + 1)
-		.arg(viewer->get_res()->get_page_count());
-
-	if (draw_overlay) {
-		QRect size = QRect(0, 0, width(), height());
-		int flags = Qt::AlignBottom | Qt::AlignRight;
-		QRect bounding = painter.boundingRect(size, flags, title);
-
-		painter.setPen(Qt::NoPen);
-		painter.setBrush(QColor("#eeeeec"));
-		painter.drawRect(bounding);
-		painter.setPen(QColor("#2e3436"));
-		painter.drawText(size, flags, title);
-	}
 }
 
 void Canvas::mousePressEvent(QMouseEvent *event) {
@@ -304,7 +302,7 @@ void Canvas::mouseDoubleClickEvent(QMouseEvent * event) {
 void Canvas::resizeEvent(QResizeEvent *event) {
 	cur_layout->resize(event->size().width(), event->size().height());
 	goto_line->move(0, height() - goto_line->height());
-	update();
+	page_overlay->move(width() - page_overlay->width(), height() - page_overlay->height());
 }
 
 // primitive actions
@@ -346,8 +344,7 @@ void Canvas::set_presenter_layout() {
 }
 
 void Canvas::toggle_overlay() {
-	draw_overlay = not draw_overlay;
-	update();
+	page_overlay->setVisible(!page_overlay->isVisible());
 }
 
 void Canvas::focus_goto() {
