@@ -42,6 +42,7 @@ void CFG::init_defaults() {
 	defaults["quit_on_init_fail"] = false;
 	defaults["single_instance_per_file"] = false;
 	defaults["icon_theme"] = "";
+	defaults["stylesheet"] = "";
 
 	// mouse buttons
 	defaults["click_link_button"] = 1;

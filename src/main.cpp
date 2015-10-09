@@ -111,6 +111,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	// load stylesheet from config if no stylesheet was specified on the command line
+	if (app.styleSheet().isEmpty()) {
+		app.setStyleSheet(CFG::get_instance()->get_value("stylesheet").toString());
+	}
+
 	Viewer katarakt(file);
 	if (!katarakt.is_valid()) {
 		return 1;

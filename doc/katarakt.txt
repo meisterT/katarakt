@@ -181,6 +181,21 @@ VARIABLES
 	katarakt instance, then the other katarakt window is activated instead.
 'string' *icon_theme* ::
 	The name of your icon theme. Fill in if auto detection fails.
+'string' *stylesheet* ::
+	See link:http://doc.qt.io/qt-4.8/stylesheet.html[]. It can be overridden
+	via Qt's *-stylesheet* command line option. The following example changes
+	the 'goto page' bar: +
++
+----
+stylesheet="
+GotoLine {
+	margin: 0px;
+	padding: 4px;
+	border-top-right-radius: 6px;
+	border-top: 1px solid black;
+	border-right: 1px solid black;
+}"
+----
 
 'int' *click_link_button* ::
 	1: The mouse button used for clicking links. Buttons 1-5 are supported.
