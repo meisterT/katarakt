@@ -93,7 +93,9 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	}
 
 	// apply start option
-	cur_layout->scroll_page(config->get_tmp_value("start_page").toInt(), false);
+	if (viewer->get_res()->is_valid()) {
+		cur_layout->scroll_page(config->get_tmp_value("start_page").toInt(), false);
+	}
 
 	setup_keys(this);
 
