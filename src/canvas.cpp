@@ -88,6 +88,8 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	QString default_layout = config->get_value("default_layout").toString();
 	if (default_layout == "grid") {
 		cur_layout = grid_layout;
+	} else if (default_layout == "presenter") {
+		cur_layout = presenter_layout;
 	} else { // "presentation" and everything else
 		cur_layout = presentation_layout;
 	}
