@@ -23,6 +23,7 @@ public:
 
 	void scroll_smooth(int dx, int dy);
 	void scroll_page(int new_page, bool relative = true);
+	void scroll_page_top_jump(int new_page, bool relative = true);
 	void render(QPainter *painter);
 
 	void advance_invisible_hit(bool forward = true);

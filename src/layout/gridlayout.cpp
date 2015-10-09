@@ -142,7 +142,7 @@ void GridLayout::resize(int w, int h) {
 
 void GridLayout::set_zoom(int new_zoom, bool relative) {
 	float old_factor = 1 + zoom * zoom_factor;
-	int old_page = page;
+	int old_page = get_page();
 	if (relative) {
 		zoom += new_zoom;
 	} else {
@@ -163,7 +163,7 @@ void GridLayout::set_zoom(int new_zoom, bool relative) {
 	off_y = (off_y - height / 2) * new_factor / old_factor + height / 2;
 
 	set_constants();
-	viewer->layout_updated(page, page != old_page);
+	viewer->layout_updated(get_page(), get_page() != old_page);
 }
 
 bool GridLayout::set_columns_noupdate(int new_columns, bool relative) {
@@ -179,28 +179,28 @@ bool GridLayout::set_columns_noupdate(int new_columns, bool relative) {
 }
 
 void GridLayout::set_columns(int new_columns, bool relative) {
-	int old_page = page;
+	int old_page = get_page();
 	if (set_columns_noupdate(new_columns, relative)) {
-		viewer->layout_updated(page, page != old_page);
+		viewer->layout_updated(get_page(), get_page() != old_page);
 	}
 }
 
 void GridLayout::set_offset(int new_offset, bool relative) {
-	int old_page = page;
+	int old_page = get_page();
 	if (relative) {
 		new_offset += grid->get_offset();
 	}
 
 	if (grid->set_offset(new_offset)) {
 		set_constants();
-		viewer->layout_updated(page, page != old_page);
+		viewer->layout_updated(get_page(), get_page() != old_page);
 	}
 }
 
 bool GridLayout::scroll_smooth_noupdate(int dx, int dy) {
 	int old_off_x = off_x;
 	int old_off_y = off_y;
-	int old_page = page;
+	int old_page = get_page();
 	off_x += dx;
 	off_y += dy;
 
@@ -262,18 +262,18 @@ bool GridLayout::scroll_smooth_noupdate(int dx, int dy) {
 			off_x = border_off_w;
 		}
 	}
-	return off_x != old_off_x || off_y != old_off_y || page != old_page;
+	return off_x != old_off_x || off_y != old_off_y || get_page() != old_page;
 }
 
 void GridLayout::scroll_smooth(int dx, int dy) {
-	int old_page = page;
+	int old_page = get_page();
 	if (scroll_smooth_noupdate(dx, dy)) {
-		viewer->layout_updated(page, page != old_page);
+		viewer->layout_updated(get_page(), get_page() != old_page);
 	}
 }
 
 bool GridLayout::scroll_page_noupdate(int new_page, bool relative) {
-	int old_page = page;
+	int old_page = get_page();
 	int old_off_y = off_y;
 
 	// negative has to stay negative, absolute movement has to account for grid offset
@@ -299,13 +299,50 @@ bool GridLayout::scroll_page_noupdate(int new_page, bool relative) {
 			off_y = border_off_h;
 		}
 	}
-	return page != old_page || off_y != old_off_y;
+	return get_page() != old_page || off_y != old_off_y;
 }
 
 void GridLayout::scroll_page(int new_page, bool relative) {
-	int old_page = page;
+	int old_page = get_page();
 	if (scroll_page_noupdate(new_page, relative)) {
-		viewer->layout_updated(page, page != old_page);
+		viewer->layout_updated(get_page(), get_page() != old_page);
+	}
+}
+
+void GridLayout::scroll_page_top_jump(int new_page, bool relative) {
+	res->store_jump(get_page());
+	int old_page = get_page();
+	bool change = false;
+
+	// calculate column index
+	if (relative) {
+		new_page += page;
+	}
+	if (new_page < 0) {
+		new_page = 0;
+	} else if (new_page >= res->get_page_count()) {
+		new_page = res->get_page_count() - 1;
+	}
+	int column_index = (new_page + grid->get_offset()) % grid->get_column_count();
+
+	// calculate pixel offset
+	int offset = 0;
+//	horizontal_page = 0;
+	if (column_index >= horizontal_page) {
+		for (int i = horizontal_page; i < column_index; i++) {
+			offset += grid->get_width(i) * size + useless_gap;
+		}
+	} else {
+		for (int i = horizontal_page; i >= column_index; i--) {
+			offset -= grid->get_width(i) * size + useless_gap;
+		}
+	}
+
+	// move viewport
+	change |= scroll_smooth_noupdate(-off_x - offset, -off_y);
+	change |= scroll_page_noupdate(new_page, relative);
+	if (change) {
+		viewer->layout_updated(get_page(), get_page() != old_page);
 	}
 }
 
@@ -427,7 +464,7 @@ void GridLayout::view_hit() {
 }
 
 void GridLayout::view_rect(const QRect &r) {
-	int old_page = page;
+	int old_page = get_page();
 
 	// move view horizontally
 	if (r.width() <= width * (1 - 2 * search_padding)) {
@@ -458,10 +495,11 @@ void GridLayout::view_rect(const QRect &r) {
 		scroll_smooth_noupdate(0, center - r.y());
 	}
 	// needs to redraw regardless of change
-	viewer->layout_updated(page, page != old_page);
+	viewer->layout_updated(get_page(), get_page() != old_page);
 }
 
 void GridLayout::view_point(const QPoint &p) {
+	res->store_jump(get_page());
 	scroll_smooth(-p.x(), -p.y());
 }
 

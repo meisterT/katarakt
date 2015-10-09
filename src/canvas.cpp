@@ -387,6 +387,7 @@ void Canvas::page_rendered(int page) {
 void Canvas::goto_page() {
 	int page = goto_line->text().toInt() - 1;
 	goto_line->hide();
-	cur_layout->scroll_page_jump(page, false);
+	setFocus(Qt::OtherFocusReason);
+	cur_layout->scroll_page_top_jump(page, false);
 }
 

@@ -30,8 +30,11 @@ public:
 	virtual void scroll_smooth(int dx, int dy);
 	virtual void scroll_page(int new_page, bool relative = true);
 
+	virtual void goto_page_at(int mx, int my);
+
 	// jump movement
 	virtual void scroll_page_jump(int new_page, bool relative = true);
+	virtual void scroll_page_top_jump(int new_page, bool relative = true);
 
 	virtual void update_search();
 	virtual void advance_hit(bool forward = true);
@@ -40,7 +43,6 @@ public:
 	virtual void activate_link(int page, float x, float y);
 	virtual void goto_link_destination(const Poppler::LinkDestination &link);
 	virtual void goto_position(int page, QPointF pos);
-	virtual void goto_page_at(int mx, int my);
 
 	// misc actions
 	virtual void render(QPainter *painter) = 0;

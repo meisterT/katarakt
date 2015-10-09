@@ -102,6 +102,11 @@ void Layout::scroll_page_jump(int new_page, bool relative) {
 	scroll_page(new_page, relative);
 }
 
+void Layout::scroll_page_top_jump(int new_page, bool relative) {
+	// override if layout supports smooth scrolling
+	scroll_page_jump(new_page, relative);
+}
+
 void Layout::update_search() {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 	if (hits->empty()) {
