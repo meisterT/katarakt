@@ -187,8 +187,6 @@ void Viewer::reload(bool clamp) {
 
 	res->load(res->get_file(), info_password.text().toLatin1());
 
- 	presenter_progress.setMaximum(res->get_page_count());
-
 	search_bar->reset_search(); // TODO restart search if loading the same document?
 	search_bar->load(res->get_file(), info_password.text().toLatin1());
 
@@ -197,6 +195,9 @@ void Viewer::reload(bool clamp) {
 	toc->init();
 	canvas->get_layout()->clear_selection();
 	canvas->reload(clamp);
+
+	canvas->update_page_overlay();
+ 	presenter_progress.setMaximum(res->get_page_count());
 }
 
 void Viewer::open(QString new_file) {
