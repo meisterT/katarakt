@@ -148,6 +148,9 @@ VARIABLES
 'float' *screen_scroll_factor* ::
 	0.9: Factor for scrolling the screen. Should be \<= 1 to create an overlapping region.
 
+'string' *page_overlay_text* ::
+	Page %1/%2: The text in the bottom right corner.
+
 'int' *useless_gap* ::
 	2: Gap between two pages in 'grid layout' in pixels.
 'int' *min_page_width* ::

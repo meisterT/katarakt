@@ -161,7 +161,7 @@ Layout *Canvas::get_layout() const {
 }
 
 void Canvas::update_page_overlay() {
-	QString overlay_text = QString("page %1/%2")
+	QString overlay_text = CFG::get_instance()->get_value("page_overlay_text").toString()
 		.arg(cur_layout->get_page() + 1)
 		.arg(viewer->get_res()->get_page_count());
 	page_overlay->setText(overlay_text);

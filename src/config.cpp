@@ -22,6 +22,9 @@ void CFG::init_defaults() {
 	defaults["mouse_wheel_factor"] = 120; // (qt-)delta for turning the mouse wheel 1 click
 	defaults["smooth_scroll_delta"] = 30; // pixel scroll offset
 	defaults["screen_scroll_factor"] = 0.9; // creates overlap for scrolling 1 screen down, should be <= 1
+
+	defaults["page_overlay_text"] = "Page %1/%2";
+
 	// layout options
 	defaults["useless_gap"] = 2;
 	defaults["min_page_width"] = 150;
