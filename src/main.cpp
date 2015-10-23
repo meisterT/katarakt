@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 		} else {
 			file = QString::fromUtf8(argv[optind]);
 		}
-		if (file == NULL) {
+		if (file.isNull()) {
 			return 1;
 		}
 	}

@@ -47,7 +47,7 @@ QString Download::load(QString f) {
 
 	if (reply->error() != QNetworkReply::NoError || !reply->isReadable()) {
 		cerr << reply->errorString().toStdString() << endl;
-		return NULL;
+		return QString();
 	}
 
 	// store data in tempfile
