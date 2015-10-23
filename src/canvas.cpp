@@ -116,6 +116,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	connect(goto_line, SIGNAL(returnPressed()), this, SLOT(goto_page()), Qt::UniqueConnection);
 
 	page_overlay = new QLabel(this);
+	page_overlay->setMargin(1);
 	page_overlay->setAutoFillBackground(true);
 	page_overlay->show();
 
