@@ -36,11 +36,11 @@ QRect transform_rect(const QRectF &rect, float scale, int off_x, int off_y) {
 }
 
 QRect transform_rect_expand(const QRectF &rect, float scale, int off_x, int off_y) {
-	static int rect_expansion = CFG::get_instance()->get_value("rect_expansion").toInt();
-	return QRect(rect.x() * scale + off_x - rect_expansion,
-			rect.y() * scale + off_y - rect_expansion,
-			rect.width() * scale + 2 * rect_expansion,
-			rect.height() * scale + 2 * rect_expansion);
+	static int rect_margin = CFG::get_instance()->get_value("Settings/rect_margin").toInt();
+	return QRect(rect.x() * scale + off_x - rect_margin,
+			rect.y() * scale + off_y - rect_margin,
+			rect.width() * scale + 2 * rect_margin,
+			rect.height() * scale + 2 * rect_margin);
 }
 
 void add_action(QWidget *base, const char *action, const char *slot, QWidget *receiver) {

@@ -35,9 +35,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 		valid(true) {
 	res = new ResourceManager(file, this);
 	if (!res->is_valid()) {
-		// the command line option toggles the value set in the config
-		if (CFG::get_instance()->get_value("quit_on_init_fail").toBool() !=
-				CFG::get_instance()->has_tmp_value("quit_on_init_fail")) {
+		if (CFG::get_instance()->get_most_current_value("Viewer/quit_on_init_fail").toBool()) {
 			valid = false;
 			return;
 		}
@@ -45,8 +43,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 
 	search_bar = new SearchBar(file, this, this);
 	if (!search_bar->is_valid()) {
-		if (CFG::get_instance()->get_value("quit_on_init_fail").toBool() !=
-				CFG::get_instance()->has_tmp_value("quit_on_init_fail")) {
+		if (CFG::get_instance()->get_most_current_value("Viewer/quit_on_init_fail").toBool()) {
 			valid = false;
 			return;
 		}
@@ -96,15 +93,15 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 
 	// load config options
 	CFG *config = CFG::get_instance();
-	smooth_scroll_delta = config->get_value("smooth_scroll_delta").toInt();
-	screen_scroll_factor = config->get_value("screen_scroll_factor").toFloat();
+	smooth_scroll_delta = config->get_value("Settings/smooth_scroll_delta").toInt();
+	screen_scroll_factor = config->get_value("Settings/screen_scroll_factor").toFloat();
 
 	layout = new QVBoxLayout();
 	layout->setContentsMargins(0, 0, 0, 0);
 	layout->setSpacing(0);
 
 	// initialize info bar
-	QIcon::setThemeName(CFG::get_instance()->get_value("icon_theme").toString());
+	QIcon::setThemeName(CFG::get_instance()->get_value("Settings/icon_theme").toString());
 
 	info_label_icon.setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	info_password.setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -145,6 +142,9 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 	info_password.setFocus(Qt::OtherFocusReason); // only works if shown
 
 	// apply start options
+	if (res->is_valid()) {
+		canvas->get_layout()->scroll_page(config->get_tmp_value("start_page").toInt(), false);
+	}
 	if (CFG::get_instance()->get_tmp_value("fullscreen").toBool()) {
 		toggle_fullscreen();
 	}
@@ -281,11 +281,11 @@ void Viewer::page_down() {
 	canvas->get_layout()->scroll_page(1);
 }
 
-void Viewer::page_first() {
+void Viewer::top() {
 	canvas->get_layout()->scroll_page_jump(-1, false);
 }
 
-void Viewer::page_last() {
+void Viewer::bottom() {
 	canvas->get_layout()->scroll_page_jump(res->get_page_count(), false);
 }
 
@@ -365,19 +365,19 @@ void Viewer::reset_zoom() {
 	canvas->get_layout()->set_zoom(0, false);
 }
 
-void Viewer::columns_inc() {
+void Viewer::increase_columns() {
 	canvas->get_layout()->set_columns(1);
 }
 
-void Viewer::columns_dec() {
+void Viewer::decrease_columns() {
 	canvas->get_layout()->set_columns(-1);
 }
 
-void Viewer::offset_inc() {
+void Viewer::increase_offset() {
 	canvas->get_layout()->set_offset(1);
 }
 
-void Viewer::offset_dec() {
+void Viewer::decrease_offset() {
 	canvas->get_layout()->set_offset(-1);
 }
 
@@ -543,46 +543,46 @@ void Viewer::close_search() {
 }
 
 void Viewer::setup_keys(QWidget *base) {
-	add_action(base, "toggle_fullscreen", SLOT(toggle_fullscreen()), base);
-	add_action(base, "close_search", SLOT(close_search()), this);
-	add_action(base, "reload", SLOT(reload()), this);
-	add_action(base, "open", SLOT(open()), this);
-	add_action(base, "save", SLOT(save()), this);
-	add_action(base, "jump_back", SLOT(jump_back()), this);
-	add_action(base, "jump_forward", SLOT(jump_forward()), this);
-	add_action(base, "mark_jump", SLOT(mark_jump()), this);
+	add_action(base, "Keys/page_up", SLOT(page_up()), this);
+	add_action(base, "Keys/page_down", SLOT(page_down()), this);
+	add_action(base, "Keys/top", SLOT(top()), this);
+	add_action(base, "Keys/bottom", SLOT(bottom()), this);
+	add_action(base, "Keys/half_screen_up", SLOT(half_screen_up()), this);
+	add_action(base, "Keys/half_screen_down", SLOT(half_screen_down()), this);
+	add_action(base, "Keys/screen_up", SLOT(screen_up()), this);
+	add_action(base, "Keys/screen_down", SLOT(screen_down()), this);
+	add_action(base, "Keys/smooth_up", SLOT(smooth_up()), this);
+	add_action(base, "Keys/smooth_down", SLOT(smooth_down()), this);
+	add_action(base, "Keys/smooth_left", SLOT(smooth_left()), this);
+	add_action(base, "Keys/smooth_right", SLOT(smooth_right()), this);
+	add_action(base, "Keys/next_hit", SLOT(next_hit()), this);
+	add_action(base, "Keys/previous_hit", SLOT(previous_hit()), this);
+	add_action(base, "Keys/next_invisible_hit", SLOT(next_invisible_hit()), this);
+	add_action(base, "Keys/previous_invisible_hit", SLOT(previous_invisible_hit()), this);
+	add_action(base, "Keys/jump_back", SLOT(jump_back()), this);
+	add_action(base, "Keys/jump_forward", SLOT(jump_forward()), this);
 
-	add_action(base, "page_up", SLOT(page_up()), this);
-	add_action(base, "page_down", SLOT(page_down()), this);
-	add_action(base, "page_first", SLOT(page_first()), this);
-	add_action(base, "page_last", SLOT(page_last()), this);
-	add_action(base, "half_screen_up", SLOT(half_screen_up()), this);
-	add_action(base, "half_screen_down", SLOT(half_screen_down()), this);
-	add_action(base, "screen_up", SLOT(screen_up()), this);
-	add_action(base, "screen_down", SLOT(screen_down()), this);
-	add_action(base, "smooth_up", SLOT(smooth_up()), this);
-	add_action(base, "smooth_down", SLOT(smooth_down()), this);
-	add_action(base, "smooth_left", SLOT(smooth_left()), this);
-	add_action(base, "smooth_right", SLOT(smooth_right()), this);
-	add_action(base, "zoom_in", SLOT(zoom_in()), this);
-	add_action(base, "zoom_out", SLOT(zoom_out()), this);
-	add_action(base, "reset_zoom", SLOT(reset_zoom()), this);
-	add_action(base, "columns_inc", SLOT(columns_inc()), this);
-	add_action(base, "columns_dec", SLOT(columns_dec()), this);
-	add_action(base, "offset_inc", SLOT(offset_inc()), this);
-	add_action(base, "offset_dec", SLOT(offset_dec()), this);
-	add_action(base, "quit", SLOT(quit()), this);
-	add_action(base, "search", SLOT(search()), this);
-	add_action(base, "search_backward", SLOT(search_backward()), this);
-	add_action(base, "next_hit", SLOT(next_hit()), this);
-	add_action(base, "previous_hit", SLOT(previous_hit()), this);
-	add_action(base, "next_invisible_hit", SLOT(next_invisible_hit()), this);
-	add_action(base, "previous_invisible_hit", SLOT(previous_invisible_hit()), this);
-	add_action(base, "rotate_left", SLOT(rotate_left()), this);
-	add_action(base, "rotate_right", SLOT(rotate_right()), this);
-	add_action(base, "toggle_invert_colors", SLOT(invert_colors()), this);
-	add_action(base, "copy_to_clipboard", SLOT(copy_to_clipboard()), this);
+	add_action(base, "Keys/zoom_in", SLOT(zoom_in()), this);
+	add_action(base, "Keys/zoom_out", SLOT(zoom_out()), this);
+	add_action(base, "Keys/reset_zoom", SLOT(reset_zoom()), this);
+	add_action(base, "Keys/increase_columns", SLOT(increase_columns()), this);
+	add_action(base, "Keys/decrease_columns", SLOT(decrease_columns()), this);
+	add_action(base, "Keys/increase_offset", SLOT(increase_offset()), this);
+	add_action(base, "Keys/decrease_offset", SLOT(decrease_offset()), this);
+	add_action(base, "Keys/rotate_left", SLOT(rotate_left()), this);
+	add_action(base, "Keys/rotate_right", SLOT(rotate_right()), this);
 
-	add_action(base, "toggle_toc", SLOT(toggle_toc()), this);
+	add_action(base, "Keys/quit", SLOT(quit()), this);
+	add_action(base, "Keys/search", SLOT(search()), this);
+	add_action(base, "Keys/search_backward", SLOT(search_backward()), this);
+	add_action(base, "Keys/close_search", SLOT(close_search()), this);
+	add_action(base, "Keys/mark_jump", SLOT(mark_jump()), this);
+	add_action(base, "Keys/invert_colors", SLOT(invert_colors()), this);
+	add_action(base, "Keys/copy_to_clipboard", SLOT(copy_to_clipboard()), this);
+	add_action(base, "Keys/toggle_fullscreen", SLOT(toggle_fullscreen()), base);
+	add_action(base, "Keys/reload", SLOT(reload()), this);
+	add_action(base, "Keys/open", SLOT(open()), this);
+	add_action(base, "Keys/save", SLOT(save()), this);
+	add_action(base, "Keys/toggle_toc", SLOT(toggle_toc()), this);
 }
 

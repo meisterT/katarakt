@@ -38,21 +38,15 @@ public:
 public slots:
 	void signal_slot(); // reloads on SIGUSR1
 
-	void toggle_fullscreen();
-	void close_search();
 	void reload(bool clamp = true);
-	void open(); // ask user for filename
 	void open(QString filename);
-	void save();
-	void jump_back();
-	void jump_forward();
-	void mark_jump();
 
 private slots:
+	// movement
 	void page_up();
 	void page_down();
-	void page_first();
-	void page_last();
+	void top();
+	void bottom();
 	void half_screen_up();
 	void half_screen_down();
 	void screen_up();
@@ -61,24 +55,33 @@ private slots:
 	void smooth_down();
 	void smooth_left();
 	void smooth_right();
-	void zoom_in();
-	void zoom_out();
-	void reset_zoom();
-	void columns_inc();
-	void columns_dec();
-	void offset_inc();
-	void offset_dec();
-	void quit();
-	void search();
-	void search_backward();
 	void next_hit();
 	void previous_hit();
 	void next_invisible_hit();
 	void previous_invisible_hit();
+	void jump_back();
+	void jump_forward();
+	// layout
+	void zoom_in();
+	void zoom_out();
+	void reset_zoom();
+	void increase_columns();
+	void decrease_columns();
+	void increase_offset();
+	void decrease_offset();
 	void rotate_left();
 	void rotate_right();
+	// viewer
+	void quit();
+	void search();
+	void search_backward();
+	void close_search();
+	void mark_jump();
 	void invert_colors();
 	void copy_to_clipboard();
+	void toggle_fullscreen();
+	void open(); // ask user for filename
+	void save();
 	void toggle_toc();
 
 private:

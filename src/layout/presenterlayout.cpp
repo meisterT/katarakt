@@ -5,20 +5,15 @@
 #include "../kpage.h"
 #include "../viewer.h"
 #include "../search.h"
+#include "../config.h"
 
 using namespace std;
 
 PresenterLayout::PresenterLayout(Viewer *v, int render_index, int page) :
-		Layout(v, render_index, page),
-		main_ratio(0.67) { // TODO add config option
+		Layout(v, render_index, page) {
+	main_ratio = CFG::get_instance()->get_value("Settings/presenter_slide_ratio").toFloat();
 	rebuild();
 }
-
-//PresenterLayout::PresenterLayout(Layout &old_layout) :
-//		Layout(old_layout),
-//		main_ratio(0.67) {
-//	rebuild();
-//}
 
 PresenterLayout::~PresenterLayout() {
 }
@@ -164,6 +159,8 @@ void PresenterLayout::render(QPainter *painter) {
 					painter->drawImage(rect.topLeft(), *img);
 				}
 				painter->rotate(-rot * 90);
+			} else {
+				render_blank_page_background(painter, center_x[i], center_y[i], page_width[i], page_height[i]);
 			}
 			res->unlock_page(page + i);
 		}

@@ -1,13 +1,13 @@
-#ifndef PRESENTATIONLAYOUT_H
-#define PRESENTATIONLAYOUT_H
+#ifndef SINGLELAYOUT_H
+#define SINGLELAYOUT_H
 
 #include "layout.h"
 
 
-class PresentationLayout : public Layout {
+class SingleLayout : public Layout {
 public:
-	PresentationLayout(Viewer *v, int render_index, int page = 0);
-	~PresentationLayout() {};
+	SingleLayout(Viewer *v, int render_index, int page = 0);
+	~SingleLayout() {};
 
 	const QRect calculate_placement(int page) const;
 	void render(QPainter *painter);

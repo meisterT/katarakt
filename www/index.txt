@@ -6,15 +6,18 @@ space as possible.
 
 Features
 --------
-There are currently two layouts.
+There are currently three layouts.
 
-	*	The presentation layout is active by default. As the name suggests it
+	*	The single layout is active by default. As the name suggests it
 		shows one slide at a time. Each page individually is scaled to use the
 		maximum available screen space.
 
 	*	The grid layout is a continuous viewing mode, and it supports as many
 		columns as you want. The relative size between pages is preserved, and
 		the biggest page is zoomed to fit the width of the window.
+
+	*	The presenter layout shows the current and the next slide side by side
+		and opens another window to view on the projector.
 
 In addition, with katarakt you can
 
@@ -49,18 +52,16 @@ link:http://git.informatik.uni-erlangen.de/?p=katarakt[git repo]
 online or clone it directly:
 
 ----
-git clone git://git.informatik.uni-erlangen.de/katarakt
+git clone https://git.informatik.uni-erlangen.de/katarakt
 ----
 
 Community
 ---------
 Feel free to join _#katarakt_ on _freenode_.
 
-You can find a bugtracker at http://redmine.cs.fau.de/redmine/projects/katarakt.
-
 License
 -------
-Copyright (C) 2011-2014, Philipp Erhardt. All rights reserved.
+Copyright (C) 2011-2015, Philipp Erhardt. All rights reserved.
 
 katarakt is free software. You can redistribute it and/or modify it under the
 terms of the simplified BSD license.

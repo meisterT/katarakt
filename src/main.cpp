@@ -16,14 +16,14 @@ static void print_help(char *name) {
 	cout << "Usage:" << endl;
 	cout << "  " << name << " ([OPTIONS] FILE|(-u URL))*" << endl;
 	cout << endl;
-	cout << "Options:" << endl;
-	cout << "  -u, --url                    Open a URL instead of a local file" << endl;
-	cout << "  -p, --page NUM               Start showing page NUM" << endl;
-	cout << "  -f, --fullscreen             Start in fullscreen mode" << endl;
-	cout << "  -q, --quit                   Quit on initialization failure" << endl;
-	cout << "  -h, --help                   Print this help and exit" << endl;
-	cout << "  --write-defaults FILE        Write the default configuration to FILE and exit" << endl;
-	cout << "  --single-instance true|false Whether to have a single instance per file" << endl;
+	cout << "Settings:" << endl;
+	cout << "  -u, --url                         Open a URL instead of a local file" << endl;
+	cout << "  -p, --page NUM                    Start showing page NUM" << endl;
+	cout << "  -f, --fullscreen                  Start in fullscreen mode" << endl;
+	cout << "  -q, --quit true|false             Quit on initialization failure" << endl;
+	cout << "  -s, --single-instance true|false  Whether to have a single instance per file" << endl;
+	cout << "  --write-default-config FILE       Write the default configuration to FILE and exit" << endl;
+	cout << "  -h, --help                        Print this help and exit" << endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -31,30 +31,26 @@ int main(int argc, char *argv[]) {
 
 	// parse command line options
 	struct option long_options[] = {
-		{"url",			no_argument,		NULL,	'u'},
-		{"page",		required_argument,	NULL,	'p'},
-		{"fullscreen",	no_argument,		NULL,	'f'},
-		{"quit",		no_argument,		NULL,	'q'},
-		{"help",		no_argument,		NULL,	'h'},
-		{"single-instance",	required_argument,	NULL,	0},
-		{"write-defaults",	required_argument,	NULL,	0},
+		{"url",						no_argument,		NULL,	'u'},
+		{"page",					required_argument,	NULL,	'p'},
+		{"fullscreen",				no_argument,		NULL,	'f'},
+		{"quit",					required_argument,	NULL,	'q'},
+		{"single-instance",			required_argument,	NULL,	's'},
+		{"write-default-config",	required_argument,	NULL,	0},
+		{"help",					no_argument,		NULL,	'h'},
 		{NULL, 0, NULL, 0}
 	};
 	int option_index = 0;
 	bool download_url = false;
 	while (1) {
-		int c = getopt_long(argc, argv, "+up:fqh", long_options, &option_index);
+		int c = getopt_long(argc, argv, "+up:fq:hs:", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
 		switch (c) {
 			case 0: {
-				const char* option_name = long_options[option_index].name;
-				if (!strcmp(option_name, "single-instance")) {
-					// (according to QVariant) any string can be converted to
-					// bool, so no type check needed here
-					CFG::get_instance()->set_tmp_value("single_instance_per_file", optarg);
-				} else if (!strcmp(option_name, "write-defaults")) {
+				const char *option_name = long_options[option_index].name;
+				if (!strcmp(option_name, "write-default-config")) {
 					CFG::write_defaults(optarg);
 					return 0;
 				}
@@ -71,10 +67,18 @@ int main(int argc, char *argv[]) {
 				CFG::get_instance()->set_tmp_value("fullscreen", true);
 				break;
 			case 'q':
-				CFG::get_instance()->set_tmp_value("quit_on_init_fail", true);
+				CFG::get_instance()->set_tmp_value("Viewer/quit_on_init_fail", optarg);
 				break;
 			case 'h':
 				print_help(argv[0]);
+				return 0;
+			case 's':
+				// (according to QVariant) any string can be converted to
+				// bool, so no type check needed here
+				CFG::get_instance()->set_tmp_value("single_instance_per_file", optarg);
+				break;
+			case 'c':
+				CFG::write_defaults(optarg);
 				return 0;
 			default:
 				// getopt prints an error message
@@ -113,7 +117,7 @@ int main(int argc, char *argv[]) {
 
 	// load stylesheet from config if no stylesheet was specified on the command line
 	if (app.styleSheet().isEmpty()) {
-		app.setStyleSheet(CFG::get_instance()->get_value("stylesheet").toString());
+		app.setStyleSheet(CFG::get_instance()->get_value("Settings/stylesheet").toString());
 	}
 
 	Viewer katarakt(file);

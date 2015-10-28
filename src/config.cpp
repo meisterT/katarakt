@@ -1,5 +1,9 @@
 #include "config.h"
-#include <QHashIterator>
+#include <QVectorIterator>
+#include <iostream>
+
+
+using namespace std;
 
 
 CFG::CFG() :
@@ -14,94 +18,90 @@ CFG::CFG(const char* file) :
 }
 
 void CFG::init_defaults() {
-	settings.beginGroup("Settings");
-	// canvas options
-	defaults["background_color"] = "0xDF000000";
-	defaults["background_color_fullscreen"] = "0xFF000000";
-	defaults["default_layout"] = "presentation";
-	defaults["mouse_wheel_factor"] = 120; // (qt-)delta for turning the mouse wheel 1 click
-	defaults["smooth_scroll_delta"] = 30; // pixel scroll offset
-	defaults["screen_scroll_factor"] = 0.9; // creates overlap for scrolling 1 screen down, should be <= 1
+	// settings
+	// canvas
+	vd.push_back("Settings/default_layout"); defaults[vd.back()] = "single";
+	vd.push_back("Settings/background_color"); defaults[vd.back()] = "0xDF202020";
+	vd.push_back("Settings/background_color_fullscreen"); defaults[vd.back()] = "0xFF000000";
+	vd.push_back("Settings/unrendered_page_color"); defaults[vd.back()] = "0x40FFFFFF";
+	vd.push_back("Settings/click_link_button"); defaults[vd.back()] = 1;
+	vd.push_back("Settings/drag_view_button"); defaults[vd.back()] = 2;
+	vd.push_back("Settings/select_text_button"); defaults[vd.back()] = 1;
+	vd.push_back("Settings/smooth_scroll_delta"); defaults[vd.back()] = 30; // pixel scroll offset
+	vd.push_back("Settings/screen_scroll_factor"); defaults[vd.back()] = 0.9; // creates overlap for scrolling 1 screen down, should be <= 1
+	vd.push_back("Settings/jump_padding"); defaults[vd.back()] = 0.2; // must be <= 0.5
+	vd.push_back("Settings/rect_margin"); defaults[vd.back()] = 2;
+	vd.push_back("Settings/useless_gap"); defaults[vd.back()] = 2;
+	vd.push_back("Settings/min_zoom"); defaults[vd.back()] = -14;
+	vd.push_back("Settings/max_zoom"); defaults[vd.back()] = 30;
+	vd.push_back("Settings/zoom_factor"); defaults[vd.back()] = 0.05;
+	vd.push_back("Settings/min_page_width"); defaults[vd.back()] = 50;
+	vd.push_back("Settings/presenter_slide_ratio"); defaults[vd.back()] = 0.67;
+	// viewer
+	vd.push_back("Settings/quit_on_init_fail"); defaults[vd.back()] = false;
+	vd.push_back("Settings/single_instance_per_file"); defaults[vd.back()] = false;
+	vd.push_back("Settings/stylesheet"); defaults[vd.back()] = "";
+	vd.push_back("Settings/page_overlay_text"); defaults[vd.back()] = "Page %1/%2";
+	vd.push_back("Settings/icon_theme"); defaults[vd.back()] = "";
+	// internal
+	vd.push_back("Settings/prefetch_count"); defaults[vd.back()] = 4;
+	vd.push_back("Settings/mouse_wheel_factor"); defaults[vd.back()] = 120; // (qt-)delta for turning the mouse wheel 1 click
+	vd.push_back("Settings/thumbnail_filter"); defaults[vd.back()] = true; // filter when creating thumbnail image
+	vd.push_back("Settings/thumbnail_size"); defaults[vd.back()] = 32;
 
-	defaults["page_overlay_text"] = "Page %1/%2";
+	// keys
+	// movement
+	vk.push_back("Keys/page_up"); keys[vk.back()] = QStringList() << "PgUp";
+	vk.push_back("Keys/page_down"); keys[vk.back()] = QStringList() << "PgDown";
+	vk.push_back("Keys/top"); keys[vk.back()] = QStringList() << "Home" << "G";
+	vk.push_back("Keys/bottom"); keys[vk.back()] = QStringList() << "End" << "Shift+G";
+	vk.push_back("Keys/goto_page"); keys[vk.back()] = QStringList() << "Ctrl+G";
+	vk.push_back("Keys/half_screen_up"); keys[vk.back()] = QStringList() << "Ctrl+U";
+	vk.push_back("Keys/half_screen_down"); keys[vk.back()] = QStringList() << "Ctrl+D";
+	vk.push_back("Keys/screen_up"); keys[vk.back()] = QStringList() << "Backspace" << "Ctrl+B";
+	vk.push_back("Keys/screen_down"); keys[vk.back()] = QStringList() << "Space" << "Ctrl+F";
+	vk.push_back("Keys/smooth_up"); keys[vk.back()] = QStringList() << "Up" << "K";
+	vk.push_back("Keys/smooth_down"); keys[vk.back()] = QStringList() << "Down" << "J";
+	vk.push_back("Keys/smooth_left"); keys[vk.back()] = QStringList() << "Left" << "H";
+	vk.push_back("Keys/smooth_right"); keys[vk.back()] = QStringList() << "Right" << "L";
+	vk.push_back("Keys/search"); keys[vk.back()] = QStringList() << "/";
+	vk.push_back("Keys/search_backward"); keys[vk.back()] = QStringList() << "?";
+	vk.push_back("Keys/next_hit"); keys[vk.back()] = QStringList() << "N";
+	vk.push_back("Keys/previous_hit"); keys[vk.back()] = QStringList() << "Shift+N";
+	vk.push_back("Keys/next_invisible_hit"); keys[vk.back()] = QStringList() << "Ctrl+N";
+	vk.push_back("Keys/previous_invisible_hit"); keys[vk.back()] = QStringList() << "Ctrl+Shift+N";
+	vk.push_back("Keys/jump_back"); keys[vk.back()] = QStringList() << "Ctrl+O" << "Alt+Left";
+	vk.push_back("Keys/jump_forward"); keys[vk.back()] = QStringList() << "Ctrl+I" << "Alt+Right";
+	vk.push_back("Keys/mark_jump"); keys[vk.back()] = QStringList() << "M";
+	// layout
+	vk.push_back("Keys/set_single_layout"); keys[vk.back()] = QStringList() << "1";
+	vk.push_back("Keys/set_grid_layout"); keys[vk.back()] = QStringList() << "2";
+	vk.push_back("Keys/set_presenter_layout"); keys[vk.back()] = QStringList() << "3";
+	vk.push_back("Keys/zoom_in"); keys[vk.back()] = QStringList() << "=" << "+";
+	vk.push_back("Keys/zoom_out"); keys[vk.back()] = QStringList() << "-";
+	vk.push_back("Keys/reset_zoom"); keys[vk.back()] = QStringList() << "Z";
+	vk.push_back("Keys/increase_columns"); keys[vk.back()] = QStringList() << "]";
+	vk.push_back("Keys/decrease_columns"); keys[vk.back()] = QStringList() << "[";
+	vk.push_back("Keys/increase_offset"); keys[vk.back()] = QStringList() << "}";
+	vk.push_back("Keys/decrease_offset"); keys[vk.back()] = QStringList() << "{";
+	vk.push_back("Keys/rotate_left"); keys[vk.back()] = QStringList() << ",";
+	vk.push_back("Keys/rotate_right"); keys[vk.back()] = QStringList() << ".";
+	// viewer
+	vk.push_back("Keys/toggle_overlay"); keys[vk.back()] = QStringList() << "T";
+	vk.push_back("Keys/quit"); keys[vk.back()] = QStringList() << "Q" << "W,E,E,E";
+	vk.push_back("Keys/close_search"); keys[vk.back()] = QStringList() << "Esc";
+	vk.push_back("Keys/invert_colors"); keys[vk.back()] = QStringList() << "I";
+	vk.push_back("Keys/copy_to_clipboard"); keys[vk.back()] = QStringList() << "Ctrl+C";
+	vk.push_back("Keys/swap_selection_and_panning_buttons"); keys[vk.back()] = QStringList() << "V";
+	vk.push_back("Keys/toggle_fullscreen"); keys[vk.back()] = QStringList() << "F";
+	vk.push_back("Keys/reload"); keys[vk.back()] = QStringList() << "R";
+	vk.push_back("Keys/open"); keys[vk.back()] = QStringList() << "O";
+	vk.push_back("Keys/save"); keys[vk.back()] = QStringList() << "S";
+	vk.push_back("Keys/toggle_toc"); keys[vk.back()] = QStringList() << "F9";
 
-	// layout options
-	defaults["useless_gap"] = 2;
-	defaults["min_page_width"] = 150;
-	defaults["min_zoom"] = -14;
-	defaults["max_zoom"] = 30;
-	defaults["zoom_factor"] = 0.05;
-	defaults["prefetch_count"] = 3;
-	defaults["search_padding"] = 0.2; // must be <= 0.5
-	// resourcemanager options
-	defaults["smooth_downscaling"] = true; // filter when creating thumbnail image
-	defaults["thumbnail_size"] = 32;
-	// search options
-	defaults["rect_expansion"] = 2;
-	// viewer options
-	defaults["quit_on_init_fail"] = false;
-	defaults["single_instance_per_file"] = false;
-	defaults["icon_theme"] = "";
-	defaults["stylesheet"] = "";
-
-	// mouse buttons
-	defaults["click_link_button"] = 1;
-	defaults["drag_view_button"] = 2;
-	defaults["select_text_button"] = 1;
-	settings.endGroup();
-
+	// tmp values
 	tmp_values["start_page"] = 0;
 	tmp_values["fullscreen"] = false;
-
-	settings.beginGroup("Keys");
-	// canvas keys
-	keys["set_presentation_layout"] = QStringList() << "1";
-	keys["set_grid_layout"] = QStringList() << "2";
-	keys["set_presenter_layout"] = QStringList() << "3";
-	keys["page_up"] = QStringList() << "PgUp";
-	keys["page_down"] = QStringList() << "PgDown";
-	keys["page_first"] = QStringList() << "Home" << "G";
-	keys["page_last"] = QStringList() << "End" << "Shift+G";
-	keys["half_screen_up"] = QStringList() << "Ctrl+U";
-	keys["half_screen_down"] = QStringList() << "Ctrl+D";
-	keys["screen_up"] = QStringList() << "Backspace" << "Ctrl+B";
-	keys["screen_down"] = QStringList() << "Space" << "Ctrl+F";
-	keys["smooth_up"] = QStringList() << "Up" << "K";
-	keys["smooth_down"] = QStringList() << "Down" << "J";
-	keys["smooth_left"] = QStringList() << "Left" << "H";
-	keys["smooth_right"] = QStringList() << "Right" << "L";
-	keys["zoom_in"] = QStringList() << "=" << "+";
-	keys["zoom_out"] = QStringList() << "-";
-	keys["reset_zoom"] = QStringList() << "Z";
-	keys["columns_inc"] = QStringList() << "]";
-	keys["columns_dec"] = QStringList() << "[";
-	keys["offset_inc"] = QStringList() << "}";
-	keys["offset_dec"] = QStringList() << "{";
-	keys["toggle_overlay"] = QStringList() << "T";
-	keys["quit"] = QStringList() << "Q" << "W,E,E,E";
-	keys["search"] = QStringList() << "/";
-	keys["search_backward"] = QStringList() << "?";
-	keys["next_hit"] = QStringList() << "N";
-	keys["previous_hit"] = QStringList() << "Shift+N";
-	keys["next_invisible_hit"] = QStringList() << "Ctrl+N";
-	keys["previous_invisible_hit"] = QStringList() << "Ctrl+Shift+N";
-	keys["focus_goto"] = QStringList() << "Ctrl+G";
-	keys["rotate_left"] = QStringList() << ",";
-	keys["rotate_right"] = QStringList() << ".";
-	keys["jump_back"] = QStringList() << "Ctrl+O" << "Alt+Left";
-	keys["jump_forward"] = QStringList() << "Ctrl+I" << "Alt+Right";
-	keys["mark_jump"] = QStringList() << "M";
-	keys["toggle_invert_colors"] = QStringList() << "I";
-	keys["copy_to_clipboard"] = QStringList() << "Ctrl+C";
-	keys["swap_selection_and_panning_buttons"] = QStringList() << "V";
-	// viewer keys
-	keys["toggle_fullscreen"] = QStringList() << "F";
-	keys["close_search"] = QStringList() << "Esc";
-	keys["reload"] = QStringList() << "R";
-	keys["open"] = QStringList() << "O";
-	keys["save"] = QStringList() << "S";
-	keys["toggle_toc"] = QStringList() << "F9";
-	settings.endGroup();
 }
 
 CFG::CFG(const CFG &/*other*/) {
@@ -116,21 +116,17 @@ CFG::~CFG() {
 }
 
 void CFG::set_defaults() {
-	settings.beginGroup("Settings");
-	QHashIterator<QString,QVariant> it(defaults);
+	QVectorIterator<QString> it(vd);
 	while (it.hasNext()) {
-		it.next();
-		settings.setValue(it.key(), it.value());
+		QString tmp = it.next();
+		settings.setValue(tmp, defaults[tmp]);
 	}
-	settings.endGroup();
 
-	settings.beginGroup("Keys");
-	QHashIterator<QString,QStringList> i2(keys);
+	QVectorIterator<QString> i2(vk);
 	while (i2.hasNext()) {
-		i2.next();
-		settings.setValue(i2.key(), i2.value());
+		QString tmp = i2.next();
+		settings.setValue(tmp, keys[tmp]);
 	}
-	settings.endGroup();
 }
 
 CFG *CFG::get_instance() {
@@ -148,11 +144,16 @@ void CFG::write_defaults(const char *file) {
 }
 
 QVariant CFG::get_value(const char *key) const {
-	return settings.value(QString("Settings/") + key, defaults[key]);
+#ifdef DEBUG
+	if (defaults.find(key) == defaults.end()) {
+		cout << "missing key " << key << endl;
+	}
+#endif
+	return settings.value(key, defaults[key]);
 }
 
 void CFG::set_value(const char *key, QVariant value) {
-	settings.setValue(QString("Settings/") + key, value);
+	settings.setValue(key, value);
 }
 
 QVariant CFG::get_tmp_value(const char *key) const {
@@ -176,6 +177,6 @@ QVariant CFG::get_most_current_value(const char *key) const {
 }
 
 QStringList CFG::get_keys(const char *action) const {
-	return settings.value(QString("Keys/") + action, keys[action]).toStringList();
+	return settings.value(action, keys[action]).toStringList();
 }
 

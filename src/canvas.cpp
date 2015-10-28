@@ -11,7 +11,7 @@
 #include "canvas.h"
 #include "viewer.h"
 #include "layout/layout.h"
-#include "layout/presentationlayout.h"
+#include "layout/singlelayout.h"
 #include "layout/gridlayout.h"
 #include "layout/presenterlayout.h"
 #include "resourcemanager.h"
@@ -36,7 +36,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 
 	{
 		bool ok;
-		unsigned int color = config->get_value("background_color").toString().toUInt(&ok, 16);
+		unsigned int color = config->get_value("Settings/background_color").toString().toUInt(&ok, 16);
 		if (ok) {
 			background.setRgba(color);
 		} else {
@@ -45,16 +45,16 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 	}
 	{
 		bool ok;
-		unsigned int color = config->get_value("background_color_fullscreen").toString().toUInt(&ok, 16);
+		unsigned int color = config->get_value("Settings/background_color_fullscreen").toString().toUInt(&ok, 16);
 		if (ok) {
 			background_fullscreen.setRgba(color);
 		} else {
 			cerr << "failed to parse background_color_fullscreen" << endl;
 		}
 	}
-	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
+	mouse_wheel_factor = config->get_value("Settings/mouse_wheel_factor").toInt();
 
-	switch (config->get_value("click_link_button").toInt()) {
+	switch (config->get_value("Settings/click_link_button").toInt()) {
 		case 1: click_link_button = Qt::LeftButton; break;
 		case 2: click_link_button = Qt::RightButton; break;
 		case 3: click_link_button = Qt::MidButton; break;
@@ -63,7 +63,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 		default: click_link_button = Qt::NoButton;
 	}
 
-	switch (config->get_value("drag_view_button").toInt()) {
+	switch (config->get_value("Settings/drag_view_button").toInt()) {
 		case 1: drag_view_button = Qt::LeftButton; break;
 		case 2: drag_view_button = Qt::RightButton; break;
 		case 3: drag_view_button = Qt::MidButton; break;
@@ -72,7 +72,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 		default: drag_view_button = Qt::NoButton;
 	}
 
-	switch (config->get_value("select_text_button").toInt()) {
+	switch (config->get_value("Settings/select_text_button").toInt()) {
 		case 1: select_text_button = Qt::LeftButton; break;
 		case 2: select_text_button = Qt::RightButton; break;
 		case 3: select_text_button = Qt::MidButton; break;
@@ -81,22 +81,17 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 		default: select_text_button = Qt::NoButton;
 	}
 
-	presentation_layout = new PresentationLayout(viewer, 0);
+	single_layout = new SingleLayout(viewer, 0);
 	grid_layout = new GridLayout(viewer, 0);
-	presenter_layout = new PresenterLayout(viewer, 1); // TODO add config string
+	presenter_layout = new PresenterLayout(viewer, 1);
 
-	QString default_layout = config->get_value("default_layout").toString();
+	QString default_layout = config->get_value("Settings/default_layout").toString();
 	if (default_layout == "grid") {
 		cur_layout = grid_layout;
 	} else if (default_layout == "presenter") {
 		cur_layout = presenter_layout;
-	} else { // "presentation" and everything else
-		cur_layout = presentation_layout;
-	}
-
-	// apply start option
-	if (viewer->get_res()->is_valid()) {
-		cur_layout->scroll_page(config->get_tmp_value("start_page").toInt(), false);
+	} else { // "single" and everything else
+		cur_layout = single_layout;
 	}
 
 	setup_keys(this);
@@ -135,7 +130,7 @@ Canvas::Canvas(Viewer *v, QWidget *parent) :
 Canvas::~Canvas() {
 	delete page_overlay;
 	delete goto_line;
-	delete presentation_layout;
+	delete single_layout;
 	delete grid_layout;
 	delete presenter_layout;
 }
@@ -151,12 +146,14 @@ void Canvas::reload(bool clamp) {
 }
 
 void Canvas::setup_keys(QWidget *base) {
-	add_action(base, "set_presentation_layout", SLOT(set_presentation_layout()), this);
-	add_action(base, "set_grid_layout", SLOT(set_grid_layout()), this);
-	add_action(base, "set_presenter_layout", SLOT(set_presenter_layout()), this);
-	add_action(base, "toggle_overlay", SLOT(toggle_overlay()), this);
-	add_action(base, "focus_goto", SLOT(focus_goto()), this);
-	add_action(base, "swap_selection_and_panning_buttons", SLOT(swap_selection_and_panning_buttons()), this);
+	add_action(base, "Keys/goto_page", SLOT(focus_goto()), this);
+
+	add_action(base, "Keys/set_single_layout", SLOT(set_single_layout()), this);
+	add_action(base, "Keys/set_grid_layout", SLOT(set_grid_layout()), this);
+	add_action(base, "Keys/set_presenter_layout", SLOT(set_presenter_layout()), this);
+
+	add_action(base, "Keys/toggle_overlay", SLOT(toggle_overlay()), this);
+	add_action(base, "Keys/swap_selection_and_panning_buttons", SLOT(swap_selection_and_panning_buttons()), this);
 }
 
 Layout *Canvas::get_layout() const {
@@ -164,7 +161,7 @@ Layout *Canvas::get_layout() const {
 }
 
 void Canvas::update_page_overlay() {
-	QString overlay_text = CFG::get_instance()->get_value("page_overlay_text").toString()
+	QString overlay_text = CFG::get_instance()->get_value("Settings/page_overlay_text").toString()
 		.arg(cur_layout->get_page() + 1)
 		.arg(viewer->get_res()->get_page_count());
 	page_overlay->setText(overlay_text);
@@ -290,7 +287,7 @@ void Canvas::wheelEvent(QWheelEvent *event) {
 }
 
 void Canvas::mouseDoubleClickEvent(QMouseEvent * event) {
-	if (click_link_button != Qt::NoButton && event->button() == drag_view_button) {
+	if (drag_view_button != Qt::NoButton && event->button() == drag_view_button) {
 		cur_layout->goto_page_at(event->x(), event->y());
 	}
 	if (select_text_button != Qt::NoButton && event->button() == select_text_button) {
@@ -309,9 +306,9 @@ void Canvas::resizeEvent(QResizeEvent *event) {
 }
 
 // primitive actions
-void Canvas::set_presentation_layout() {
-	presentation_layout->activate(cur_layout);
-	cur_layout = presentation_layout;
+void Canvas::set_single_layout() {
+	single_layout->activate(cur_layout);
+	cur_layout = single_layout;
 	update();
 	viewer->get_beamer()->hide();
 	viewer->show_progress(false);

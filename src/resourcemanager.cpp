@@ -34,8 +34,8 @@ ResourceManager::ResourceManager(const QString &file, Viewer *v) :
 		cur_jump_pos(jumplist.end()) {
 	// load config options
 	CFG *config = CFG::get_instance();
-	smooth_downscaling = config->get_value("smooth_downscaling").toBool();
-	thumbnail_size = config->get_value("thumbnail_size").toInt();
+	smooth_downscaling = config->get_value("Settings/thumbnail_filter").toBool();
+	thumbnail_size = config->get_value("Settings/thumbnail_size").toInt();
 
 	initialize(file, QByteArray());
 }
@@ -214,6 +214,10 @@ void ResourceManager::unlock_page(int page) const {
 
 void ResourceManager::invert_colors() {
 	inverted_colors = !inverted_colors;
+}
+
+bool ResourceManager::are_colors_inverted() const {
+	return inverted_colors;
 }
 
 void ResourceManager::collect_garbage(int keep_min, int keep_max) {

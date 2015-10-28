@@ -23,13 +23,22 @@ Layout::Layout(Viewer *v, int render_index, int _page) :
 		search_visible(false) {
 	// load config options
 	CFG *config = CFG::get_instance();
-	useless_gap = config->get_value("useless_gap").toInt();
-	min_page_width = config->get_value("min_page_width").toInt();
-	min_zoom = config->get_value("min_zoom").toInt();
-	max_zoom = config->get_value("max_zoom").toInt();
-	zoom_factor = config->get_value("zoom_factor").toFloat();
-	prefetch_count = config->get_value("prefetch_count").toInt();
-	search_padding = config->get_value("search_padding").toFloat();
+	{
+		bool ok;
+		unsigned int color = config->get_value("Settings/unrendered_page_color").toString().toUInt(&ok, 16);
+		if (ok) {
+			unrendered_page_color.setRgba(color);
+		} else {
+			cerr << "failed to parse unrendered_page_color" << endl;
+		}
+	}
+	useless_gap = config->get_value("Settings/useless_gap").toInt();
+	min_page_width = config->get_value("Settings/min_page_width").toInt();
+	min_zoom = config->get_value("Settings/min_zoom").toInt();
+	max_zoom = config->get_value("Settings/max_zoom").toInt();
+	zoom_factor = config->get_value("Settings/zoom_factor").toFloat();
+	prefetch_count = config->get_value("Settings/prefetch_count").toInt();
+	jump_padding = config->get_value("Settings/jump_padding").toFloat();
 }
 
 Layout::~Layout() {
@@ -306,6 +315,19 @@ void Layout::render_selection(QPainter *painter, int cur_page, QPoint offset, fl
 				painter->drawRect(transform_rect(bb, size, offset.x(), offset.y()));
 			}
 		}
+	}
+}
+
+void Layout::render_blank_page_background(QPainter *painter, int x, int y, int w, int h) {
+	if (res->are_colors_inverted()) {
+		// invert color, keep alpha
+		QColor tmp(255 ^ unrendered_page_color.red(),
+				255 ^ unrendered_page_color.green(),
+				255 ^ unrendered_page_color.blue(),
+				unrendered_page_color.alpha());
+		painter->fillRect(QRect(x, y, w, h), tmp);
+	} else {
+		painter->fillRect(QRect(x, y, w, h), unrendered_page_color);
 	}
 }
 

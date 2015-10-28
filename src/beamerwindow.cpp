@@ -3,7 +3,7 @@
 #include "canvas.h"
 #include "config.h"
 #include "resourcemanager.h"
-#include "layout/presentationlayout.h"
+#include "layout/singlelayout.h"
 #include <QResizeEvent>
 #include <QApplication>
 #include <iostream>
@@ -17,12 +17,12 @@ BeamerWindow::BeamerWindow(Viewer *v, QWidget *parent) :
 		valid(false) {
 	setFocusPolicy(Qt::StrongFocus);
 
-	layout = new PresentationLayout(viewer, 0);
+	layout = new SingleLayout(viewer, 0);
 
 	CFG *config = CFG::get_instance();
-	mouse_wheel_factor = config->get_value("mouse_wheel_factor").toInt();
+	mouse_wheel_factor = config->get_value("Settings/mouse_wheel_factor").toInt();
 
-	switch (config->get_value("click_link_button").toInt()) {
+	switch (config->get_value("Settings/click_link_button").toInt()) {
 		case 1: click_link_button = Qt::LeftButton; break;
 		case 2: click_link_button = Qt::RightButton; break;
 		case 3: click_link_button = Qt::MidButton; break;

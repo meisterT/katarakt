@@ -71,6 +71,7 @@ protected:
 
 	void render_search_rects(QPainter *painter, int cur_page, QPoint offset, float size);
 	void render_selection(QPainter *painter, int cur_page, QPoint offset, float size);
+	void render_blank_page_background(QPainter *painter, int x, int y, int w, int h);
 	virtual void view_hit();
 
 	Viewer *viewer;
@@ -85,13 +86,14 @@ protected:
 	QList<QRectF>::const_iterator hit_it;
 
 	// config options
+	QColor unrendered_page_color;
 	int useless_gap;
 	int min_page_width;
 	int min_zoom;
 	int max_zoom;
 	float zoom_factor;
 	int prefetch_count;
-	float search_padding;
+	float jump_padding;
 
 	MouseSelection selection;
 };

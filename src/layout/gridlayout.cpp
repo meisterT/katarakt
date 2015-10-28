@@ -397,6 +397,8 @@ void GridLayout::render(QPainter *painter) {
 						painter->drawImage(rect.topLeft(), *img);
 					}
 					painter->rotate(-rot * 90);
+				} else {
+					render_blank_page_background(painter, wpos + center_x, hpos + center_y, page_width, page_height);
 				}
 				res->unlock_page(last_page);
 			}
@@ -467,11 +469,11 @@ void GridLayout::view_rect(const QRect &r) {
 	int old_page = get_page();
 
 	// move view horizontally
-	if (r.width() <= width * (1 - 2 * search_padding)) {
-		if (r.x() < width * search_padding) {
-			scroll_smooth_noupdate(width * search_padding - r.x(), 0);
-		} else if (r.x() + r.width() > width * (1 - search_padding)) {
-			scroll_smooth_noupdate(width * (1 - search_padding) - r.x() - r.width(), 0);
+	if (r.width() <= width * (1 - 2 * jump_padding)) {
+		if (r.x() < width * jump_padding) {
+			scroll_smooth_noupdate(width * jump_padding - r.x(), 0);
+		} else if (r.x() + r.width() > width * (1 - jump_padding)) {
+			scroll_smooth_noupdate(width * (1 - jump_padding) - r.x() - r.width(), 0);
 		}
 	} else {
 		int center = (width - r.width()) / 2;
@@ -481,11 +483,11 @@ void GridLayout::view_rect(const QRect &r) {
 		scroll_smooth_noupdate(center - r.x(), 0);
 	}
 	// vertically
-	if (r.height() <= height * (1 - 2 * search_padding)) {
-		if (r.y() < height * search_padding) {
-			scroll_smooth_noupdate(0, height * search_padding - r.y());
-		} else if (r.y() + r.height() > height * (1 - search_padding)) {
-			scroll_smooth_noupdate(0, height * (1 - search_padding) - r.y() - r.height());
+	if (r.height() <= height * (1 - 2 * jump_padding)) {
+		if (r.y() < height * jump_padding) {
+			scroll_smooth_noupdate(0, height * jump_padding - r.y());
+		} else if (r.y() + r.height() > height * (1 - jump_padding)) {
+			scroll_smooth_noupdate(0, height * (1 - jump_padding) - r.y() - r.height());
 		}
 	} else {
 		int center = (height - r.height()) / 2;
@@ -611,10 +613,10 @@ void GridLayout::goto_link_destination(const Poppler::LinkDestination &link) {
 
 	QPoint p = get_target_page_distance(link_page);
 	if (link.isChangeLeft()) {
-		p.rx() += link_point.x() * size - width * search_padding;
+		p.rx() += link_point.x() * size - width * jump_padding;
 	}
 	if (link.isChangeTop()) {
-		p.ry() += link_point.y() * size - height * search_padding;
+		p.ry() += link_point.y() * size - height * jump_padding;
 	}
 	view_point(p);
 }

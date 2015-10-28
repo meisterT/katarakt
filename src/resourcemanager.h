@@ -54,6 +54,7 @@ public:
 	void rotate(int value, bool relative = true);
 	void unlock_page(int page) const;
 	void invert_colors();
+	bool are_colors_inverted() const;
 
 	void collect_garbage(int keep_min, int keep_max);
 

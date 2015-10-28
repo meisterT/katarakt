@@ -2,7 +2,7 @@
 #include <QImage>
 #include <QApplication>
 #include <set>
-#include "presentationlayout.h"
+#include "singlelayout.h"
 #include "layout.h"
 #include "../util.h"
 #include "../viewer.h"
@@ -14,18 +14,18 @@
 using namespace std;
 
 
-PresentationLayout::PresentationLayout(Viewer *v, int render_index, int page) :
+SingleLayout::SingleLayout(Viewer *v, int render_index, int page) :
 		Layout(v, render_index, page) {
 }
 
-int PresentationLayout::calculate_fit_width(int page) const {
+int SingleLayout::calculate_fit_width(int page) const {
 	if ((float) width / height > res->get_page_aspect(page)) {
 		return res->get_page_aspect(page) * height;
 	}
 	return width;
 }
 
-const QRect PresentationLayout::calculate_placement(int page) const {
+const QRect SingleLayout::calculate_placement(int page) const {
 	int page_width = width, page_height = height;
 	int center_x = 0, center_y = 0;
 
@@ -40,7 +40,7 @@ const QRect PresentationLayout::calculate_placement(int page) const {
 	return QRect(center_x, center_y, page_width, page_height);
 }
 
-void PresentationLayout::render(QPainter *painter) {
+void SingleLayout::render(QPainter *painter) {
 	const QRect p = calculate_placement(page);
 	const KPage *k_page = res->get_page(page, p.width(), render_index);
 	if (k_page != NULL) {
@@ -69,6 +69,8 @@ void PresentationLayout::render(QPainter *painter) {
 				painter->drawImage(rect.topLeft(), *img);
 			}
 			painter->rotate(-rot * 90);
+		} else {
+			render_blank_page_background(painter, p.x(), p.y(), p.width(), p.height());
 		}
 		res->unlock_page(page);
 	}
@@ -113,7 +115,7 @@ void PresentationLayout::render(QPainter *painter) {
 	res->collect_garbage(page - prefetch_count * 3, page + prefetch_count * 3);
 }
 
-void PresentationLayout::advance_invisible_hit(bool forward) {
+void SingleLayout::advance_invisible_hit(bool forward) {
 	const map<int,QList<QRectF> *> *hits = viewer->get_search_bar()->get_hits();
 
 	if (hits->empty()) {
@@ -130,7 +132,7 @@ void PresentationLayout::advance_invisible_hit(bool forward) {
 	view_hit();
 }
 
-pair<int, QPointF> PresentationLayout::get_location_at(int px, int py) const {
+pair<int, QPointF> SingleLayout::get_location_at(int px, int py) const {
 	const QRect p = calculate_placement(page);
 
 	// transform mouse coordinates
@@ -155,7 +157,7 @@ pair<int, QPointF> PresentationLayout::get_location_at(int px, int py) const {
 	return make_pair(page, QPointF(x, y));
 }
 
-bool PresentationLayout::page_visible(int p) const {
+bool SingleLayout::page_visible(int p) const {
 	return p == page;
 }
 

@@ -13,7 +13,7 @@
 
 class Viewer;
 class Layout;
-class PresentationLayout;
+class SingleLayout;
 class GridLayout;
 class PresenterLayout;
 class GotoLine;
@@ -58,7 +58,7 @@ private slots:
 	void goto_page();
 
 	// primitive actions
-	void set_presentation_layout();
+	void set_single_layout();
 	void set_grid_layout();
 	void set_presenter_layout();
 
@@ -74,7 +74,7 @@ private:
 
 	Viewer *viewer;
 	Layout *cur_layout;
-	PresentationLayout *presentation_layout;
+	SingleLayout *single_layout;
 	GridLayout *grid_layout;
 	PresenterLayout *presenter_layout;
 

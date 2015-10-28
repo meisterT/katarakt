@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 #include <QSettings>
+#include <QVector>
 #include <QHash>
 #include <QString>
 #include <QVariant>
@@ -20,6 +21,8 @@ private:
 	void set_defaults();
 
 	QSettings settings;
+	QVector<QString> vd;
+	QVector<QString> vk;
 	QHash<QString,QVariant> defaults;
 	QHash<QString,QVariant> tmp_values; // not persistent
 	QHash<QString,QStringList> keys;
