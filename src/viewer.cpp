@@ -35,7 +35,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 		valid(true) {
 	res = new ResourceManager(file, this);
 	if (!res->is_valid()) {
-		if (CFG::get_instance()->get_most_current_value("Viewer/quit_on_init_fail").toBool()) {
+		if (CFG::get_instance()->get_most_current_value("Settings/quit_on_init_fail").toBool()) {
 			valid = false;
 			return;
 		}
@@ -43,7 +43,7 @@ Viewer::Viewer(const QString &file, QWidget *parent) :
 
 	search_bar = new SearchBar(file, this, this);
 	if (!search_bar->is_valid()) {
-		if (CFG::get_instance()->get_most_current_value("Viewer/quit_on_init_fail").toBool()) {
+		if (CFG::get_instance()->get_most_current_value("Settings/quit_on_init_fail").toBool()) {
 			valid = false;
 			return;
 		}

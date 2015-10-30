@@ -44,7 +44,10 @@ void ResourceManager::initialize(const QString &file, const QByteArray &password
 	page_count = 0;
 	k_page = NULL;
 
-	doc = Poppler::Document::load(file, QByteArray(), password);
+	doc = NULL;
+	if (!file.isNull()) {
+		doc = Poppler::Document::load(file, QByteArray(), password);
+	}
 
 	worker = new Worker(this);
 	if (viewer->get_canvas() != NULL) {

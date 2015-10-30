@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 				CFG::get_instance()->set_tmp_value("fullscreen", true);
 				break;
 			case 'q':
-				CFG::get_instance()->set_tmp_value("Viewer/quit_on_init_fail", optarg);
+				CFG::get_instance()->set_tmp_value("Settings/quit_on_init_fail", optarg);
 				break;
 			case 'h':
 				print_help(argv[0]);
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
 			case 's':
 				// (according to QVariant) any string can be converted to
 				// bool, so no type check needed here
-				CFG::get_instance()->set_tmp_value("single_instance_per_file", optarg);
+				CFG::get_instance()->set_tmp_value("Settings/single_instance_per_file", optarg);
 				break;
 			case 'c':
 				CFG::write_defaults(optarg);
@@ -106,10 +106,13 @@ int main(int argc, char *argv[]) {
 		if (file.isNull()) {
 			return 1;
 		}
+	} else if (CFG::get_instance()->get_most_current_value("Settings/quit_on_init_fail").toBool()) {
+		print_help(argv[0]);
+		return 1;
 	}
-	// else no argument given, "open" empty string
+	// else: opens empty window without file
 
-	if (CFG::get_instance()->get_most_current_value("single_instance_per_file").toBool()) {
+	if (CFG::get_instance()->get_most_current_value("Settings/single_instance_per_file").toBool()) {
 		if (activate_katarakt_with_file(file)) {
 			return 0;
 		}

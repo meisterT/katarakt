@@ -164,7 +164,11 @@ SearchBar::SearchBar(const QString &file, Viewer *v, QWidget *parent) :
 void SearchBar::initialize(const QString &file, const QByteArray &password) {
 	worker = NULL;
 
-	doc = Poppler::Document::load(file, QByteArray(), password);
+	doc = NULL;
+//	if (!file.isNull()) { // don't print the poppler error message for the second time
+	if (!file.isEmpty()) {
+		doc = Poppler::Document::load(file, QByteArray(), password);
+	}
 
 	if (doc == NULL) {
 		// poppler already prints a debug message

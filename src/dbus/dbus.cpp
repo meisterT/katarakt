@@ -41,6 +41,11 @@ void dbus_init(Viewer *viewer) {
 }
 
 bool activate_katarakt_with_file(QString file) {
+	if (file.isNull()) {
+		// always start a new instance if no argument was given
+		return false;
+	}
+
 	QString filepath = QFileInfo(file).absoluteFilePath();
 	QDBusConnection bus = QDBusConnection::sessionBus();
 	QStringList services = bus.interface()->registeredServiceNames().value();

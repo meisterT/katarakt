@@ -172,7 +172,12 @@ QVariant CFG::get_most_current_value(const char *key) const {
 	if (tmp_values.contains(key)) {
 		return tmp_values[key];
 	} else {
-		return settings.value(QString("Settings/") + key, defaults[key]);
+#ifdef DEBUG
+		if (defaults.find(key) == defaults.end()) {
+			cout << "missing key " << key << endl;
+		}
+#endif
+		return settings.value(key, defaults[key]);
 	}
 }
 
