@@ -55,6 +55,8 @@ online or clone it directly:
 git clone https://git.informatik.uni-erlangen.de/katarakt
 ----
 
+Tarballs are available link:https://wwwcip.cs.fau.de/~go18gomu/katarakt/tarballs/[here].
+
 Community
 ---------
 Feel free to join _#katarakt_ on _freenode_.
