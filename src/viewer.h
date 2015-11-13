@@ -81,6 +81,7 @@ private slots:
 	void copy_to_clipboard();
 	void toggle_fullscreen();
 	void open(); // ask user for filename
+	void print();
 	void save();
 	void toggle_toc();
 

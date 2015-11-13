@@ -3,6 +3,9 @@
 #include <QFileInfo>
 #include <QAction>
 #include <QFileDialog>
+#include <QPrinter>
+#include <QProcess>
+#include <QPrintDialog>
 #include <csignal>
 #include <cerrno>
 #include <unistd.h>
@@ -218,6 +221,43 @@ void Viewer::open() {
 	if (!new_file.isNull()) {
 		open(new_file);
 	}
+}
+
+void Viewer::print() {
+	QPrinter printer(QPrinter::PrinterResolution);
+	QPrintDialog *printDialog = new QPrintDialog(&printer, this);
+	printDialog->setWindowTitle(QString::fromUtf8("katarakt/print %1").arg(get_res()->get_file()));
+	printDialog->setOptions(QAbstractPrintDialog::PrintPageRange | QAbstractPrintDialog::PrintCurrentPage);
+	int fromPage = 1, toPage = get_res()->get_page_count();
+	printDialog->setMinMax(fromPage, toPage);
+	printDialog->setFromTo(fromPage, toPage);
+
+	if (printDialog->exec() != QDialog::Accepted) {
+		delete printDialog;
+		return;
+	}
+
+	if (printer.printRange() == QPrinter::PageRange) {
+		fromPage = printer.fromPage();
+		toPage = printer.toPage();
+	} else if (printer.printRange() == QPrinter::CurrentPage) {
+		fromPage = toPage = canvas->get_layout()->get_page() + 1; // 0-indexed
+	}
+
+	QStringList list;
+	list << QString("-d") << QString("%1").arg(printer.printerName());
+	list << QString("-n") << QString("%1").arg(printer.copyCount());
+	list << QString("-P") << QString("%1-%2").arg(fromPage).arg(toPage);
+	if (printer.duplex() == QPrinter::DuplexLongSide) {
+		list << QString("-o") << QString("sides=two-sided-long-edge");
+	} else if (printer.duplex() == QPrinter::DuplexShortSide) {
+		list << QString("-o") << QString("sides=two-sided-short-edge");
+	}
+	// FIXME: how to set color / grayscale with lp? Or: how to disable it in print dialog?
+	list << QString("--");
+	list << QString("%1").arg(get_res()->get_file());
+	QProcess::execute("lp", list);
+	delete printDialog;
 }
 
 void Viewer::save() {
@@ -582,6 +622,7 @@ void Viewer::setup_keys(QWidget *base) {
 	add_action(base, "Keys/toggle_fullscreen", SLOT(toggle_fullscreen()), base);
 	add_action(base, "Keys/reload", SLOT(reload()), this);
 	add_action(base, "Keys/open", SLOT(open()), this);
+	add_action(base, "Keys/print", SLOT(print()), this);
 	add_action(base, "Keys/save", SLOT(save()), this);
 	add_action(base, "Keys/toggle_toc", SLOT(toggle_toc()), this);
 }

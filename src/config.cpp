@@ -96,6 +96,7 @@ void CFG::init_defaults() {
 	vk.push_back("Keys/toggle_fullscreen"); keys[vk.back()] = QStringList() << "F";
 	vk.push_back("Keys/reload"); keys[vk.back()] = QStringList() << "R";
 	vk.push_back("Keys/open"); keys[vk.back()] = QStringList() << "O";
+	vk.push_back("Keys/print"); keys[vk.back()] = QStringList() << "P";
 	vk.push_back("Keys/save"); keys[vk.back()] = QStringList() << "S";
 	vk.push_back("Keys/toggle_toc"); keys[vk.back()] = QStringList() << "F9";
 
